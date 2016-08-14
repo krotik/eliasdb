@@ -1,11 +1,7 @@
 EliasDB
 =======
-
 EliasDB is a graph based database which aims to provide a lightweight solution for projects which want to store their data as graph.
 
-Status
-------
-Swgger Definition: <a href="http://online.swagger.io/validator/debug?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json"><img src="http://online.swagger.io/validator?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json" id="validator"></a>
 
 Features
 --------
@@ -35,7 +31,7 @@ After accepting the self-signed certificate from the server you should see a web
 
 ### Using as a standalone application:
 
-The terminal uses a REST API to communicate with the backend. The REST API can be browsed using a dynamically generated swagger.json definition (https://localhost:9090/db/swagger.json). You can browse the API of the EliasDB's latest version [here](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json#/default).
+The terminal uses a REST API to communicate with the backend. The REST API can be browsed using a dynamically generated swagger.json definition (https://localhost:9090/db/swagger.json). You can browse the API of EliasDB's latest version [here](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json#/default).
 
 Further Reading
 ---------------
