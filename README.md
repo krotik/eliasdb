@@ -3,9 +3,12 @@ EliasDB
 
 EliasDB is a graph based database which aims to provide a lightweight solution for projects which want to store their data as graph.
 
+Status
+------
+Swgger Definition: <a href="http://online.swagger.io/validator/debug?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json"><img src="http://online.swagger.io/validator?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json" id="validator"></a>
+
 Features
 --------
-
 - Build on top of a fast key-value store which supports transactions and memory-only storage.
 - Data is stored in nodes (key-value objects) which are connected via edges.
 - Stored graphs can be separated via partitions.
@@ -20,26 +23,24 @@ Features
   and rule based consistency management.
 
 
-Getting Started
----------------
-
-### Using as a standalone application:
-
+Getting Started (standalone application)
+----------------------------------------
 You can download a precompiled package for Win64 [here](https://raw.githubusercontent.com/krotik/eliasdb/master/res/eliasdb_v0_8.zip).
 
 Extract it and execute the executable. The executable should automatically create 3 subfolders and a configuration file. Point your webbrowser to:
-
 ```
 https://localhost:9090/db/term.html
 ```
+After accepting the self-signed certificate from the server you should see a web terminal. 
 
-After accepting the self-signed certificate from the server you should see a web terminal.
+### Using as a standalone application:
 
+The terminal uses a REST API to communicate with the backend. The REST API can be browsed using a dynamically generated swagger.json definition (https://localhost:9090/db/swagger.json). You can browse the API of the EliasDB's latest version [here](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json#/default).
 
 Further Reading
 ---------------
-- A design document which describes the different components of the graph database. [LINK](/doc/elias_db_design.txt)
-- A reference for the EliasDB query language EQL. [LINK](/doc/eql.txt)
+- A design document which describes the different components of the graph database. [Link](/doc/elias_db_design.md)
+- A reference for the EliasDB query language EQL. [Link](/doc/eql.md)
 
 License
 -------
