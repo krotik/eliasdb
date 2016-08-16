@@ -12,7 +12,7 @@ https://localhost:9090/db/term.html
 
 The generated default key and certificate for https are self-signed which should give a security warning in the browser. After accepting you should see a prompt.t
 
-tutorial1.png
+![](https://github.com/krotik/eliasdb/blob/master/doc/tutorial1.png?raw=true)
 
 You can get an overview of all available command by typing:
 
@@ -30,7 +30,7 @@ store
 
 into the terminal and press enter. Copy now the contents of the file [tutorial_data.json](http://) into the terminal - either drag the file onto the terminal input or copy/paste its contents. 
 
-tutorial2.png
+![](https://github.com/krotik/eliasdb/blob/master/doc/tutorial2.png?raw=true)
 
 After submitting the request you should see a message saying "OK". Running now the "info" should show that the datastore is now filled with data:
 
@@ -65,7 +65,7 @@ get Line
 
 The result should be a table of tube lines. Each line having a unique key and a name. 
 
-tutorial3.png
+![](https://github.com/krotik/eliasdb/blob/master/doc/tutorial3.png?raw=true)
 
 We can easily order the table by name by writing:
 
@@ -106,3 +106,5 @@ index Station name phrase King's Cross
 We are looking for a Station which has the name King's Cross in its name. The index can efficiently lookup words, phrases (multiple consecutive words) and attribute values. The index query result is a node key. We can now lookup this node by running:
 
 lookup Station "145"
+
+![](https://github.com/krotik/eliasdb/blob/master/doc/tutorial4.png?raw=true)
