@@ -1,6 +1,6 @@
 EliasDB
 =======
-EliasDB is a graph based database which aims to provide a lightweight solution for projects which want to store their data as graph.
+EliasDB is a graph based database which aims to provide a lightweight solution for projects which want to store their data as a graph.
 
 Features
 --------
