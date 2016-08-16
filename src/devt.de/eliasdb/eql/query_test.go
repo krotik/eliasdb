@@ -19,6 +19,27 @@ import (
 	"devt.de/eliasdb/graph/graphstorage"
 )
 
+func TestBugFixes(t *testing.T) {
+	gm, _ := songGraph()
+
+	// Bug 1 - Lookup only giving last AST main child node (show) to runtime instead of first non-value (where)
+
+	res, err := RunQuery("test", "main", "lookup Author '000' traverse :::Song end show Song:key with ordering(ascending key)", gm)
+
+	if err != nil || res.String() != `
+Labels: Song Key
+Format: auto
+Data: 2:n:key
+Aria1
+Aria2
+Aria3
+Aria4
+`[1:] {
+		t.Error("Unexpected result: ", err, res)
+		return
+	}
+}
+
 func TestQuery(t *testing.T) {
 	gm, _ := songGraph()
 

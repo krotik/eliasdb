@@ -98,6 +98,8 @@ func (rt *lookupRuntime) Validate() error {
 			// We have a first non-id child
 
 			initIndex = i
+			break
+
 		} else {
 
 			// Collect all given keys
