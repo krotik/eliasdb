@@ -2,7 +2,6 @@ EliasDB
 =======
 EliasDB is a graph based database which aims to provide a lightweight solution for projects which want to store their data as graph.
 
-
 Features
 --------
 - Build on top of a fast key-value store which supports transactions and memory-only storage.
@@ -18,7 +17,6 @@ Features
 - When used as an embedded database it supports transactions with rollbacks, iteration of data
   and rule based consistency management.
 
-
 Getting Started (standalone application)
 ----------------------------------------
 You can download a precompiled package for Win64 [here](https://raw.githubusercontent.com/krotik/eliasdb/master/res/eliasdb_v0_8.zip).
@@ -28,6 +26,10 @@ Extract it and execute the executable. The executable should automatically creat
 https://localhost:9090/db/term.html
 ```
 After accepting the self-signed certificate from the server you should see a web terminal. EliasDB can be stopped with a simple CTRL+C or by overwriting the content in eliasdb.lck with a single character.
+
+### Tutorial:
+
+To get an idea of what EliasDB is about have a look at the [tutorial](/doc/tutorial.md).
 
 ### REST API:
 
