@@ -34,11 +34,11 @@ const TERM_SRC = `
             box-shadow: 3px 3px 3px rgba(50, 50, 50, 0.25);
         }
 
-		.t-header h1 {
-			display: inline-block;
+        .t-header h1 {
+            display: inline-block;
             font-size: 18px;
             margin: 3px 0;
-		}
+        }
 
         .t-terms {
             padding: 0 10%;
@@ -89,7 +89,7 @@ const TERM_SRC = `
 
         .t-terms .t-term .t-prompt {
             float: left;
-			width: 15px;
+            width: 15px;
             font-weight: bold;
         }
 
@@ -102,7 +102,7 @@ const TERM_SRC = `
 
         .t-terms .t-term .t-button {
             background: #EEEEEE;
-			float: right;
+            float: right;
             border: #000000 2px solid;
             margin: 2px;
             border-radius: 10px;
@@ -288,7 +288,17 @@ const TERM_SRC = `
 
                     // Strip out unwanted html tags
 
-                    return t.replace(/<(?:.|\n)*?>/gm, ' ').replace(/&(?:.|\n)*?;/gm, ' ');
+                    t = t.replace(/<(?:.|\n)*?>/g, ' ');
+                    
+                    // Convert sansitised html to text
+                    
+                    t = t.replace(/&gt;/g, '>');
+                    t = t.replace(/&lt;/g, '<');
+                    t = t.replace(/&quot;/g, '"');
+                    t = t.replace(/&apos;/g, "'");
+                    t = t.replace(/&amp;/g, '&');
+
+                    return t
                 };
 
                 buttonOK.innerHTML    = "Ok";
@@ -318,6 +328,29 @@ const TERM_SRC = `
                     input.focus();
                 });
 
+                t.addEvent(term, "drop", function (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    var files = e.dataTransfer.files;
+                    for (var i = 0, f; f = files[i]; i++) {
+
+                        var reader = new FileReader();
+
+                        reader.onload = function(content) {
+                            input.innerHTML += t.esc(content.target.result);
+                        }
+
+                        reader.readAsText(f);
+                    }
+                });
+
+                t.addEvent(term, "dragover", function (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                });
+
                 t.addEvent(buttonOK, "click", function (e) {
                     t.main.exec(input, stipText(input.innerHTML));
                 });
@@ -340,13 +373,13 @@ const TERM_SRC = `
 
                 // After the cmd has been executed
 
-				var cmdFunc = t.cmds[cmd];
+                var cmdFunc = t.cmds[cmd];
 
-				if (cmdFunc !== undefined) {
-                	cmdFunc(element, rest);
-				} else {
-					t.main.addError(element, "Unknown command");
-				}
+                if (cmdFunc !== undefined) {
+                    cmdFunc(element, rest);
+                } else {
+                    t.main.addError(element, "Unknown command");
+                }
             },
 
             // Add an error message. Returns true if a new element was added.
@@ -363,7 +396,7 @@ const TERM_SRC = `
                 }
 
                 element.focus();
-			},
+            },
 
             // Add a normal message. Returns true if a new element was added.
             //
@@ -377,7 +410,7 @@ const TERM_SRC = `
 
                     t.main.addPrompt();
                 }
-			},
+            },
 
             // Add a new element which should just display text.
             //
@@ -403,7 +436,7 @@ const TERM_SRC = `
 
                 t.main._showColorEffect(term);
 
-				term.innerHTML = t.esc(text);
+                term.innerHTML = t.esc(text);
 
                 return addedNewElement;
             },
@@ -472,8 +505,8 @@ const TERM_SRC = `
 
             // Get the help text
             //
-			"help" : function (element, data) {
-				"use strict";
+            "help" : function (element, data) {
+                "use strict";
 
                 data = data.replace(/^\s+|\s+$/gm, '');
 
@@ -563,28 +596,28 @@ const TERM_SRC = `
 
             // Get the "about" JSON
             //
-			"about" : function (element) {
-				"use strict";
+            "about" : function (element) {
+                "use strict";
 
                 t.ajax(t.ajaxPrefix + "/about/", "GET", undefined, function (r) {
                     t.main.addOutput(element, JSON.stringify(r, undefined, 4));
                 });
-			},
+            },
 
             // Get the "info" JSON
             //
-			"info" : function (element) {
-				"use strict";
+            "info" : function (element) {
+                "use strict";
 
                 t.ajax(t.ajaxPrefix + "/v1/info/", "GET", undefined, function (r) {
                     t.main.addOutput(element, JSON.stringify(r, undefined, 4));
                 });
-			},
+            },
 
             // Store data in the datastore.
             //
             "store" : function (element, data) {
-				"use strict";
+                "use strict";
                 var dataObj;
 
                 try {
@@ -601,12 +634,12 @@ const TERM_SRC = `
                     function (r) {
                         t.main.addError(element, r);
                     });
-			},
+            },
 
             // Delete data in the datastore.
             //
             "delete" : function (element, data) {
-				"use strict";
+                "use strict";
                 var dataObj;
 
                 try {
@@ -623,12 +656,13 @@ const TERM_SRC = `
                     function (r) {
                         t.main.addError(element, r);
                     });
-			},
+            },
 
             // Get data in the datastore.
             //
             "get" : function (element, data) {
                 "use strict";
+
                 t.ajax(t.ajaxPrefix + "/v1/query/" + t.partition + "?q=get" + encodeURIComponent(data), "GET", undefined,
                     function (r) {
                         t.main.addTableOutput(element, r);
@@ -698,7 +732,7 @@ const TERM_SRC = `
 
                 t.main.addOutput(element, "Partition to query is: " + t.partition);
             }
-		};
+        };
     </script>
   </body>
 </html>
