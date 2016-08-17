@@ -464,7 +464,7 @@ writeEdge writes a given edge to the datastore. It is assumed that the caller
 holds the writer lock before calling the functions and that, after the function
 returns, the changes are flushed to the storage. The caller has also to ensure
 that the endpoints of the edge do exist. Returns the old edge if an
-update occured.
+update occurred.
 */
 func (gm *GraphManager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 	end1Tree *hash.HTree, end2Tree *hash.HTree) (data.Edge, error) {

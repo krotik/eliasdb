@@ -193,7 +193,7 @@ func TestMainErrorCases(t *testing.T) {
 
 	main()
 
-	// Check that an error happend
+	// Check that an error happened
 
 	if len(errorLog) != 1 || (errorLog[0] != "stat **"+string(0)+": invalid argument" &&
 		errorLog[0] != "Lstat **"+string(0)+": invalid argument") {
@@ -222,7 +222,7 @@ func TestMainErrorCases(t *testing.T) {
 
 	main()
 
-	// Check that an error happend
+	// Check that an error happened
 
 	if len(errorLog) != 2 ||
 		!strings.Contains(errorLog[0], "Could not create directory") ||
@@ -246,7 +246,7 @@ func TestMainErrorCases(t *testing.T) {
 
 	main()
 
-	// Check that an error happend
+	// Check that an error happened
 
 	if len(errorLog) != 1 ||
 		!strings.Contains(errorLog[0], "Failed to generate ssl key and certificate") {

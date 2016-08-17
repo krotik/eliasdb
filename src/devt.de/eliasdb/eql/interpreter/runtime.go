@@ -253,7 +253,7 @@ func (p *eqlRuntimeProvider) initWithFlags(withNode *parser.ASTNode,
 
 		case 2:
 
-			// Search for first kind / attribute occurence
+			// Search for first kind / attribute occurrence
 
 			kind := colDataSplit[0]
 			attr := colDataSplit[1]

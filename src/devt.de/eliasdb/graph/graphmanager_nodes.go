@@ -287,7 +287,7 @@ func (gm *GraphManager) storeOrUpdateNode(part string, node data.Node, onlyUpdat
 writeNode writes a given node in full or part to the datastore. It is assumed
 that the caller holds the writer lock before calling the functions and that,
 after the function returns, the changes are flushed to the storage. Returns
-the old node if an update occured. An attribute filter can be speified to skip
+the old node if an update occurred. An attribute filter can be speified to skip
 specific attributes.
 */
 func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *hash.HTree,

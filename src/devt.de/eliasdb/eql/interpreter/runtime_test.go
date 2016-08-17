@@ -459,7 +459,7 @@ get mynode
 		return
 	}
 
-	// Expected result explaination:
+	// Expected result explanation:
 	// Row 1 - Node 000 is alone so no traversals possible
 	// Row 2, 3, 4, 5 - there are two edges from 123 to 456 so possible traversals are doubled
 	//                  456 is also connected to 789 and 789-2
@@ -547,7 +547,7 @@ key as key3 FORMAT x`, rt)
 		return
 	}
 
-	// Expected result explaination:
+	// Expected result explanation:
 	// Row 1, 2, 3, 4 - there are two edges from 123 to 456 so possible traversals are doubled
 	//                  456 is also connected to 789 and 789-2
 	// Row 5 - Node 123 has also a direct connection to xxx

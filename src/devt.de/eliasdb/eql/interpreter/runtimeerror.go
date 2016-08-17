@@ -34,7 +34,7 @@ type RuntimeError struct {
 	Source string          // Name of the source which was given to the parser
 	Type   error           // Error type (to be used for equal checks)
 	Detail string          // Details of this error
-	Node   *parser.ASTNode // AST Node where the error occured
+	Node   *parser.ASTNode // AST Node where the error occurred
 	Line   int             // Line of the error
 	Pos    int             // Position of the error
 }
