@@ -335,7 +335,7 @@ func TestSimpleNodeUpdate(t *testing.T) {
 		return
 	}
 
-	fetchedNode, err = gm.FetchNode("main", "nodeToUpdate", "nodeupdatekind")
+	fetchedNode, _ = gm.FetchNode("main", "nodeToUpdate", "nodeupdatekind")
 
 	if len(fetchedNode.Data()) != len(node1.Data())+1 {
 		t.Error("Unexpected number of attributes")

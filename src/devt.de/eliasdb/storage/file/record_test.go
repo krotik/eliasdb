@@ -202,7 +202,7 @@ func TestMarshalBinary(t *testing.T) {
 
 	ior = new(bytes.Buffer)
 	ior.Write(data[1:5])
-	r3, err = ReadRecord(ior)
+	_, err = ReadRecord(ior)
 	if err == nil {
 		t.Error("ReadRecord should return an error when given invalid data")
 		return

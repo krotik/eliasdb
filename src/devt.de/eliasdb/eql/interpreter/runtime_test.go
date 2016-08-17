@@ -137,7 +137,7 @@ Data: 1:n:key, 2:n:key, 2:e:key, 2:e:name
 		return
 	}
 
-	res, err = ast.Runtime.Eval()
+	_, err = ast.Runtime.Eval()
 	if err.Error() != "EQL error in test: Unknown node kind (bla) (Line:1 Pos:38)" {
 		t.Error(err)
 		return

@@ -294,7 +294,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	ptr, err = psf.AllocatePage(view.TYPE_TRANSLATION_PAGE)
+	_, err = psf.AllocatePage(view.TYPE_TRANSLATION_PAGE)
 	if err != file.ErrAlreadyInUse {
 		t.Error(err)
 	}

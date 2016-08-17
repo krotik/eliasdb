@@ -146,7 +146,7 @@ func (t *TransactionManager) recover() error {
 	// Read and verify magic
 
 	magic := make([]byte, 2)
-	i, err := file.Read(magic)
+	i, _ := file.Read(magic)
 
 	if i != 2 || magic[0] != TRANSACTION_LOG_HEADER[0] ||
 		magic[1] != TRANSACTION_LOG_HEADER[1] {

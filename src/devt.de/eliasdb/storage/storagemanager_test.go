@@ -253,7 +253,7 @@ func runPerformanceTest(id string, sm StorageManager, ops int) {
 
 	go tc.clientFetch(id, "teststring", sm, ops, errorChan)
 
-	res = <-errorChan
+	<-errorChan
 
 	elapsed7 = time.Since(start).Nanoseconds() / (1000 * 1000)
 

@@ -40,7 +40,7 @@ func TestDirectoryExists(t *testing.T) {
 		return
 	}
 
-	res, err = PathExists("**" + string(0x0))
+	_, err = PathExists("**" + string(0x0))
 	if err == nil {
 		t.Error("Incorrect paths should throw an error")
 		return
@@ -73,7 +73,7 @@ func TestIsDir(t *testing.T) {
 		return
 	}
 
-	res, err = IsDir("**" + string(0x0))
+	_, err = IsDir("**" + string(0x0))
 	if err == nil {
 		t.Error("Incorrect paths should throw an error")
 		return

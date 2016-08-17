@@ -145,6 +145,7 @@ func TestMainNormalCase(t *testing.T) {
 	// Check the print log
 
 	if logString := strings.Join(printLog, "\n"); logString != `
+EliasDB 0.8
 Starting datastore in testdb/db
 Creating GraphManager instance
 Creating key (key.pem) and certificate (cert.pem) in: ssl

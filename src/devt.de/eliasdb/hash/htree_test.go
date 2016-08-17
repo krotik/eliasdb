@@ -66,7 +66,7 @@ func TestHTreeSerialization(t *testing.T) {
 
 	sm2 := storage.NewDiskStorageManager(DBDIR+"/test1", false, false, false)
 
-	htree2, err := LoadHTree(sm2, loc)
+	htree2, _ := LoadHTree(sm2, loc)
 
 	if res, err := htree2.Get([]byte("test")); res != "testvalue1" || err != nil {
 		t.Error("Unexpected result:", res, err)

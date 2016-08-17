@@ -1040,7 +1040,7 @@ func TestEdgeOperations(t *testing.T) {
 
 	sm.(*storage.MemoryStorageManager).AccessMap[loc] = storage.ACCESS_CACHE_AND_FETCH_ERROR
 
-	specs, err = gm.FetchNodeEdgeSpecs("main", node1.Key(), node1.Kind())
+	_, err = gm.FetchNodeEdgeSpecs("main", node1.Key(), node1.Kind())
 	if !strings.Contains(err.Error(), "Slot not found") {
 		t.Error("Unexpected error:", err)
 		return
