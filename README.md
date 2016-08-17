@@ -56,6 +56,18 @@ EliasDB uses a single configuration file called eliasdb.config.json. After start
 
 Note: It is not (and will never be) possible to access the REST API via HTTP.
 
+Building EliasDB
+----------------
+To build EliasDB from source you first have to checkout the source. Create a directory and change into it. Run then:
+```
+git clone https://github.com/krotik/eliasdb/ .
+```
+
+Assuming your GOPATH is set to the new directory you should be able to build the binary with:
+```
+go install devt.de/eliasdb
+```
+
 Further Reading
 ---------------
 - A design document which describes the different components of the graph database. [Link](/doc/elias_db_design.md)
