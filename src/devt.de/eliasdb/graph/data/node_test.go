@@ -38,9 +38,9 @@ func TestGraphNode(t *testing.T) {
 		return
 	}
 
-	gn.SetAttr(NODE_KEY, "123")
+	gn.SetAttr(NodeKey, "123")
 
-	if res := gn.Attr(NODE_KEY); res != "123" {
+	if res := gn.Attr(NodeKey); res != "123" {
 		t.Error("Unexpected key:", res)
 		return
 	}
@@ -50,9 +50,9 @@ func TestGraphNode(t *testing.T) {
 		return
 	}
 
-	gn.SetAttr(NODE_KIND, "mykind")
+	gn.SetAttr(NodeKind, "mykind")
 
-	if res := gn.Attr(NODE_KIND); res != "mykind" {
+	if res := gn.Attr(NodeKind); res != "mykind" {
 		t.Error("Unexpected kind:", res)
 		return
 	}
@@ -108,7 +108,7 @@ func TestGraphNode(t *testing.T) {
 		t.Error("Unexpected data reference")
 		return
 	}
-	
+
 	nnode := NewGraphNodeFromMap(gn.Data())
 	if nnode.Data()["key"] != gn.(*graphNode).data["key"] {
 		t.Error("Unexpected data reference")

@@ -9,6 +9,8 @@
  */
 
 /*
+Package paging contains functions and constants necessary for paging of records.
+
 PagedStorageFile is a wrapper object for a StorageFile which views the file
 records as a linked list of pages.
 
@@ -82,13 +84,13 @@ func (psf *PagedStorageFile) AllocatePage(pagetype int16) (uint64, error) {
 	var record *file.Record
 	var err error
 
-	if pagetype == view.TYPE_FREE_PAGE {
+	if pagetype == view.TypeFreePage {
 		return 0, ErrFreePage
 	}
 
 	// Check first the free list
 
-	ptr := psf.header.FirstListElement(view.TYPE_FREE_PAGE)
+	ptr := psf.header.FirstListElement(view.TypeFreePage)
 	isnew := ptr == 0
 
 	if !isnew {
@@ -107,13 +109,13 @@ func (psf *PagedStorageFile) AllocatePage(pagetype int16) (uint64, error) {
 
 		record, _ = psf.storagefile.Get(ptr)
 
-		psf.header.SetFirstListElement(view.TYPE_FREE_PAGE, nextptr)
+		psf.header.SetFirstListElement(view.TypeFreePage, nextptr)
 
 	} else {
 
 		// Need to create a new rcord
 
-		ptr = psf.header.LastListElement(view.TYPE_FREE_PAGE)
+		ptr = psf.header.LastListElement(view.TypeFreePage)
 		if ptr == 0 {
 			// If the file is new the first pointer is 1
 			ptr = 1
@@ -130,7 +132,7 @@ func (psf *PagedStorageFile) AllocatePage(pagetype int16) (uint64, error) {
 		// The last list element pointer is used to point to the next free record
 		// it is not actuallz the last element of the list.
 
-		psf.header.SetLastListElement(view.TYPE_FREE_PAGE, ptr+1)
+		psf.header.SetLastListElement(view.TypeFreePage, ptr+1)
 	}
 
 	// Set the view data on the record
@@ -203,7 +205,7 @@ func (psf *PagedStorageFile) FreePage(id uint64) error {
 	pageview := view.GetPageView(record)
 	pagetype := pageview.Type()
 
-	if pagetype == view.TYPE_FREE_PAGE {
+	if pagetype == view.TypeFreePage {
 		psf.storagefile.ReleaseInUse(record)
 		return ErrFreePage
 	}
@@ -212,10 +214,10 @@ func (psf *PagedStorageFile) FreePage(id uint64) error {
 	next := pageview.NextPage()
 
 	// Put the page to the front of the free list
-	pageview.SetType(view.TYPE_FREE_PAGE)
-	pageview.SetNextPage(psf.header.FirstListElement(view.TYPE_FREE_PAGE))
+	pageview.SetType(view.TypeFreePage)
+	pageview.SetNextPage(psf.header.FirstListElement(view.TypeFreePage))
 	pageview.SetPrevPage(0)
-	psf.header.SetFirstListElement(view.TYPE_FREE_PAGE, id)
+	psf.header.SetFirstListElement(view.TypeFreePage, id)
 
 	// NOTE The prev pointers will always point to 0 for records in the
 	// free list. There is no need to update them.
@@ -322,7 +324,7 @@ func (psf *PagedStorageFile) Flush() error {
 }
 
 /*
-Discard all changes which were done after the last flush.
+Rollback discards all changes which were done after the last flush.
 The PageStorageFile object should be discarded if something
 goes wrong during a rollback operation.
 */

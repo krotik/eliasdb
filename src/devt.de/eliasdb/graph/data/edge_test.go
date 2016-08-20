@@ -18,18 +18,18 @@ import (
 func TestGraphEdge(t *testing.T) {
 	ge := NewGraphEdge()
 
-	ge.SetAttr(NODE_KEY, "123")
-	ge.SetAttr(NODE_KIND, "myedgekind")
+	ge.SetAttr(NodeKey, "123")
+	ge.SetAttr(NodeKind, "myedgekind")
 
-	ge.SetAttr(EDGE_END1_KEY, "456")
-	ge.SetAttr(EDGE_END1_KIND, "mynodekind1")
-	ge.SetAttr(EDGE_END1_ROLE, "role1")
-	ge.SetAttr(EDGE_END1_CASCADING, true)
+	ge.SetAttr(EdgeEnd1Key, "456")
+	ge.SetAttr(EdgeEnd1Kind, "mynodekind1")
+	ge.SetAttr(EdgeEnd1Role, "role1")
+	ge.SetAttr(EdgeEnd1Cascading, true)
 
-	ge.SetAttr(EDGE_END2_KEY, "789")
-	ge.SetAttr(EDGE_END2_KIND, "mynodekind2")
-	ge.SetAttr(EDGE_END2_ROLE, "role2")
-	ge.SetAttr(EDGE_END2_CASCADING, false)
+	ge.SetAttr(EdgeEnd2Key, "789")
+	ge.SetAttr(EdgeEnd2Kind, "mynodekind2")
+	ge.SetAttr(EdgeEnd2Role, "role2")
+	ge.SetAttr(EdgeEnd2Cascading, false)
 
 	ge.SetAttr("name", "test")
 

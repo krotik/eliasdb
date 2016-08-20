@@ -9,6 +9,8 @@
  */
 
 /*
+Package parser contains the EQL parser.
+
 Runtime provides the runtime component for a specific node in the AST.
 */
 package parser

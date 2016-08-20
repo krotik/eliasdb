@@ -50,15 +50,15 @@ func TestNodeKeyIterator(t *testing.T) {
 	edge.SetAttr("key", "abc")
 	edge.SetAttr("kind", "myedge")
 
-	edge.SetAttr(data.EDGE_END1_KEY, node1.Key())
-	edge.SetAttr(data.EDGE_END1_KIND, node1.Kind())
-	edge.SetAttr(data.EDGE_END1_ROLE, "node1")
-	edge.SetAttr(data.EDGE_END1_CASCADING, true)
+	edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+	edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+	edge.SetAttr(data.EdgeEnd1Role, "node1")
+	edge.SetAttr(data.EdgeEnd1Cascading, true)
 
-	edge.SetAttr(data.EDGE_END2_KEY, node2.Key())
-	edge.SetAttr(data.EDGE_END2_KIND, node2.Kind())
-	edge.SetAttr(data.EDGE_END2_ROLE, "node2")
-	edge.SetAttr(data.EDGE_END2_CASCADING, false)
+	edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+	edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+	edge.SetAttr(data.EdgeEnd2Role, "node2")
+	edge.SetAttr(data.EdgeEnd2Cascading, false)
 
 	gm.StoreEdge("main", edge)
 
@@ -68,13 +68,13 @@ func TestNodeKeyIterator(t *testing.T) {
 		return
 	}
 
-	expected_keys := []string{"123", "789"}
+	expectedKeys := []string{"123", "789"}
 
 	i := 0
 	for ni.HasNext() {
 		key := ni.Next()
-		if key != expected_keys[i] {
-			t.Error("Unexpected key:", key, "expected", expected_keys[i])
+		if key != expectedKeys[i] {
+			t.Error("Unexpected key:", key, "expected", expectedKeys[i])
 			return
 		}
 
@@ -91,12 +91,12 @@ func TestNodeKeyIterator(t *testing.T) {
 		return
 	}
 
-	msm := mgs.StorageManager("main"+"mykind"+STORAGE_SUFFIX_NODES, false)
+	msm := mgs.StorageManager("main"+"mykind"+StorageSuffixNodes, false)
 
 	tree, _, _ := gm.getNodeStorageHTree("main", "mykind", false)
-	_, loc, _ := tree.GetValueAndLocation([]byte(PREFIX_NS_ATTRS + "123"))
+	_, loc, _ := tree.GetValueAndLocation([]byte(PrefixNSAttrs + "123"))
 
-	msm.(*storage.MemoryStorageManager).AccessMap[loc] = storage.ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR
+	msm.(*storage.MemoryStorageManager).AccessMap[loc] = storage.AccessCacheAndFetchSeriousError
 
 	ni.Next()
 	if ni.LastError == nil {
@@ -106,7 +106,7 @@ func TestNodeKeyIterator(t *testing.T) {
 
 	delete(msm.(*storage.MemoryStorageManager).AccessMap, loc)
 
-	msm.(*storage.MemoryStorageManager).AccessMap[1] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.(*storage.MemoryStorageManager).AccessMap[1] = storage.AccessCacheAndFetchError
 
 	ni, err = gm.NodeKeyIterator("main", "mykind")
 	if ni != nil || err == nil {
@@ -116,7 +116,7 @@ func TestNodeKeyIterator(t *testing.T) {
 
 	delete(msm.(*storage.MemoryStorageManager).AccessMap, 1)
 
-	msm.(*storage.MemoryStorageManager).AccessMap[loc] = storage.ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR
+	msm.(*storage.MemoryStorageManager).AccessMap[loc] = storage.AccessCacheAndFetchSeriousError
 
 	ni, err = gm.NodeKeyIterator("main", "mykind")
 	if ni != nil || err == nil {

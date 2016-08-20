@@ -25,7 +25,7 @@ func TestFreePhysicalSlotPage(t *testing.T) {
 
 	// Make sure the record has a correct magic
 
-	view.NewPageView(r, view.TYPE_FREE_PHYSICAL_SLOT_PAGE)
+	view.NewPageView(r, view.TypeFreePhysicalSlotPage)
 
 	fpsp := NewFreePhysicalSlotPage(r)
 
@@ -36,10 +36,10 @@ func TestFreePhysicalSlotPage(t *testing.T) {
 		return
 	}
 
-	slotinfoId := fpsp.FirstFreeSlotInfo()
+	slotinfoID := fpsp.FirstFreeSlotInfo()
 
-	if slotinfoId != 0 {
-		t.Error("Unexpected first free slot:", slotinfoId)
+	if slotinfoID != 0 {
+		t.Error("Unexpected first free slot:", slotinfoID)
 		return
 	}
 
@@ -119,7 +119,7 @@ func TestFreePhysicalSlotPage(t *testing.T) {
 func TestFreePhysicalSlotPageAllocation(t *testing.T) {
 	r := file.NewRecord(123, make([]byte, 4096))
 
-	view.NewPageView(r, view.TYPE_FREE_PHYSICAL_SLOT_PAGE)
+	view.NewPageView(r, view.TypeFreePhysicalSlotPage)
 
 	fpsp := NewFreePhysicalSlotPage(r)
 

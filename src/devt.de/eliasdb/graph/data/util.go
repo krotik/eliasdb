@@ -8,12 +8,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/*
+Package data contains classes and functions to handle graph data.
+*/
 package data
 
 import "devt.de/common/datautil"
 
 /*
-Function to compare node attributes.
+NodeCompare compares node attributes.
 */
 func NodeCompare(node1 Node, node2 Node, attrs []string) bool {
 
@@ -24,7 +27,7 @@ func NodeCompare(node1 Node, node2 Node, attrs []string) bool {
 
 		attrs = make([]string, 0, len(node1.Data()))
 
-		for attr, _ := range node1.Data() {
+		for attr := range node1.Data() {
 			attrs = append(attrs, attr)
 		}
 	}
@@ -39,7 +42,7 @@ func NodeCompare(node1 Node, node2 Node, attrs []string) bool {
 }
 
 /*
-Function to clone a node.
+NodeClone clones a node.
 */
 func NodeClone(node Node) Node {
 	var data map[string]interface{}
@@ -48,7 +51,8 @@ func NodeClone(node Node) Node {
 }
 
 /*
-Merges two nodes together in a third node. The node values are copied by reference.
+NodeMerge merges two nodes together in a third node. The node values are copied
+by reference.
 */
 func NodeMerge(node1 Node, node2 Node) Node {
 	data := make(map[string]interface{})

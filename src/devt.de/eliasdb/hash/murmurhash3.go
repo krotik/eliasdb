@@ -8,16 +8,16 @@
  */
 
 /*
+Package hash provides a HTree implementation to provide key-value storage functionality
+for a StorageManager.
+
 Implementation of Austin Appleby's MurmurHash3 (32bit)
 
 Reference implementation: http://code.google.com/p/smhasher/wiki/MurmurHash3
 */
 package hash
 
-import (
-	"errors"
-	"fmt"
-)
+import "fmt"
 
 const (
 	c1 uint32 = 0xcc9e2d51
@@ -32,8 +32,8 @@ func MurMurHashData(data []byte, offset int, size int, seed int) (uint32, error)
 	// Check parameters
 
 	if offset < 0 || size < 0 {
-		return 0, errors.New(fmt.Sprintf(
-			"Invalid data boundaries; offset: %v; size: %v", offset, size))
+		return 0, fmt.Errorf("Invalid data boundaries; offset: %v; size: %v",
+			offset, size)
 	}
 
 	h1 := uint32(seed)
@@ -43,13 +43,13 @@ func MurMurHashData(data []byte, offset int, size int, seed int) (uint32, error)
 	// Check length of available data
 
 	if len(data) <= end {
-		return 0, errors.New(fmt.Sprintf(
-			"Data out of bounds; set boundary: %v; data length: %v", end, len(data)))
+		return 0, fmt.Errorf("Data out of bounds; set boundary: %v; data length: %v",
+			end, len(data))
 	}
 
 	for i := offset; i < end; i += 4 {
 
-		var k1 uint32 = uint32(data[i])
+		var k1 = uint32(data[i])
 		k1 |= uint32(data[i+1]) << 8
 		k1 |= uint32(data[i+2]) << 16
 		k1 |= uint32(data[i+3]) << 24
@@ -63,8 +63,9 @@ func MurMurHashData(data []byte, offset int, size int, seed int) (uint32, error)
 		h1 = h1*5 + 0xe6546b64
 	}
 
-	// tail
-	var k1 uint32 = 0
+	// Tail
+
+	var k1 uint32
 
 	switch size & 3 {
 	case 3:

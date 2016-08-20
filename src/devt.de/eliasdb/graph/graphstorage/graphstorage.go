@@ -9,12 +9,15 @@
  */
 
 /*
-A graph storage provides the storage mechanism for the graph manager.
+Package graphstorage contains classes which model storage objects for graph data.
 */
 package graphstorage
 
 import "devt.de/eliasdb/storage"
 
+/*
+GraphStorage interface models the storage mechanism for the graph manager.
+*/
 type GraphStorage interface {
 
 	/*
@@ -42,7 +45,7 @@ type GraphStorage interface {
 	   StorageManager gets a storage manager with a certain name. A non-existing
 	   StorageManager is not created automatically if the create flag is set to false.
 	*/
-	StorageManager(smname string, create bool) storage.StorageManager
+	StorageManager(smname string, create bool) storage.Manager
 
 	/*
 		Close closes the storage.

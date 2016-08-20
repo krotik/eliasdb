@@ -9,10 +9,15 @@
  */
 
 /*
+Package graph contains the main API to the graph datastore.
+
 IndexQuery provides access to the full text search index.
 */
 package graph
 
+/*
+IndexQuery models the interface to the full text search index.
+*/
 type IndexQuery interface {
 
 	/*

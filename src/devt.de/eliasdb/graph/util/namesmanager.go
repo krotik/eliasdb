@@ -9,6 +9,8 @@
  */
 
 /*
+Package util contains utility classes for the graph storage.
+
 Name manager managing names of kinds, roles and attributes. Each stored name
 gets either a 16 or 32 bit (little endian) number assigned. The manager provides functions to lookup
 these names or their numbers.
@@ -18,29 +20,29 @@ package util
 import "encoding/binary"
 
 /*
-Prefix for entries storing codes
+PrefixCode is the prefix for entries storing codes
 */
-const PREFIX_CODE = string(0x0)
+const PrefixCode = string(0x0)
 
 /*
-Prefix for entries storing names
+PrefixName is the prefix for entries storing names
 */
-const PREFIX_NAME = string(0x1)
+const PrefixName = string(0x1)
 
 /*
-Prefix for counter entries
+PrefixCounter is the prefix for counter entries
 */
-const PREFIX_COUNTER = string(0x0)
+const PrefixCounter = string(0x0)
 
 /*
-Prefix for 16 bit kind related entries
+Prefix16Bit is the prefix for 16 bit kind related entries
 */
-const PREFIX_16_BIT = string(0x1)
+const Prefix16Bit = string(0x1)
 
 /*
-Prefix for attribute related entries
+Prefix32Bit is the prefix for attribute related entries
 */
-const PREFIX_32_BIT = string(0x2)
+const Prefix32Bit = string(0x2)
 
 /*
 NamesManager data structure
@@ -61,14 +63,14 @@ Encode32 encodes a given value as a 32 bit string. If the create flag
 is set to false then a new entry will not be created if it does not exist.
 */
 func (gs *NamesManager) Encode32(val string, create bool) string {
-	return gs.encode(PREFIX_32_BIT, val, create)
+	return gs.encode(Prefix32Bit, val, create)
 }
 
 /*
 Decode32 decodes a given 32 bit string to a value.
 */
 func (gs *NamesManager) Decode32(val string) string {
-	return gs.decode(PREFIX_32_BIT, val)
+	return gs.decode(Prefix32Bit, val)
 }
 
 /*
@@ -76,28 +78,28 @@ Encode16 encodes a given value as a 16 bit string. If the create flag
 is set to false then a new entry will not be created if it does not exist.
 */
 func (gs *NamesManager) Encode16(val string, create bool) string {
-	return gs.encode(PREFIX_16_BIT, val, create)
+	return gs.encode(Prefix16Bit, val, create)
 }
 
 /*
 Decode16 decodes a given 16 bit string to a value.
 */
 func (gs *NamesManager) Decode16(val string) string {
-	return gs.decode(PREFIX_16_BIT, val)
+	return gs.decode(Prefix16Bit, val)
 }
 
 /*
 encode encodes a name to a code.
 */
 func (gs *NamesManager) encode(prefix string, name string, create bool) string {
-	codekey := string(PREFIX_CODE) + prefix + name
+	codekey := string(PrefixCode) + prefix + name
 
 	code, ok := gs.nameDB[codekey]
 
 	// If the code doesn't exist yet create it
 
 	if !ok && create {
-		if prefix == PREFIX_16_BIT {
+		if prefix == Prefix16Bit {
 			code = gs.newCode16()
 
 		} else {
@@ -105,7 +107,7 @@ func (gs *NamesManager) encode(prefix string, name string, create bool) string {
 		}
 
 		gs.nameDB[codekey] = code
-		namekey := string(PREFIX_NAME) + prefix + code
+		namekey := string(PrefixName) + prefix + code
 		gs.nameDB[namekey] = name
 	}
 
@@ -116,7 +118,7 @@ func (gs *NamesManager) encode(prefix string, name string, create bool) string {
 decode decodes a name from a code.
 */
 func (gs *NamesManager) decode(prefix string, code string) string {
-	namekey := string(PREFIX_NAME) + prefix + code
+	namekey := string(PrefixName) + prefix + code
 
 	return gs.nameDB[namekey]
 }
@@ -129,7 +131,7 @@ func (gs *NamesManager) newCode32() (res string) {
 
 	// Calculate count entry
 
-	countAttr := string(PREFIX_COUNTER) + PREFIX_32_BIT
+	countAttr := string(PrefixCounter) + Prefix32Bit
 
 	// Calculate new code
 
@@ -162,7 +164,7 @@ func (gs *NamesManager) newCode16() (res string) {
 
 	// Calculate count entry
 
-	countAttr := string(PREFIX_COUNTER) + PREFIX_16_BIT
+	countAttr := string(PrefixCounter) + Prefix16Bit
 
 	// Calculate new code
 

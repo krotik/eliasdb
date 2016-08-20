@@ -9,6 +9,8 @@
  */
 
 /*
+Package graph contains the main API to the graph datastore.
+
 A transaction is used to build up multiple store and delete tasks for the
 graph database. Nothing is written to the database before calling commit().
 A transaction commit does an automatic rollback if an error occurs
@@ -25,11 +27,11 @@ import (
 )
 
 /*
-GraphTrans data structure
+Trans data structure
 */
-type GraphTrans struct {
-	gm       *GraphManager // Graph manager which created this transaction
-	subtrans bool          // Flag if the transaction is a subtransaction
+type Trans struct {
+	gm       *Manager // Graph manager which created this transaction
+	subtrans bool     // Flag if the transaction is a subtransaction
 
 	storeNodes  map[string]data.Node // Nodes which should be stored
 	removeNodes map[string]data.Node // Nodes which should be removed
@@ -38,27 +40,27 @@ type GraphTrans struct {
 }
 
 /*
-Create a new graph transaction.
+NewGraphTrans creates a new graph transaction.
 */
-func NewGraphTrans(gm *GraphManager) *GraphTrans {
-	return &GraphTrans{gm, false, make(map[string]data.Node), make(map[string]data.Node),
+func NewGraphTrans(gm *Manager) *Trans {
+	return &Trans{gm, false, make(map[string]data.Node), make(map[string]data.Node),
 		make(map[string]data.Edge), make(map[string]data.Edge)}
 }
 
 /*
 IsEmpty returns if this transaction is empty.
 */
-func (gt *GraphTrans) IsEmpty() bool {
+func (gt *Trans) IsEmpty() bool {
 	return len(gt.storeNodes) == 0 && len(gt.removeNodes) == 0 &&
 		len(gt.storeEdges) == 0 && len(gt.removeEdges) == 0
 }
 
 /*
-Write the transaction to the graph database. An automatic rollback is done if
+Commit writes the transaction to the graph database. An automatic rollback is done if
 any non-fatal error occurs. Failed transactions cannot be committed again.
 Serious write errors which may corrupt the database will cause a panic.
 */
-func (gt *GraphTrans) Commit() error {
+func (gt *Trans) Commit() error {
 
 	// Take writer lock if we are not in a subtransaction
 
@@ -82,7 +84,7 @@ func (gt *GraphTrans) Commit() error {
 
 		// Rollback node storages
 
-		for kkey, _ := range nodePartsAndKinds {
+		for kkey := range nodePartsAndKinds {
 			partAndKind := strings.Split(kkey, "#")
 
 			gt.gm.rollbackNodeIndex(partAndKind[0], partAndKind[1])
@@ -95,7 +97,7 @@ func (gt *GraphTrans) Commit() error {
 		// Rollback edge storages
 
 		if edgePartsAndKinds != nil {
-			for kkey, _ := range edgePartsAndKinds {
+			for kkey := range edgePartsAndKinds {
 				partAndKind := strings.Split(kkey, "#")
 
 				gt.gm.rollbackEdgeIndex(partAndKind[0], partAndKind[1])
@@ -140,7 +142,7 @@ func (gt *GraphTrans) Commit() error {
 
 	panicIfError(gt.gm.gs.FlushMain())
 
-	for kkey, _ := range nodePartsAndKinds {
+	for kkey := range nodePartsAndKinds {
 
 		partAndKind := strings.Split(kkey, "#")
 
@@ -148,7 +150,7 @@ func (gt *GraphTrans) Commit() error {
 		panicIfError(gt.gm.flushNodeStorage(partAndKind[0], partAndKind[1]))
 	}
 
-	for kkey, _ := range edgePartsAndKinds {
+	for kkey := range edgePartsAndKinds {
 
 		partAndKind := strings.Split(kkey, "#")
 
@@ -162,7 +164,7 @@ func (gt *GraphTrans) Commit() error {
 /*
 commitNodes tries to commit all transaction nodes.
 */
-func (gt *GraphTrans) commitNodes(nodePartsAndKinds map[string]string, edgePartsAndKinds map[string]string) error {
+func (gt *Trans) commitNodes(nodePartsAndKinds map[string]string, edgePartsAndKinds map[string]string) error {
 
 	// First insert nodes
 
@@ -199,8 +201,8 @@ func (gt *GraphTrans) commitNodes(nodePartsAndKinds map[string]string, edgeParts
 		// to the index.
 
 		if oldnode == nil {
-			current_count := gt.gm.NodeCount(node.Kind())
-			gt.gm.writeNodeCount(node.Kind(), current_count+1, false)
+			currentCount := gt.gm.NodeCount(node.Kind())
+			gt.gm.writeNodeCount(node.Kind(), currentCount+1, false)
 
 			if iht != nil {
 				err := util.NewIndexManager(iht).Index(node.Key(), node.IndexMap())
@@ -231,9 +233,9 @@ func (gt *GraphTrans) commitNodes(nodePartsAndKinds map[string]string, edgeParts
 
 		var event int
 		if oldnode == nil {
-			event = EVENT_NODE_CREATED
+			event = EventNodeCreated
 		} else {
-			event = EVENT_NODE_UPDATED
+			event = EventNodeUpdated
 		}
 
 		if err := gt.gm.gr.graphEvent(gt, event, part, node, oldnode); err != nil {
@@ -287,12 +289,12 @@ func (gt *GraphTrans) commitNodes(nodePartsAndKinds map[string]string, edgeParts
 
 			// Decrease the node count
 
-			current_count := gt.gm.NodeCount(node.Kind())
-			gt.gm.writeNodeCount(node.Kind(), current_count-1, false)
+			currentCount := gt.gm.NodeCount(node.Kind())
+			gt.gm.writeNodeCount(node.Kind(), currentCount-1, false)
 
 			// Execute rules
 
-			if err := gt.gm.gr.graphEvent(gt, EVENT_NODE_DELETED, part, oldnode); err != nil {
+			if err := gt.gm.gr.graphEvent(gt, EventNodeDeleted, part, oldnode); err != nil {
 				return err
 			}
 		}
@@ -306,7 +308,7 @@ func (gt *GraphTrans) commitNodes(nodePartsAndKinds map[string]string, edgeParts
 /*
 commitEdges tries to commit all transaction edges.
 */
-func (gt *GraphTrans) commitEdges(nodePartsAndKinds map[string]string, edgePartsAndKinds map[string]string) error {
+func (gt *Trans) commitEdges(nodePartsAndKinds map[string]string, edgePartsAndKinds map[string]string) error {
 
 	// First insert edges
 
@@ -342,12 +344,15 @@ func (gt *GraphTrans) commitEdges(nodePartsAndKinds map[string]string, edgeParts
 		if err != nil {
 			return err
 		} else if end1ht == nil {
-			return &util.GraphError{util.ErrInvalidData,
-				"Can't store edge to non-existend node kind: " + edge.End1Kind()}
-		} else if end1, err := end1nodeht.Get([]byte(PREFIX_NS_ATTRS + edge.End1Key())); err != nil || end1 == nil {
-			return &util.GraphError{util.ErrInvalidData,
-				fmt.Sprintf("Can't find edge endpoint: %s (%s)",
-					edge.End1Key(), edge.End1Kind())}
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: fmt.Sprintf("Can't store edge to non-existend node kind: %v", edge.End1Kind()),
+			}
+		} else if end1, err := end1nodeht.Get([]byte(PrefixNSAttrs + edge.End1Key())); err != nil || end1 == nil {
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: fmt.Sprintf("Can't find edge endpoint: %s (%s)", edge.End1Key(), edge.End1Kind()),
+			}
 		}
 
 		end2nodeht, end2ht, err := gt.gm.getNodeStorageHTree(part, edge.End2Kind(), false)
@@ -355,12 +360,14 @@ func (gt *GraphTrans) commitEdges(nodePartsAndKinds map[string]string, edgeParts
 		if err != nil {
 			return err
 		} else if end2ht == nil {
-			return &util.GraphError{util.ErrInvalidData,
-				"Can't store edge to non-existend node kind: " + edge.End2Kind()}
-		} else if end2, err := end2nodeht.Get([]byte(PREFIX_NS_ATTRS + edge.End2Key())); err != nil || end2 == nil {
-			return &util.GraphError{util.ErrInvalidData,
-				fmt.Sprintf("Can't find edge endpoint: %s (%s)",
-					edge.End2Key(), edge.End2Kind())}
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: "Can't store edge to non-existend node kind: " + edge.End2Kind()}
+		} else if end2, err := end2nodeht.Get([]byte(PrefixNSAttrs + edge.End2Key())); err != nil || end2 == nil {
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: fmt.Sprintf("Can't find edge endpoint: %s (%s)", edge.End2Key(), edge.End2Kind()),
+			}
 		}
 
 		// Write edge to the datastore
@@ -377,8 +384,8 @@ func (gt *GraphTrans) commitEdges(nodePartsAndKinds map[string]string, edgeParts
 
 			// Increase edge count
 
-			current_count := gt.gm.EdgeCount(edge.Kind())
-			gt.gm.writeEdgeCount(edge.Kind(), current_count+1, false)
+			currentCount := gt.gm.EdgeCount(edge.Kind())
+			gt.gm.writeEdgeCount(edge.Kind(), currentCount+1, false)
 
 			// Write edge data to the index
 
@@ -411,9 +418,9 @@ func (gt *GraphTrans) commitEdges(nodePartsAndKinds map[string]string, edgeParts
 
 		var event int
 		if oldedge == nil {
-			event = EVENT_EDGE_CREATED
+			event = EventEdgeCreated
 		} else {
-			event = EVENT_EDGE_UPDATED
+			event = EventEdgeUpdated
 		}
 
 		if err := gt.gm.gr.graphEvent(gt, event, part, edge, oldedge); err != nil {
@@ -487,12 +494,12 @@ func (gt *GraphTrans) commitEdges(nodePartsAndKinds map[string]string, edgeParts
 
 			// Decrease edge count
 
-			current_count := gt.gm.EdgeCount(oldedge.Kind())
-			gt.gm.writeEdgeCount(oldedge.Kind(), current_count-1, false)
+			currentCount := gt.gm.EdgeCount(oldedge.Kind())
+			gt.gm.writeEdgeCount(oldedge.Kind(), currentCount-1, false)
 
 			// Execute rules
 
-			if err := gt.gm.gr.graphEvent(gt, EVENT_EDGE_DELETED, part, oldedge); err != nil {
+			if err := gt.gm.gr.graphEvent(gt, EventEdgeDeleted, part, oldedge); err != nil {
 				return err
 			}
 		}
@@ -507,7 +514,7 @@ func (gt *GraphTrans) commitEdges(nodePartsAndKinds map[string]string, edgeParts
 StoreNode stores a single node in a partition of the graph. This function will
 overwrites any existing node.
 */
-func (gt *GraphTrans) StoreNode(part string, node data.Node) error {
+func (gt *Trans) StoreNode(part string, node data.Node) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	} else if err := gt.gm.checkNode(node); err != nil {
@@ -529,7 +536,7 @@ func (gt *GraphTrans) StoreNode(part string, node data.Node) error {
 UpdateNode updates a single node in a partition of the graph. This function will
 only update the given values of the node.
 */
-func (gt *GraphTrans) UpdateNode(part string, node data.Node) error {
+func (gt *Trans) UpdateNode(part string, node data.Node) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	} else if err := gt.gm.checkNode(node); err != nil {
@@ -562,7 +569,7 @@ func (gt *GraphTrans) UpdateNode(part string, node data.Node) error {
 /*
 RemoveNode removes a single node from a partition of the graph.
 */
-func (gt *GraphTrans) RemoveNode(part string, nkey string, nkind string) error {
+func (gt *Trans) RemoveNode(part string, nkey string, nkind string) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	}
@@ -574,8 +581,8 @@ func (gt *GraphTrans) RemoveNode(part string, nkey string, nkind string) error {
 	}
 
 	node := data.NewGraphNode()
-	node.SetAttr(data.NODE_KEY, nkey)
-	node.SetAttr(data.NODE_KIND, nkind)
+	node.SetAttr(data.NodeKey, nkey)
+	node.SetAttr(data.NodeKind, nkind)
 
 	gt.removeNodes[key] = node
 
@@ -586,7 +593,7 @@ func (gt *GraphTrans) RemoveNode(part string, nkey string, nkind string) error {
 StoreEdge stores a single edge in a partition of the graph. This function will
 overwrites any existing edge.
 */
-func (gt *GraphTrans) StoreEdge(part string, edge data.Edge) error {
+func (gt *Trans) StoreEdge(part string, edge data.Edge) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	} else if err := gt.gm.checkEdge(edge); err != nil {
@@ -605,9 +612,9 @@ func (gt *GraphTrans) StoreEdge(part string, edge data.Edge) error {
 }
 
 /*
-RemoveNode removes a single node from a partition of the graph.
+RemoveEdge removes a single edge from a partition of the graph.
 */
-func (gt *GraphTrans) RemoveEdge(part string, ekey string, ekind string) error {
+func (gt *Trans) RemoveEdge(part string, ekey string, ekind string) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	}
@@ -619,8 +626,8 @@ func (gt *GraphTrans) RemoveEdge(part string, ekey string, ekind string) error {
 	}
 
 	edge := data.NewGraphEdge()
-	edge.SetAttr(data.NODE_KEY, ekey)
-	edge.SetAttr(data.NODE_KIND, ekind)
+	edge.SetAttr(data.NodeKey, ekey)
+	edge.SetAttr(data.NodeKind, ekind)
 
 	gt.removeEdges[key] = edge
 
@@ -630,6 +637,6 @@ func (gt *GraphTrans) RemoveEdge(part string, ekey string, ekind string) error {
 /*
 Create a key for the transaction storage.
 */
-func (gt *GraphTrans) createKey(part string, key string, kind string) string {
+func (gt *Trans) createKey(part string, key string, kind string) string {
 	return part + "#" + kind + "#" + key
 }

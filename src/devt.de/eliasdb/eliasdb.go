@@ -40,14 +40,13 @@ import (
 // ================
 
 /*
-Config file which should be used to configure EliasDB
+ConfigFile is the config file which will be used to configure EliasDB
 */
 var ConfigFile = "eliasdb.config.json"
 
 /*
-Defaut configuration
+Known configuration options for EliasDB
 */
-
 const (
 	MemoryOnlyStorage        = "MemoryOnlyStorage"
 	LocationDatastore        = "LocationDatastore"
@@ -64,6 +63,9 @@ const (
 	ResultCacheMaxAgeSeconds = "ResultCacheMaxAgeSeconds"
 )
 
+/*
+DefaultConfig is the defaut configuration
+*/
 var DefaultConfig = map[string]interface{}{
 	MemoryOnlyStorage:        false,
 	EnableWebFolder:          true,
@@ -81,7 +83,7 @@ var DefaultConfig = map[string]interface{}{
 }
 
 /*
-Actual config which is used
+Config is the actual configuration data which is used
 */
 var Config map[string]interface{}
 
@@ -163,9 +165,9 @@ func main() {
 
 	// Setting other API parameters
 
-	api.API_HOST = config(HTTPSHost) + ":" + config(HTTPSPort)
-	v1.RESULTCACHE_MAXSIZE, _ = strconv.ParseUint(config(ResultCacheMaxSize), 10, 0)
-	v1.RESULTCACHE_MAXAGE, _ = strconv.ParseInt(config(ResultCacheMaxAgeSeconds), 10, 0)
+	api.APIHost = config(HTTPSHost) + ":" + config(HTTPSPort)
+	v1.ResultCacheMaxSize, _ = strconv.ParseUint(config(ResultCacheMaxSize), 10, 0)
+	v1.ResultCacheMaxAge, _ = strconv.ParseInt(config(ResultCacheMaxAgeSeconds), 10, 0)
 
 	// Check if HTTPS key and certificate are in place
 
@@ -198,7 +200,7 @@ func main() {
 	// Register REST endpoints for version 1
 
 	api.RegisterRestEndpoints(v1.V1EndpointMap)
-	api.RegisterRestEndpoints(api.AboutEndpointMap)
+	api.RegisterRestEndpoints(api.GeneralEndpointMap)
 
 	// Register normal web server
 
@@ -219,13 +221,13 @@ func main() {
 
 		if Config[EnableWebTerminal].(bool) {
 
-			ensurePath(path.Join(webFolder, api.API_ROOT))
+			ensurePath(path.Join(webFolder, api.APIRoot))
 
-			termFile := path.Join(webFolder, api.API_ROOT, "term.html")
+			termFile := path.Join(webFolder, api.APIRoot, "term.html")
 
 			print("Ensuring web termminal: ", termFile)
 
-			ioutil.WriteFile(termFile, []byte(TERM_SRC[1:]), 0644)
+			ioutil.WriteFile(termFile, []byte(TermSRC[1:]), 0644)
 		}
 	}
 
@@ -238,7 +240,7 @@ func main() {
 
 	port := config(HTTPSPort)
 
-	print("Starting server on: ", api.API_HOST)
+	print("Starting server on: ", api.APIHost)
 
 	go hs.RunHTTPSServer(basepath+config(LocationHTTPS), config(HTTPSCertificate),
 		config(HTTPSKey), ":"+port, &wg)
@@ -254,60 +256,59 @@ func main() {
 		fatal(hs.LastError)
 		return
 
-	} else {
+	}
 
-		// Read server certificate and write a fingerprint file
+	// Read server certificate and write a fingerprint file
 
-		fpfile := basepath + config(LocationWebFolder) + "/fingerprint.json"
+	fpfile := basepath + config(LocationWebFolder) + "/fingerprint.json"
 
-		print("Writing fingerprint file: ", fpfile)
+	print("Writing fingerprint file: ", fpfile)
 
-		certs, _ := cryptutil.ReadX509CertsFromFile(certPath)
+	certs, _ := cryptutil.ReadX509CertsFromFile(certPath)
 
-		if len(certs) > 0 {
-			buf := bytes.Buffer{}
+	if len(certs) > 0 {
+		buf := bytes.Buffer{}
 
-			buf.WriteString("{\n")
-			buf.WriteString(fmt.Sprintf(`  "md5"    : "%s",`, cryptutil.Md5CertFingerprint(certs[0])))
-			buf.WriteString("\n")
-			buf.WriteString(fmt.Sprintf(`  "sha1"   : "%s",`, cryptutil.Sha1CertFingerprint(certs[0])))
-			buf.WriteString("\n")
-			buf.WriteString(fmt.Sprintf(`  "sha256" : "%s"`, cryptutil.Sha256CertFingerprint(certs[0])))
-			buf.WriteString("\n")
-			buf.WriteString("}\n")
+		buf.WriteString("{\n")
+		buf.WriteString(fmt.Sprintf(`  "md5"    : "%s",`, cryptutil.Md5CertFingerprint(certs[0])))
+		buf.WriteString("\n")
+		buf.WriteString(fmt.Sprintf(`  "sha1"   : "%s",`, cryptutil.Sha1CertFingerprint(certs[0])))
+		buf.WriteString("\n")
+		buf.WriteString(fmt.Sprintf(`  "sha256" : "%s"`, cryptutil.Sha256CertFingerprint(certs[0])))
+		buf.WriteString("\n")
+		buf.WriteString("}\n")
 
-			ioutil.WriteFile(fpfile, buf.Bytes(), 0644)
+		ioutil.WriteFile(fpfile, buf.Bytes(), 0644)
+	}
+
+	// Create a lockfile so the server can be shut down
+
+	lf := lockutil.NewLockFile(basepath+config(LockFile), time.Duration(2)*time.Second)
+
+	lf.Start()
+
+	go func() {
+
+		// Check if the lockfile watcher is running and
+		// call shutdown once it has finished
+
+		for lf.WatcherRunning() {
+			time.Sleep(time.Duration(1) * time.Second)
 		}
 
-		// Create a lockfile so the server can be shut down
+		print("Lockfile was modified")
 
-		lf := lockutil.NewLockFile(basepath+config(LockFile), time.Duration(2)*time.Second)
+		hs.Shutdown()
+	}()
 
-		lf.Start()
+	// Add to the wait group so we can wait for the shutdown
 
-		go func() {
+	wg.Add(1)
 
-			// Check if the lockfile watcher is running and
-			// call shutdown once it has finished
+	print("Waiting for shutdown")
+	wg.Wait()
 
-			for lf.WatcherRunning() {
-				time.Sleep(time.Duration(1) * time.Second)
-			}
-
-			print("Lockfile was modified")
-
-			hs.Shutdown()
-		}()
-
-		// Add to the wait group so we can wait for the shutdown
-
-		wg.Add(1)
-
-		print("Waiting for shutdown")
-		wg.Wait()
-
-		print("Shutting down")
-	}
+	print("Shutting down")
 }
 
 /*

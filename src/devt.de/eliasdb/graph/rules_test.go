@@ -29,13 +29,13 @@ func (r *TestRule) Name() string {
 }
 
 func (r *TestRule) Handles() []int {
-	return []int{EVENT_NODE_CREATED, EVENT_NODE_UPDATED, EVENT_NODE_DELETED,
-		EVENT_EDGE_CREATED, EVENT_EDGE_UPDATED, EVENT_EDGE_DELETED}
+	return []int{EventNodeCreated, EventNodeUpdated, EventNodeDeleted,
+		EventEdgeCreated, EventEdgeUpdated, EventEdgeDeleted}
 }
 
-func (r *TestRule) Handle(gm *GraphManager, trans *GraphTrans, event int, ed ...interface{}) error {
+func (r *TestRule) Handle(gm *Manager, trans *Trans, event int, ed ...interface{}) error {
 	if r.handleError {
-		return &util.GraphError{util.ErrAccessComponent, "Test error"}
+		return &util.GraphError{Type: util.ErrAccessComponent, Detail: "Test error"}
 	}
 
 	if r.commitError {
@@ -47,15 +47,15 @@ func (r *TestRule) Handle(gm *GraphManager, trans *GraphTrans, event int, ed ...
 		edge.SetAttr("key", "123")
 		edge.SetAttr("kind", "myedge")
 
-		edge.SetAttr(data.EDGE_END1_KEY, node.Key())
-		edge.SetAttr(data.EDGE_END1_KIND, node.Kind())
-		edge.SetAttr(data.EDGE_END1_ROLE, "node1")
-		edge.SetAttr(data.EDGE_END1_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd1Key, node.Key())
+		edge.SetAttr(data.EdgeEnd1Kind, node.Kind())
+		edge.SetAttr(data.EdgeEnd1Role, "node1")
+		edge.SetAttr(data.EdgeEnd1Cascading, false)
 
-		edge.SetAttr(data.EDGE_END2_KEY, node.Key())
-		edge.SetAttr(data.EDGE_END2_KIND, node.Kind())
-		edge.SetAttr(data.EDGE_END2_ROLE, "node2")
-		edge.SetAttr(data.EDGE_END2_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd2Key, node.Key())
+		edge.SetAttr(data.EdgeEnd2Kind, node.Kind())
+		edge.SetAttr(data.EdgeEnd2Role, "node2")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
 
 		trans.StoreEdge("test", edge)
 	}
@@ -74,17 +74,17 @@ func TestRules(t *testing.T) {
 		edge.SetAttr("key", key)
 		edge.SetAttr("kind", "myedge")
 
-		edge.SetAttr(data.EDGE_END1_KEY, node1.Key())
-		edge.SetAttr(data.EDGE_END1_KIND, node1.Kind())
-		edge.SetAttr(data.EDGE_END1_ROLE, "node1")
-		edge.SetAttr(data.EDGE_END1_CASCADING, true)
+		edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+		edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+		edge.SetAttr(data.EdgeEnd1Role, "node1")
+		edge.SetAttr(data.EdgeEnd1Cascading, true)
 
-		edge.SetAttr(data.EDGE_END2_KEY, node2.Key())
-		edge.SetAttr(data.EDGE_END2_KIND, node2.Kind())
-		edge.SetAttr(data.EDGE_END2_ROLE, "node2")
-		edge.SetAttr(data.EDGE_END2_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+		edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+		edge.SetAttr(data.EdgeEnd2Role, "node2")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
 
-		edge.SetAttr(data.NODE_NAME, "Edge1"+key)
+		edge.SetAttr(data.NodeName, "Edge1"+key)
 
 		return edge
 	}
@@ -226,7 +226,7 @@ func TestRules(t *testing.T) {
 
 	trans := NewGraphTrans(gm)
 
-	err := gm.gr.graphEvent(trans, EVENT_NODE_DELETED, "test 1", node1)
+	err := gm.gr.graphEvent(trans, EventNodeDeleted, "test 1", node1)
 
 	if err.Error() !=
 		"GraphError: Graph rule error (GraphError: Invalid data (Partition name "+
@@ -248,17 +248,17 @@ func TestRulesTrans(t *testing.T) {
 		edge.SetAttr("key", key)
 		edge.SetAttr("kind", "myedge")
 
-		edge.SetAttr(data.EDGE_END1_KEY, node1.Key())
-		edge.SetAttr(data.EDGE_END1_KIND, node1.Kind())
-		edge.SetAttr(data.EDGE_END1_ROLE, "node1")
-		edge.SetAttr(data.EDGE_END1_CASCADING, true)
+		edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+		edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+		edge.SetAttr(data.EdgeEnd1Role, "node1")
+		edge.SetAttr(data.EdgeEnd1Cascading, true)
 
-		edge.SetAttr(data.EDGE_END2_KEY, node2.Key())
-		edge.SetAttr(data.EDGE_END2_KIND, node2.Kind())
-		edge.SetAttr(data.EDGE_END2_ROLE, "node2")
-		edge.SetAttr(data.EDGE_END2_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+		edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+		edge.SetAttr(data.EdgeEnd2Role, "node2")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
 
-		edge.SetAttr(data.NODE_NAME, "Edge1"+key)
+		edge.SetAttr(data.NodeName, "Edge1"+key)
 
 		return edge
 	}
@@ -427,15 +427,15 @@ func TestRulesErrors(t *testing.T) {
 	edge.SetAttr("key", "123")
 	edge.SetAttr("kind", "myedge")
 
-	edge.SetAttr(data.EDGE_END1_KEY, node1.Key())
-	edge.SetAttr(data.EDGE_END1_KIND, node1.Kind())
-	edge.SetAttr(data.EDGE_END1_ROLE, "node1")
-	edge.SetAttr(data.EDGE_END1_CASCADING, false)
+	edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+	edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+	edge.SetAttr(data.EdgeEnd1Role, "node1")
+	edge.SetAttr(data.EdgeEnd1Cascading, false)
 
-	edge.SetAttr(data.EDGE_END2_KEY, node1.Key())
-	edge.SetAttr(data.EDGE_END2_KIND, node1.Kind())
-	edge.SetAttr(data.EDGE_END2_ROLE, "node2")
-	edge.SetAttr(data.EDGE_END2_CASCADING, false)
+	edge.SetAttr(data.EdgeEnd2Key, node1.Key())
+	edge.SetAttr(data.EdgeEnd2Kind, node1.Kind())
+	edge.SetAttr(data.EdgeEnd2Role, "node2")
+	edge.SetAttr(data.EdgeEnd2Cascading, false)
 
 	if err := gm.StoreEdge("main", edge); err.Error() !=
 		"GraphError: Graph rule error (GraphError: Failed to access graph storage component (Test error))" {

@@ -9,6 +9,8 @@
  */
 
 /*
+Package pageview contains object wrappers for different page types.
+
 FreeLogicalSlotPage is a page which holds information about free logical slots.
 The page stores the slot location in a slotinfo data structure.
 */
@@ -38,7 +40,7 @@ NewFreeLogicalSlotPage creates a new page which can manage free slots.
 func NewFreeLogicalSlotPage(record *file.Record) *FreeLogicalSlotPage {
 	checkFreeLogicalSlotPageMagic(record)
 
-	maxSlots := (len(record.Data()) - OFFSET_DATA) / util.LOCATION_SIZE
+	maxSlots := (len(record.Data()) - OffsetData) / util.LocationSize
 
 	return &FreeLogicalSlotPage{NewSlotInfoPage(record), uint16(maxSlots), 0, 0}
 }
@@ -50,7 +52,7 @@ the wrapped record is valid.
 func checkFreeLogicalSlotPageMagic(record *file.Record) bool {
 	magic := record.ReadInt16(0)
 
-	if magic == view.VIEW_PAGE_HEADER+view.TYPE_FREE_LOGICAL_SLOT_PAGE {
+	if magic == view.ViewPageHeader+view.TypeFreeLogicalSlotPage {
 		return true
 	}
 	panic("Unexpected header found in FreeLogicalSlotPage")
@@ -67,7 +69,7 @@ func (flsp *FreeLogicalSlotPage) MaxSlots() uint16 {
 FreeSlotCount returns the number of free slots on this page.
 */
 func (flsp *FreeLogicalSlotPage) FreeSlotCount() uint16 {
-	return flsp.Record.ReadUInt16(OFFSET_COUNT)
+	return flsp.Record.ReadUInt16(OffsetCount)
 }
 
 /*
@@ -91,7 +93,7 @@ func (flsp *FreeLogicalSlotPage) AllocateSlotInfo(slotinfo uint16) uint16 {
 
 	// Increase counter for allocated slotinfos
 
-	flsp.Record.WriteUInt16(OFFSET_COUNT, flsp.FreeSlotCount()+1)
+	flsp.Record.WriteUInt16(OffsetCount, flsp.FreeSlotCount()+1)
 
 	// Update prevFoundAllocatedSlot if necessary
 
@@ -114,7 +116,7 @@ func (flsp *FreeLogicalSlotPage) ReleaseSlotInfo(slotinfo uint16) uint16 {
 
 	// Decrease counter for allocated slotinfos
 
-	flsp.Record.WriteUInt16(OFFSET_COUNT, flsp.FreeSlotCount()-1)
+	flsp.Record.WriteUInt16(OffsetCount, flsp.FreeSlotCount()-1)
 
 	// Update prevFoundFreeSlot if necessary
 
@@ -126,7 +128,7 @@ func (flsp *FreeLogicalSlotPage) ReleaseSlotInfo(slotinfo uint16) uint16 {
 }
 
 /*
-FirstFreeSlotInfo returns the id for the first available slotinfo or -1 if 
+FirstFreeSlotInfo returns the id for the first available slotinfo or -1 if
 nothing is available.
 */
 func (flsp *FreeLogicalSlotPage) FirstFreeSlotInfo() int {
@@ -140,7 +142,7 @@ func (flsp *FreeLogicalSlotPage) FirstFreeSlotInfo() int {
 }
 
 /*
-FirstAllocatedSlotInfo returns the id for the first allocated slotinfo or -1 if 
+FirstAllocatedSlotInfo returns the id for the first allocated slotinfo or -1 if
 nothing is allocated.
 */
 func (flsp *FreeLogicalSlotPage) FirstAllocatedSlotInfo() int {
@@ -165,5 +167,5 @@ func (flsp *FreeLogicalSlotPage) isAllocatedSlot(slotinfo uint16) bool {
 slotinfoToOffset converts a slotinfo number into an offset on the record.
 */
 func (flsp *FreeLogicalSlotPage) slotinfoToOffset(slotinfo uint16) uint16 {
-	return OFFSET_DATA + slotinfo*util.LOCATION_SIZE
+	return OffsetData + slotinfo*util.LocationSize
 }

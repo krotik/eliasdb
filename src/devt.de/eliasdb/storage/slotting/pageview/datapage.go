@@ -9,6 +9,8 @@
  */
 
 /*
+Package pageview contains object wrappers for different page types.
+
 DataPage is a page which holds actual data.
 */
 package pageview
@@ -21,11 +23,11 @@ import (
 )
 
 /*
-Pointer to first element on the page
+OffsetFirst is a pointer to first element on the page
 */
-const OFFSET_FIRST = view.OFFSET_DATA
+const OffsetFirst = view.OffsetData
 
-// OFFSET_DATA declared in freephysicalslotpage
+// OffsetData is declared in freephysicalslotpage
 
 /*
 DataPage data structure
@@ -50,7 +52,7 @@ the wrapped record is valid.
 func checkDataPageMagic(record *file.Record) bool {
 	magic := record.ReadInt16(0)
 
-	if magic == view.VIEW_PAGE_HEADER+view.TYPE_DATA_PAGE {
+	if magic == view.ViewPageHeader+view.TypeDataPage {
 		return true
 	}
 	panic("Unexpected header found in DataPage")
@@ -60,22 +62,22 @@ func checkDataPageMagic(record *file.Record) bool {
 DataSpace returns the available data space on this page.
 */
 func (dp *DataPage) DataSpace() uint16 {
-	return uint16(len(dp.Record.Data()) - OFFSET_DATA)
+	return uint16(len(dp.Record.Data()) - OffsetData)
 }
 
 /*
 OffsetFirst returns the pointer to the first element on the page.
 */
 func (dp *DataPage) OffsetFirst() uint16 {
-	return dp.Record.ReadUInt16(OFFSET_FIRST)
+	return dp.Record.ReadUInt16(OffsetFirst)
 }
 
 /*
 SetOffsetFirst sets the pointer to the first element on the page.
 */
 func (dp *DataPage) SetOffsetFirst(first uint16) {
-	if first > 0 && first < OFFSET_DATA {
-		panic(fmt.Sprint("Cannot set offset of first element on DataPage below ", OFFSET_DATA))
+	if first > 0 && first < OffsetData {
+		panic(fmt.Sprint("Cannot set offset of first element on DataPage below ", OffsetData))
 	}
-	dp.Record.WriteUInt16(OFFSET_FIRST, first)
+	dp.Record.WriteUInt16(OffsetFirst, first)
 }

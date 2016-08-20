@@ -8,7 +8,7 @@
  */
 
 /*
-Common function for string operations.
+Package stringutil contains common function for string operations.
 */
 package stringutil
 

@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-const COMPLEX_TEST_QUERY = `# This is a comment
+const complexTextQuery = `# This is a comment
 
 LOOKUP Song "a","b","c", "blaД"
 FROM GROUP test
@@ -47,7 +47,7 @@ WITH ORDERING(ASCENDING dd,DESCENDING dsd), FILTERING(ISNOTNULL ss,UNIQUE aa)
 `
 
 func TestComplexLexing(t *testing.T) {
-	if res := LexToList("mytest", COMPLEX_TEST_QUERY); fmt.Sprint(res) !=
+	if res := LexToList("mytest", complexTextQuery); fmt.Sprint(res) !=
 		`[<LOOKUP> "Song" "a" , "b" , "c" , "blaД" <FROM> <GROUP> "test" <WHERE> `+
 			`"ДTest Attr"... = "blaД" <AND> "a" < "b" <AND> "a" = "TRAVERS" <OR> <NOT> `+
 			`"a" - - "1" > "b" <OR> "c" <CONTAINS> "d" <AND> "e" = "10" - - "1" * "10" `+
@@ -311,11 +311,11 @@ func TestLexerInputControl(t *testing.T) {
 		return
 	}
 
-	if test.next(false) != RUNE_EOF {
+	if test.next(false) != RuneEOF {
 		t.Error("Unexpected last rune")
 		return
 	}
-	if test.next(true) != RUNE_EOF {
+	if test.next(true) != RuneEOF {
 		t.Error("Unexpected last rune")
 		return
 	}

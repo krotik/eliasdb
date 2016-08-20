@@ -8,6 +8,8 @@
  */
 
 /*
+Package bitutil contains common function for bit-level operations.
+
 Functions to pack and unpack a list of non-zero numbers very efficiently.
 */
 package bitutil
@@ -16,19 +18,20 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math"
-
-	"devt.de/common/pools"
 )
 
-const PACK_LIST_2BIT = 0x1
-const PACK_LIST_3BIT = 0x2
-const PACK_LIST_6BIT = 0x3
-const PACK_LIST_VAR_BIT = 0x0
-
-var BufferPool = pools.NewByteBufferPool()
+/*
+Different types of list packing
+*/
+const (
+	packListType2Bit = 0x1
+	packListType3Bit = 0x2
+	packListType6Bit = 0x3
+	packListTypeVar  = 0x0
+)
 
 /*
-Pack a given list to a string. Depending on the given highest number the
+PackList packs a given list to a string. Depending on the given highest number the
 list is packed in the most efficient way.
 */
 func PackList(unpackedlist []uint64, highest uint64) string {
@@ -83,7 +86,7 @@ func PackList(unpackedlist []uint64, highest uint64) string {
 }
 
 /*
-Unpack a list from a packed string.
+UnpackList unpacks a list from a packed string.
 */
 func UnpackList(packedlist string) []uint64 {
 	plist := []byte(packedlist)
@@ -92,7 +95,7 @@ func UnpackList(packedlist string) []uint64 {
 		return nil
 	}
 
-	if plist[0]&0xC0 == PACK_LIST_VAR_BIT {
+	if plist[0]&0xC0 == packListTypeVar {
 		return UnpackBigList(packedlist)
 	}
 
@@ -107,7 +110,7 @@ func UnpackList(packedlist string) []uint64 {
 }
 
 /*
-Pack a list of 8 bit numbers.
+PackList8Bit packs a list of 8 bit numbers.
 */
 func PackList8Bit(list []uint8) string {
 	var bb bytes.Buffer
@@ -122,7 +125,7 @@ func PackList8Bit(list []uint8) string {
 }
 
 /*
-Pack a list of 16 bit numbers.
+PackList16Bit packs a list of 16 bit numbers.
 */
 func PackList16Bit(list []uint16) string {
 	var bb bytes.Buffer
@@ -137,7 +140,7 @@ func PackList16Bit(list []uint16) string {
 }
 
 /*
-Pack a list of 32 bit numbers.
+PackList32Bit packs a list of 32 bit numbers.
 */
 func PackList32Bit(list []uint32) string {
 	var bb bytes.Buffer
@@ -152,7 +155,7 @@ func PackList32Bit(list []uint32) string {
 }
 
 /*
-Pack a list of 64 bit numbers.
+PackList64Bit packs a list of 64 bit numbers.
 */
 func PackList64Bit(list []uint64) string {
 	var bb bytes.Buffer
@@ -167,7 +170,7 @@ func PackList64Bit(list []uint64) string {
 }
 
 /*
-Unpack a list which has large values.
+UnpackBigList unpacks a list which has large values.
 */
 func UnpackBigList(packedlist string) []uint64 {
 	var ret []uint64
@@ -210,7 +213,7 @@ func UnpackBigList(packedlist string) []uint64 {
 }
 
 /*
-Pack a list of bytes into a string using 2 bits for each item.
+PackList2Bit packs a list of bytes into a string using 2 bits for each item.
 (Items must be between 1 and 3)
 */
 func PackList2Bit(list []byte) string {
@@ -223,11 +226,11 @@ func PackList2Bit(list []byte) string {
 	ret := make([]byte, int(math.Ceil(float64(1)/3+float64(len(list)-1)/4)))
 
 	if len(list) == 1 {
-		ret[0] = list2byte2bit(PACK_LIST_2BIT, list[0], 0, 0)
+		ret[0] = list2byte2bit(packListType2Bit, list[0], 0, 0)
 	} else if len(list) == 2 {
-		ret[0] = list2byte2bit(PACK_LIST_2BIT, list[0], list[1], 0)
+		ret[0] = list2byte2bit(packListType2Bit, list[0], list[1], 0)
 	} else {
-		ret[0] = list2byte2bit(PACK_LIST_2BIT, list[0], list[1], list[2])
+		ret[0] = list2byte2bit(packListType2Bit, list[0], list[1], list[2])
 
 		j := 1
 		for i := 3; i < len(list); i += 4 {
@@ -248,7 +251,7 @@ func PackList2Bit(list []byte) string {
 }
 
 /*
-Pack a list of bytes into a string using 3 bits for each item.
+PackList3Bit packs a list of bytes into a string using 3 bits for each item.
 (Items must be between 1 and 7)
 */
 func PackList3Bit(list []byte) string {
@@ -261,9 +264,9 @@ func PackList3Bit(list []byte) string {
 	ret := make([]byte, int(math.Ceil(float64(len(list))/2)))
 
 	if len(list) == 1 {
-		ret[0] = list2byte3bitAndHeader(PACK_LIST_3BIT, list[0], 0)
+		ret[0] = list2byte3bitAndHeader(packListType3Bit, list[0], 0)
 	} else {
-		ret[0] = list2byte3bitAndHeader(PACK_LIST_3BIT, list[0], list[1])
+		ret[0] = list2byte3bitAndHeader(packListType3Bit, list[0], list[1])
 
 		j := 1
 		for i := 2; i < len(list); i += 2 {
@@ -280,7 +283,7 @@ func PackList3Bit(list []byte) string {
 }
 
 /*
-Pack a list of bytes into a string using 6 bits for each item.
+PackList6Bit packs a list of bytes into a string using 6 bits for each item.
 (Items must be between 1 and 63)
 */
 func PackList6Bit(list []byte) string {
@@ -293,9 +296,9 @@ func PackList6Bit(list []byte) string {
 	ret := make([]byte, len(list))
 
 	if len(list) == 1 {
-		ret[0] = list2byte6bitAndHeader(PACK_LIST_6BIT, list[0])
+		ret[0] = list2byte6bitAndHeader(packListType6Bit, list[0])
 	} else {
-		ret[0] = list2byte6bitAndHeader(PACK_LIST_6BIT, list[0])
+		ret[0] = list2byte6bitAndHeader(packListType6Bit, list[0])
 
 		for i := 1; i < len(list); i++ {
 			ret[i] = list2byte6bitAndHeader(0, list[i])
@@ -318,11 +321,11 @@ func UnpackSmallList(packedlist string) []byte {
 
 	ltype := plist[0] & 0xC0 >> 6
 
-	if ltype == PACK_LIST_2BIT {
+	if ltype == packListType2Bit {
 		return unpacklist2bit(plist)
-	} else if ltype == PACK_LIST_3BIT {
+	} else if ltype == packListType3Bit {
 		return unpacklist3bit(plist)
-	} else if ltype == PACK_LIST_6BIT {
+	} else if ltype == packListType6Bit {
 		return unpacklist6bit(plist)
 	}
 

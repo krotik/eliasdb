@@ -8,7 +8,7 @@
  */
 
 /*
-Common function for bit-level operations.
+Package bitutil contains common function for bit-level operations.
 */
 package bitutil
 

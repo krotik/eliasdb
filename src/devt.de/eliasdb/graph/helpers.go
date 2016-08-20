@@ -9,7 +9,9 @@
  */
 
 /*
-Helper functions.
+Package graph contains the main API to the graph datastore.
+
+This file contains helper functions.
 */
 package graph
 
@@ -33,10 +35,12 @@ import (
 /*
 checkPartitionName checks if a given partition name is valid.
 */
-func (gm *GraphManager) checkPartitionName(part string) error {
+func (gm *Manager) checkPartitionName(part string) error {
 	if !stringutil.IsAlphaNumeric(part) {
-		return &util.GraphError{util.ErrInvalidData, "Partition name " + part +
-			" is not alphanumeric - can only contain [a-zA-Z0-9_]"}
+		return &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("Partition name %v is not alphanumeric - can only contain [a-zA-Z0-9_]", part),
+		}
 	}
 
 	return nil
@@ -45,30 +49,32 @@ func (gm *GraphManager) checkPartitionName(part string) error {
 /*
 checkNode checks if a given node can be written to the datastore.
 */
-func (gm *GraphManager) checkNode(node data.Node) error {
+func (gm *Manager) checkNode(node data.Node) error {
 	return gm.checkItemGeneral(node, "Node")
 }
 
 /*
 checkItemGeneral checks the general properties of a given graph item.
 */
-func (gm *GraphManager) checkItemGeneral(node data.Node, name string) error {
+func (gm *Manager) checkItemGeneral(node data.Node, name string) error {
 	if node.Key() == "" {
-		return &util.GraphError{util.ErrInvalidData, name + " is missing a key value"}
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: name + " is missing a key value"}
 	}
 
 	if node.Kind() == "" {
-		return &util.GraphError{util.ErrInvalidData, name + " is missing a kind value"}
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: name + " is missing a kind value"}
 	}
 
 	if !stringutil.IsAlphaNumeric(node.Kind()) {
-		return &util.GraphError{util.ErrInvalidData, name + " kind " + node.Kind() +
-			" is not alphanumeric - can only contain [a-zA-Z0-9_]"}
+		return &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("%v kind %v is not alphanumeric - can only contain [a-zA-Z0-9_]", name, node.Kind()),
+		}
 	}
 
-	for attr, _ := range node.Data() {
+	for attr := range node.Data() {
 		if attr == "" {
-			return &util.GraphError{util.ErrInvalidData, name + " contains empty string attribute name"}
+			return &util.GraphError{Type: util.ErrInvalidData, Detail: name + " contains empty string attribute name"}
 		}
 	}
 
@@ -78,47 +84,51 @@ func (gm *GraphManager) checkItemGeneral(node data.Node, name string) error {
 /*
 checkEdge checks if a given edge can be written to the datastore.
 */
-func (gm *GraphManager) checkEdge(edge data.Edge) error {
+func (gm *Manager) checkEdge(edge data.Edge) error {
 	if err := gm.checkItemGeneral(edge, "Edge"); err != nil {
 		return err
 	}
 
 	if edge.End1Key() == "" {
-		return &util.GraphError{util.ErrInvalidData, "Edge is missing a key value for end1"}
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: "Edge is missing a key value for end1"}
 	}
 
 	if edge.End1Kind() == "" {
-		return &util.GraphError{util.ErrInvalidData, "Edge is missing a kind value for end1"}
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: "Edge is missing a kind value for end1"}
 	}
 
 	if edge.End1Role() == "" {
-		return &util.GraphError{util.ErrInvalidData, "Edge is missing a role value for end1"}
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: "Edge is missing a role value for end1"}
 	} else if !stringutil.IsAlphaNumeric(edge.End1Role()) {
-		return &util.GraphError{util.ErrInvalidData, "Edge role " + edge.End1Role() +
-			" is not alphanumeric - can only contain [a-zA-Z0-9_]"}
+		return &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("Edge role %v is not alphanumeric - can only contain [a-zA-Z0-9_]", edge.End1Role()),
+		}
 	}
 
-	if _, ok := edge.Attr(data.EDGE_END1_CASCADING).(bool); !ok {
-		return &util.GraphError{util.ErrInvalidData, "Edge is missing a cascading value for end1"}
+	if _, ok := edge.Attr(data.EdgeEnd1Cascading).(bool); !ok {
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: "Edge is missing a cascading value for end1"}
 	}
 
 	if edge.End2Key() == "" {
-		return &util.GraphError{util.ErrInvalidData, "Edge is missing a key value for end2"}
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: "Edge is missing a key value for end2"}
 	}
 
 	if edge.End2Kind() == "" {
-		return &util.GraphError{util.ErrInvalidData, "Edge is missing a kind value for end2"}
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: "Edge is missing a kind value for end2"}
 	}
 
 	if edge.End2Role() == "" {
-		return &util.GraphError{util.ErrInvalidData, "Edge is missing a role value for end2"}
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: "Edge is missing a role value for end2"}
 	} else if !stringutil.IsAlphaNumeric(edge.End2Role()) {
-		return &util.GraphError{util.ErrInvalidData, "Edge role " + edge.End2Role() +
-			" is not alphanumeric - can only contain [a-zA-Z0-9_]"}
+		return &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("Edge role %v is not alphanumeric - can only contain [a-zA-Z0-9_]", edge.End2Role()),
+		}
 	}
 
-	if _, ok := edge.Attr(data.EDGE_END2_CASCADING).(bool); !ok {
-		return &util.GraphError{util.ErrInvalidData, "Edge is missing a cascading value for end2"}
+	if _, ok := edge.Attr(data.EdgeEnd2Cascading).(bool); !ok {
+		return &util.GraphError{Type: util.ErrInvalidData, Detail: "Edge is missing a cascading value for end2"}
 	}
 
 	return nil
@@ -127,40 +137,40 @@ func (gm *GraphManager) checkEdge(edge data.Edge) error {
 /*
 writeNodeCount writes a new node count for a specific kind to the datastore.
 */
-func (gm *GraphManager) writeNodeCount(kind string, count uint64, flush bool) error {
+func (gm *Manager) writeNodeCount(kind string, count uint64, flush bool) error {
 	numstr := make([]byte, 8)
 
 	binary.LittleEndian.PutUint64(numstr, count)
-	gm.gs.MainDB()[MAINDB_NODE_COUNT+kind] = string(numstr)
+	gm.gs.MainDB()[MainDBNodeCount+kind] = string(numstr)
 
 	if flush {
 		return gm.gs.FlushMain()
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 /*
 writeEdgeCount writes a new edge count for a specific kind to the datastore.
 */
-func (gm *GraphManager) writeEdgeCount(kind string, count uint64, flush bool) error {
+func (gm *Manager) writeEdgeCount(kind string, count uint64, flush bool) error {
 	numstr := make([]byte, 8)
 
 	binary.LittleEndian.PutUint64(numstr, count)
-	gm.gs.MainDB()[MAINDB_EDGE_COUNT+kind] = string(numstr)
+	gm.gs.MainDB()[MainDBEdgeCount+kind] = string(numstr)
 
 	if flush {
 		return gm.gs.FlushMain()
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 /*
 getNodeStorageHTree gets two HTree instances which can be used to store nodes.
 This function ensures that depending entries in other datastructures do exist.
 */
-func (gm *GraphManager) getNodeStorageHTree(part string, kind string,
+func (gm *Manager) getNodeStorageHTree(part string, kind string,
 	create bool) (*hash.HTree, *hash.HTree, error) {
 
 	// Check if the partition name is valid
@@ -172,45 +182,47 @@ func (gm *GraphManager) getNodeStorageHTree(part string, kind string,
 	// Check if the node kind is valid
 
 	if !stringutil.IsAlphaNumeric(kind) {
-		return nil, nil, &util.GraphError{util.ErrInvalidData, "Node kind " + kind +
-			" is not alphanumeric - can only contain [a-zA-Z0-9_]"}
+		return nil, nil, &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("Node kind %v is not alphanumeric - can only contain [a-zA-Z0-9_]", kind),
+		}
 	}
 
 	// Make sure all required lookup maps are there
 
-	if gm.getMainDBMap(MAINDB_NODE_KINDS) == nil {
-		gm.storeMainDBMap(MAINDB_NODE_KINDS, make(map[string]string))
+	if gm.getMainDBMap(MainDBNodeKinds) == nil {
+		gm.storeMainDBMap(MainDBNodeKinds, make(map[string]string))
 	}
 
-	if gm.getMainDBMap(MAINDB_PARTS) == nil {
-		gm.storeMainDBMap(MAINDB_PARTS, make(map[string]string))
+	if gm.getMainDBMap(MainDBParts) == nil {
+		gm.storeMainDBMap(MainDBParts, make(map[string]string))
 	}
 
-	if gm.getMainDBMap(MAINDB_NODE_ATTRS+kind) == nil {
-		gm.storeMainDBMap(MAINDB_NODE_ATTRS+kind, make(map[string]string))
+	if gm.getMainDBMap(MainDBNodeAttrs+kind) == nil {
+		gm.storeMainDBMap(MainDBNodeAttrs+kind, make(map[string]string))
 	}
 
-	if gm.getMainDBMap(MAINDB_NODE_EDGES+kind) == nil {
-		gm.storeMainDBMap(MAINDB_NODE_EDGES+kind, make(map[string]string))
+	if gm.getMainDBMap(MainDBNodeEdges+kind) == nil {
+		gm.storeMainDBMap(MainDBNodeEdges+kind, make(map[string]string))
 	}
 
-	if _, ok := gm.gs.MainDB()[MAINDB_NODE_COUNT+kind]; !ok {
-		gm.gs.MainDB()[MAINDB_NODE_COUNT+kind] = string(make([]byte, 8, 8))
+	if _, ok := gm.gs.MainDB()[MainDBNodeCount+kind]; !ok {
+		gm.gs.MainDB()[MainDBNodeCount+kind] = string(make([]byte, 8, 8))
 	}
 
 	// Return the actual storage
 
-	gs := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_NODES, create)
+	gs := gm.gs.StorageManager(part+kind+StorageSuffixNodes, create)
 	if gs == nil {
 		return nil, nil, nil
 	}
 
-	attrTree, err := gm.getHTree(gs, ROOT_ID_NODE_HTREE)
+	attrTree, err := gm.getHTree(gs, RootIDNodeHTree)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	valTree, err := gm.getHTree(gs, ROOT_ID_NODE_HTREE_SECOND)
+	valTree, err := gm.getHTree(gs, RootIDNodeHTreeSecond)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -222,7 +234,7 @@ func (gm *GraphManager) getNodeStorageHTree(part string, kind string,
 getEdgeStorageHTree gets a HTree which can be used to store edges. This function ensures that depending
 entries in other datastructures do exist.
 */
-func (gm *GraphManager) getEdgeStorageHTree(part string, kind string, create bool) (*hash.HTree, error) {
+func (gm *Manager) getEdgeStorageHTree(part string, kind string, create bool) (*hash.HTree, error) {
 
 	// Check if the partition name is valid
 
@@ -233,52 +245,54 @@ func (gm *GraphManager) getEdgeStorageHTree(part string, kind string, create boo
 	// Check if the edge kind is valid
 
 	if !stringutil.IsAlphaNumeric(kind) {
-		return nil, &util.GraphError{util.ErrInvalidData, "Edge kind " + kind +
-			" is not alphanumeric - can only contain [a-zA-Z0-9_]"}
+		return nil, &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("Edge kind %v is not alphanumeric - can only contain [a-zA-Z0-9_]", kind),
+		}
 	}
 
 	// Make sure all required lookup maps are there
 
-	if gm.getMainDBMap(MAINDB_EDGE_KINDS) == nil {
-		gm.storeMainDBMap(MAINDB_EDGE_KINDS, make(map[string]string))
-	}
-	
-	if gm.getMainDBMap(MAINDB_EDGE_ATTRS+kind) == nil {
-		gm.storeMainDBMap(MAINDB_EDGE_ATTRS+kind, make(map[string]string))
+	if gm.getMainDBMap(MainDBEdgeKinds) == nil {
+		gm.storeMainDBMap(MainDBEdgeKinds, make(map[string]string))
 	}
 
-	if _, ok := gm.gs.MainDB()[MAINDB_EDGE_COUNT+kind]; !ok {
-		gm.gs.MainDB()[MAINDB_EDGE_COUNT+kind] = string(make([]byte, 8, 8))
+	if gm.getMainDBMap(MainDBEdgeAttrs+kind) == nil {
+		gm.storeMainDBMap(MainDBEdgeAttrs+kind, make(map[string]string))
+	}
+
+	if _, ok := gm.gs.MainDB()[MainDBEdgeCount+kind]; !ok {
+		gm.gs.MainDB()[MainDBEdgeCount+kind] = string(make([]byte, 8, 8))
 	}
 
 	// Return the actual storage
 
-	gs := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_EDGES, create)
+	gs := gm.gs.StorageManager(part+kind+StorageSuffixEdges, create)
 	if gs == nil {
 		return nil, nil
 	}
 
-	return gm.getHTree(gs, ROOT_ID_NODE_HTREE)
+	return gm.getHTree(gs, RootIDNodeHTree)
 }
 
 /*
 getNodeIndexHTree gets a HTree which can be used to index nodes.
 */
-func (gm *GraphManager) getNodeIndexHTree(part string, kind string, create bool) (*hash.HTree, error) {
-	return gm.getIndexHTree(part, kind, create, "Node", STORAGE_SUFFIX_NODES_INDEX)
+func (gm *Manager) getNodeIndexHTree(part string, kind string, create bool) (*hash.HTree, error) {
+	return gm.getIndexHTree(part, kind, create, "Node", StorageSuffixNodesIndex)
 }
 
 /*
 getEdgeIndexHTree gets a HTree which can be used to index edges.
 */
-func (gm *GraphManager) getEdgeIndexHTree(part string, kind string, create bool) (*hash.HTree, error) {
-	return gm.getIndexHTree(part, kind, create, "Edge", STORAGE_SUFFIX_EDGES_INDEX)
+func (gm *Manager) getEdgeIndexHTree(part string, kind string, create bool) (*hash.HTree, error) {
+	return gm.getIndexHTree(part, kind, create, "Edge", StorageSuffixEdgesIndex)
 }
 
 /*
 getIndexHTree gets a HTree which can be used to index items.
 */
-func (gm *GraphManager) getIndexHTree(part string, kind string, create bool, name string, suffix string) (*hash.HTree, error) {
+func (gm *Manager) getIndexHTree(part string, kind string, create bool, name string, suffix string) (*hash.HTree, error) {
 
 	// Check if the partition name is valid
 
@@ -289,8 +303,10 @@ func (gm *GraphManager) getIndexHTree(part string, kind string, create bool, nam
 	// Check if the kind is valid
 
 	if !stringutil.IsAlphaNumeric(kind) {
-		return nil, &util.GraphError{util.ErrInvalidData, name + " kind " + kind +
-			" is not alphanumeric - can only contain [a-zA-Z0-9_]"}
+		return nil, &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("%v kind %v is not alphanumeric - can only contain [a-zA-Z0-9_]", name, kind),
+		}
 	}
 
 	gs := gm.gs.StorageManager(part+kind+suffix, create)
@@ -298,16 +314,16 @@ func (gm *GraphManager) getIndexHTree(part string, kind string, create bool, nam
 		return nil, nil
 	}
 
-	return gm.getHTree(gs, ROOT_ID_NODE_HTREE)
+	return gm.getHTree(gs, RootIDNodeHTree)
 }
 
 /*
 flushNodeStorage flushes a node storage.
 */
-func (gm *GraphManager) flushNodeStorage(part string, kind string) error {
-	if sm := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_NODES, false); sm != nil {
+func (gm *Manager) flushNodeStorage(part string, kind string) error {
+	if sm := gm.gs.StorageManager(part+kind+StorageSuffixNodes, false); sm != nil {
 		if err := sm.Flush(); err != nil {
-			return &util.GraphError{util.ErrFlushing, err.Error()}
+			return &util.GraphError{Type: util.ErrFlushing, Detail: err.Error()}
 		}
 	}
 	return nil
@@ -316,10 +332,10 @@ func (gm *GraphManager) flushNodeStorage(part string, kind string) error {
 /*
 flushNodeIndex flushes a node index.
 */
-func (gm *GraphManager) flushNodeIndex(part string, kind string) error {
-	if sm := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_NODES_INDEX, false); sm != nil {
+func (gm *Manager) flushNodeIndex(part string, kind string) error {
+	if sm := gm.gs.StorageManager(part+kind+StorageSuffixNodesIndex, false); sm != nil {
 		if err := sm.Flush(); err != nil {
-			return &util.GraphError{util.ErrFlushing, err.Error()}
+			return &util.GraphError{Type: util.ErrFlushing, Detail: err.Error()}
 		}
 	}
 	return nil
@@ -328,10 +344,10 @@ func (gm *GraphManager) flushNodeIndex(part string, kind string) error {
 /*
 flushEdgeStorage flushes an edge storage.
 */
-func (gm *GraphManager) flushEdgeStorage(part string, kind string) error {
-	if sm := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_EDGES, false); sm != nil {
+func (gm *Manager) flushEdgeStorage(part string, kind string) error {
+	if sm := gm.gs.StorageManager(part+kind+StorageSuffixEdges, false); sm != nil {
 		if err := sm.Flush(); err != nil {
-			return &util.GraphError{util.ErrFlushing, err.Error()}
+			return &util.GraphError{Type: util.ErrFlushing, Detail: err.Error()}
 		}
 	}
 	return nil
@@ -340,10 +356,10 @@ func (gm *GraphManager) flushEdgeStorage(part string, kind string) error {
 /*
 flushEdgeIndex flushes an edge index.
 */
-func (gm *GraphManager) flushEdgeIndex(part string, kind string) error {
-	if sm := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_EDGES_INDEX, false); sm != nil {
+func (gm *Manager) flushEdgeIndex(part string, kind string) error {
+	if sm := gm.gs.StorageManager(part+kind+StorageSuffixEdgesIndex, false); sm != nil {
 		if err := sm.Flush(); err != nil {
-			return &util.GraphError{util.ErrFlushing, err.Error()}
+			return &util.GraphError{Type: util.ErrFlushing, Detail: err.Error()}
 		}
 	}
 	return nil
@@ -352,10 +368,10 @@ func (gm *GraphManager) flushEdgeIndex(part string, kind string) error {
 /*
 rollbackNodeStorage rollbacks a node storage.
 */
-func (gm *GraphManager) rollbackNodeStorage(part string, kind string) error {
-	if sm := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_NODES, false); sm != nil {
+func (gm *Manager) rollbackNodeStorage(part string, kind string) error {
+	if sm := gm.gs.StorageManager(part+kind+StorageSuffixNodes, false); sm != nil {
 		if err := sm.Rollback(); err != nil {
-			return &util.GraphError{util.ErrRollback, err.Error()}
+			return &util.GraphError{Type: util.ErrRollback, Detail: err.Error()}
 		}
 	}
 	return nil
@@ -364,10 +380,10 @@ func (gm *GraphManager) rollbackNodeStorage(part string, kind string) error {
 /*
 rollbackNodeIndex rollbacks a node index.
 */
-func (gm *GraphManager) rollbackNodeIndex(part string, kind string) error {
-	if sm := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_NODES_INDEX, false); sm != nil {
+func (gm *Manager) rollbackNodeIndex(part string, kind string) error {
+	if sm := gm.gs.StorageManager(part+kind+StorageSuffixNodesIndex, false); sm != nil {
 		if err := sm.Rollback(); err != nil {
-			return &util.GraphError{util.ErrRollback, err.Error()}
+			return &util.GraphError{Type: util.ErrRollback, Detail: err.Error()}
 		}
 	}
 	return nil
@@ -376,10 +392,10 @@ func (gm *GraphManager) rollbackNodeIndex(part string, kind string) error {
 /*
 rollbackEdgeStorage rollbacks an edge storage.
 */
-func (gm *GraphManager) rollbackEdgeStorage(part string, kind string) error {
-	if sm := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_EDGES, false); sm != nil {
+func (gm *Manager) rollbackEdgeStorage(part string, kind string) error {
+	if sm := gm.gs.StorageManager(part+kind+StorageSuffixEdges, false); sm != nil {
 		if err := sm.Rollback(); err != nil {
-			return &util.GraphError{util.ErrRollback, err.Error()}
+			return &util.GraphError{Type: util.ErrRollback, Detail: err.Error()}
 		}
 	}
 	return nil
@@ -388,10 +404,10 @@ func (gm *GraphManager) rollbackEdgeStorage(part string, kind string) error {
 /*
 rollbackEdgeIndex rollbacks an edge index.
 */
-func (gm *GraphManager) rollbackEdgeIndex(part string, kind string) error {
-	if sm := gm.gs.StorageManager(part+kind+STORAGE_SUFFIX_EDGES_INDEX, false); sm != nil {
+func (gm *Manager) rollbackEdgeIndex(part string, kind string) error {
+	if sm := gm.gs.StorageManager(part+kind+StorageSuffixEdgesIndex, false); sm != nil {
 		if err := sm.Rollback(); err != nil {
-			return &util.GraphError{util.ErrRollback, err.Error()}
+			return &util.GraphError{Type: util.ErrRollback, Detail: err.Error()}
 		}
 	}
 	return nil
@@ -401,7 +417,7 @@ func (gm *GraphManager) rollbackEdgeIndex(part string, kind string) error {
 getHTree creates or loads a HTree from a given StorageManager. HTrees are not cached
 since the creation shouldn't have too much overhead.
 */
-func (gm *GraphManager) getHTree(sm storage.StorageManager, slot int) (*hash.HTree, error) {
+func (gm *Manager) getHTree(sm storage.Manager, slot int) (*hash.HTree, error) {
 	var htree *hash.HTree
 	var err error
 
@@ -414,7 +430,7 @@ func (gm *GraphManager) getHTree(sm storage.StorageManager, slot int) (*hash.HTr
 		htree, err = hash.NewHTree(sm)
 
 		if err != nil {
-			err = &util.GraphError{util.ErrAccessComponent, err.Error()}
+			err = &util.GraphError{Type: util.ErrAccessComponent, Detail: err.Error()}
 		} else {
 			sm.SetRoot(slot, htree.Location())
 		}
@@ -425,7 +441,7 @@ func (gm *GraphManager) getHTree(sm storage.StorageManager, slot int) (*hash.HTr
 
 		htree, err = hash.LoadHTree(sm, loc)
 		if err != nil {
-			err = &util.GraphError{util.ErrAccessComponent, err.Error()}
+			err = &util.GraphError{Type: util.ErrAccessComponent, Detail: err.Error()}
 		}
 	}
 
@@ -435,7 +451,7 @@ func (gm *GraphManager) getHTree(sm storage.StorageManager, slot int) (*hash.HTr
 /*
 getMainDBMap gets a map from the main database.
 */
-func (gm *GraphManager) getMainDBMap(key string) map[string]string {
+func (gm *Manager) getMainDBMap(key string) map[string]string {
 
 	// First try to cache
 
@@ -459,7 +475,7 @@ func (gm *GraphManager) getMainDBMap(key string) map[string]string {
 storeMainDBMap stores a map in the main database. The map is stored as a gob byte slice.
 Once it has been decoded it is cached for read operations.
 */
-func (gm *GraphManager) storeMainDBMap(key string, mapval map[string]string) {
+func (gm *Manager) storeMainDBMap(key string, mapval map[string]string) {
 	gm.mapCache[key] = mapval
 	gm.gs.MainDB()[key] = mapToString(mapval)
 }
@@ -468,8 +484,8 @@ func (gm *GraphManager) storeMainDBMap(key string, mapval map[string]string) {
 // =======================
 
 /*
-Function to determine if a given spec is a fully specified spec (i.e. all
-spec components are specified)
+IsFullSpec is a function to determine if a given spec is a fully specified spec
+(i.e. all spec components are specified)
 */
 func IsFullSpec(spec string) bool {
 	sspec := strings.Split(spec, ":")

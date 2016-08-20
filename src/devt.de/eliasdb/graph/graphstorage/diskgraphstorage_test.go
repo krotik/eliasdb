@@ -22,19 +22,19 @@ import (
 	"devt.de/eliasdb/storage"
 )
 
-const DISKGRAPHSTORAGE_TEST_DBDIR = "diskgraphstoragetest1"
-const DISKGRAPHSTORAGE_TEST_DBDIR2 = "diskgraphstoragetest2"
+const diskGraphStorageTestDBDir = "diskgraphstoragetest1"
+const diskGraphStorageTestDBDir2 = "diskgraphstoragetest2"
 
-var DBDIRS = []string{DISKGRAPHSTORAGE_TEST_DBDIR, DISKGRAPHSTORAGE_TEST_DBDIR2}
+var dbdirs = []string{diskGraphStorageTestDBDir, diskGraphStorageTestDBDir2}
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const invalidFileName = "**" + string(0x0)
 
 // Main function for all tests in this package
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
-	for _, dbdir := range DBDIRS {
+	for _, dbdir := range dbdirs {
 		if res, _ := fileutil.PathExists(dbdir); res {
 			if err := os.RemoveAll(dbdir); err != nil {
 				fmt.Print("Could not remove test directory:", err.Error())
@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 
 	// Teardown
 
-	for _, dbdir := range DBDIRS {
+	for _, dbdir := range dbdirs {
 		if res, _ := fileutil.PathExists(dbdir); res {
 			if err := os.RemoveAll(dbdir); err != nil {
 				fmt.Print("Could not remove test directory:", err.Error())
@@ -60,25 +60,25 @@ func TestMain(m *testing.M) {
 }
 
 func TestDiskGraphStorage(t *testing.T) {
-	dgsnew, err := NewDiskGraphStorage(DISKGRAPHSTORAGE_TEST_DBDIR)
+	dgsnew, err := NewDiskGraphStorage(diskGraphStorageTestDBDir)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if res := dgsnew.Name(); res != DISKGRAPHSTORAGE_TEST_DBDIR {
+	if res := dgsnew.Name(); res != diskGraphStorageTestDBDir {
 		t.Error("Unexpected name:", res)
 		return
 	}
 
 	// Check that the storage directory exists
 
-	if res, _ := fileutil.PathExists(DISKGRAPHSTORAGE_TEST_DBDIR); !res {
+	if res, _ := fileutil.PathExists(diskGraphStorageTestDBDir); !res {
 		t.Error("Storage directory does not exist")
 		return
 	}
 
-	if res, _ := fileutil.PathExists(DISKGRAPHSTORAGE_TEST_DBDIR + "/" + FILENAME_NAME_DB); !res {
+	if res, _ := fileutil.PathExists(diskGraphStorageTestDBDir + "/" + FilenameNameDB); !res {
 		t.Error("Name DB does not exist")
 		return
 	}
@@ -92,14 +92,14 @@ func TestDiskGraphStorage(t *testing.T) {
 		return
 	}
 
-	if res, _ := fileutil.PathExists(DISKGRAPHSTORAGE_TEST_DBDIR + "/store1.nodes.db.0"); !res {
+	if res, _ := fileutil.PathExists(diskGraphStorageTestDBDir + "/store1.nodes.db.0"); !res {
 		t.Error("Storage file does not exist")
 		return
 	}
 
 	sm2 := dgsnew.StorageManager("store2.nodes", false)
 
-	if res, _ := fileutil.PathExists(DISKGRAPHSTORAGE_TEST_DBDIR + "/store2.nodes.db.0"); res {
+	if res, _ := fileutil.PathExists(diskGraphStorageTestDBDir + "/store2.nodes.db.0"); res {
 		t.Error("Storage file should not have been created")
 		return
 	}
@@ -121,7 +121,7 @@ func TestDiskGraphStorage(t *testing.T) {
 
 	// Open the storage again to make sure we can load it
 
-	dgs, err := NewDiskGraphStorage(DISKGRAPHSTORAGE_TEST_DBDIR)
+	dgs, err := NewDiskGraphStorage(diskGraphStorageTestDBDir)
 	if err != nil {
 		t.Error(err)
 		return
@@ -139,7 +139,7 @@ func TestDiskGraphStorage(t *testing.T) {
 }
 
 func TestDiskGraphStorageErrors(t *testing.T) {
-	_, err := NewDiskGraphStorage(INVALID_FILE_NAME)
+	_, err := NewDiskGraphStorage(invalidFileName)
 	if err == nil {
 		t.Error("Unexpected new disk graph storage result")
 		return
@@ -147,27 +147,27 @@ func TestDiskGraphStorageErrors(t *testing.T) {
 
 	// Test names map error case
 
-	old := FILENAME_NAME_DB
-	FILENAME_NAME_DB = INVALID_FILE_NAME
+	old := FilenameNameDB
+	FilenameNameDB = invalidFileName
 
-	_, err = NewDiskGraphStorage(DISKGRAPHSTORAGE_TEST_DBDIR2)
+	_, err = NewDiskGraphStorage(diskGraphStorageTestDBDir2)
 	if err == nil {
 		t.Error("Unexpected new disk graph storage result")
-		FILENAME_NAME_DB = old
+		FilenameNameDB = old
 		return
 	}
 
-	_, err = NewDiskGraphStorage(DISKGRAPHSTORAGE_TEST_DBDIR2)
+	_, err = NewDiskGraphStorage(diskGraphStorageTestDBDir2)
 	if err == nil {
 		t.Error("Unexpected new disk graph storage result")
-		FILENAME_NAME_DB = old
+		FilenameNameDB = old
 		return
 	}
 
-	FILENAME_NAME_DB = old
+	FilenameNameDB = old
 
-	dgs := &DiskGraphStorage{INVALID_FILE_NAME, nil, make(map[string]storage.StorageManager)}
-	pm, _ := datautil.NewPersistentMap(INVALID_FILE_NAME)
+	dgs := &DiskGraphStorage{invalidFileName, nil, make(map[string]storage.Manager)}
+	pm, _ := datautil.NewPersistentMap(invalidFileName)
 	dgs.mainDB = pm
 
 	msm := storage.NewMemoryStorageManager("test")

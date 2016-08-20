@@ -9,16 +9,21 @@
  */
 
 /*
+Package storage contains API classes for data storage in slots.
+
 A storage manager handles the data storage.
 */
 package storage
 
 /*
-Version root id.
+RootIDVersion is the root id holding the version.
 */
-const ROOT_ID_VERSION = 1
+const RootIDVersion = 1
 
-type StorageManager interface {
+/*
+Manager describes an abstract storage manager.
+*/
+type Manager interface {
 
 	/*
 	   Name returns the name of the StorageManager instance.

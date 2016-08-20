@@ -9,6 +9,8 @@
  */
 
 /*
+Package data contains classes and functions to handle graph data.
+
 Edges are items stored in the graph. Edges connect nodes. The graphEdge object
 is the minimal implementation of the Edge interface and represents a simple edge.
 Edges have attributes which may or may not be presentable as a string. Setting a
@@ -18,6 +20,9 @@ package data
 
 import "fmt"
 
+/*
+Edge models edges in the graph
+*/
 type Edge interface {
 	Node
 
@@ -83,44 +88,44 @@ type Edge interface {
 }
 
 /*
-Key of the first end
+EdgeEnd1Key is the key of the first end
 */
-const EDGE_END1_KEY = "end1key"
+const EdgeEnd1Key = "end1key"
 
 /*
-Kind of the first end
+EdgeEnd1Kind is the kind of the first end
 */
-const EDGE_END1_KIND = "end1kind"
+const EdgeEnd1Kind = "end1kind"
 
 /*
-Role of the first end
+EdgeEnd1Role is the role of the first end
 */
-const EDGE_END1_ROLE = "end1role"
+const EdgeEnd1Role = "end1role"
 
 /*
-Flag to cascade delete operations from the first end
+EdgeEnd1Cascading is the flag to cascade delete operations from the first end
 */
-const EDGE_END1_CASCADING = "end1cascading"
+const EdgeEnd1Cascading = "end1cascading"
 
 /*
-Key of the second end
+EdgeEnd2Key is the key of the second end
 */
-const EDGE_END2_KEY = "end2key"
+const EdgeEnd2Key = "end2key"
 
 /*
-Kind of the second end
+EdgeEnd2Kind is the kind of the second end
 */
-const EDGE_END2_KIND = "end2kind"
+const EdgeEnd2Kind = "end2kind"
 
 /*
-Role of the second end
+EdgeEnd2Role is the role of the second end
 */
-const EDGE_END2_ROLE = "end2role"
+const EdgeEnd2Role = "end2role"
 
 /*
-Flag to cascade delete operations from the second end
+EdgeEnd2Cascading is the flag to cascade delete operations from the second end
 */
-const EDGE_END2_CASCADING = "end2cascading"
+const EdgeEnd2Cascading = "end2cascading"
 
 /*
 graphEdge data structure.
@@ -150,21 +155,21 @@ func NewGraphEdgeFromNode(node Node) Edge {
 End1Key returns the key of the first end of this edge.
 */
 func (ge *graphEdge) End1Key() string {
-	return ge.stringAttr(EDGE_END1_KEY)
+	return ge.stringAttr(EdgeEnd1Key)
 }
 
 /*
 	End1Kind returns the kind of the first end of this edge.
 */
 func (ge *graphEdge) End1Kind() string {
-	return ge.stringAttr(EDGE_END1_KIND)
+	return ge.stringAttr(EdgeEnd1Kind)
 }
 
 /*
 	End1Role returns the role of the first end of this edge.
 */
 func (ge *graphEdge) End1Role() string {
-	return ge.stringAttr(EDGE_END1_ROLE)
+	return ge.stringAttr(EdgeEnd1Role)
 }
 
 /*
@@ -172,28 +177,28 @@ func (ge *graphEdge) End1Role() string {
 	to the other end.
 */
 func (ge *graphEdge) End1IsCascading() bool {
-	return ge.Attr(EDGE_END1_CASCADING).(bool)
+	return ge.Attr(EdgeEnd1Cascading).(bool)
 }
 
 /*
 	End2Key returns the key of the second end of this edge.
 */
 func (ge *graphEdge) End2Key() string {
-	return ge.stringAttr(EDGE_END2_KEY)
+	return ge.stringAttr(EdgeEnd2Key)
 }
 
 /*
 	End2Kind returns the kind of the second end of this edge.
 */
 func (ge *graphEdge) End2Kind() string {
-	return ge.stringAttr(EDGE_END2_KIND)
+	return ge.stringAttr(EdgeEnd2Kind)
 }
 
 /*
 	End2Role returns the role of the second end of this edge.
 */
 func (ge *graphEdge) End2Role() string {
-	return ge.stringAttr(EDGE_END2_ROLE)
+	return ge.stringAttr(EdgeEnd2Role)
 }
 
 /*
@@ -201,7 +206,7 @@ func (ge *graphEdge) End2Role() string {
 	to the other end.
 */
 func (ge *graphEdge) End2IsCascading() bool {
-	return ge.Attr(EDGE_END2_CASCADING).(bool)
+	return ge.Attr(EdgeEnd2Cascading).(bool)
 }
 
 /*
@@ -249,10 +254,10 @@ can be used to provide a full-text search.
 */
 func (ge *graphEdge) IndexMap() map[string]string {
 	return createIndexMap(ge.graphNode, func(attr string) bool {
-		return attr == NODE_KEY || attr == NODE_KIND || attr == EDGE_END1_KEY ||
-			attr == EDGE_END1_KIND || attr == EDGE_END1_ROLE || attr == EDGE_END1_CASCADING ||
-			attr == EDGE_END2_KEY || attr == EDGE_END2_KIND || attr == EDGE_END2_ROLE ||
-			attr == EDGE_END2_CASCADING
+		return attr == NodeKey || attr == NodeKind || attr == EdgeEnd1Key ||
+			attr == EdgeEnd1Kind || attr == EdgeEnd1Role || attr == EdgeEnd1Cascading ||
+			attr == EdgeEnd2Key || attr == EdgeEnd2Kind || attr == EdgeEnd2Role ||
+			attr == EdgeEnd2Cascading
 	})
 }
 

@@ -8,18 +8,15 @@
  */
 
 /*
-Common error objects and functions.
+Package errorutil contains common error objects and functions.
 */
 package errorutil
 
 import "strings"
 
 /*
-Composite errors can collect multiple errors in a single error object.
-*/
-
-/*
-CompositeError datastructure
+CompositeError datastructure. Composite errors can collect multiple errors in a
+single error object.
 */
 type CompositeError struct {
 	Errors []string

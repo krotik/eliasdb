@@ -9,6 +9,8 @@
  */
 
 /*
+Package interpreter contains the EQL interpreter.
+
 Function related runtime components
 */
 package interpreter
@@ -26,7 +28,7 @@ import (
 // =======================
 
 /*
-A where related function.
+FuncWhere represents a where related function.
 */
 type FuncWhere func(astNode *parser.ASTNode, rtp *eqlRuntimeProvider,
 	node data.Node, edge data.Edge) (interface{}, error)
@@ -69,7 +71,7 @@ var showFunc = map[string]FuncShowInst{
 }
 
 /*
-Interface for show related functions
+FuncShow is the interface definition for show related functions
 */
 type FuncShow interface {
 
@@ -90,14 +92,17 @@ type FuncShow interface {
 }
 
 /*
-   Create a function object. Returns which column data should be queried and
-   how the colummn should be named.
+FuncShowInst creates a function object. Returns which column data should be queried and
+how the colummn should be named.
 */
 type FuncShowInst func(astNode *parser.ASTNode, rtp *eqlRuntimeProvider) (FuncShow, string, string, error)
 
 // Show Count
 // ----------
 
+/*
+showCountInst creates a new showCount object.
+*/
 func showCountInst(astNode *parser.ASTNode, rtp *eqlRuntimeProvider) (FuncShow, string, string, error) {
 
 	// Check parameters
@@ -113,13 +118,16 @@ func showCountInst(astNode *parser.ASTNode, rtp *eqlRuntimeProvider) (FuncShow, 
 }
 
 /*
-Count reachable nodes via a given traversal spec.
+showCount is the number of reachable nodes via a given traversal spec.
 */
 type showCount struct {
 	rtp  *eqlRuntimeProvider
 	spec string
 }
 
+/*
+name returns the name of the function.
+*/
 func (sc *showCount) name() string {
 	return "count"
 }
@@ -135,7 +143,7 @@ func (sc *showCount) eval(node data.Node, edge data.Edge) (interface{}, string, 
 	}
 
 	srcQuery := fmt.Sprintf("q:lookup %s \"%s\" traverse %s end show 2:n:%s, 2:n:%s, 2:n:%s",
-		node.Kind(), strconv.Quote(node.Key()), sc.spec, data.NODE_KEY, data.NODE_KIND, data.NODE_NAME)
+		node.Kind(), strconv.Quote(node.Key()), sc.spec, data.NodeKey, data.NodeKind, data.NodeName)
 
 	return len(nodes), srcQuery, nil
 }

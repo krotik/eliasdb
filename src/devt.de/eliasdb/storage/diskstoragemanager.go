@@ -9,6 +9,8 @@
  */
 
 /*
+Package storage contains API classes for data storage in slots.
+
 A disk storage manager handles the data storage on disk.
 */
 package storage
@@ -30,50 +32,52 @@ import (
 )
 
 /*
-DiskStorageManager Version
+VERSION constains the version of the storage API
 */
 const VERSION = 1
 
 /*
-File ending for lockfile.
+FileSiffixLockfile is the file ending for lockfiles
 */
-const FILE_SUFFIX_LOCKFILE = "lck"
+const FileSiffixLockfile = "lck"
 
 /*
-File ending for logical slot storage.
+FileSuffixLogicalSlots is the file ending for a logical slot storage
 */
-const FILE_SUFFIX_LOGICAL_SLOTS = "ix"
+const FileSuffixLogicalSlots = "ix"
 
 /*
-File ending for free logical slot storage.
+FileSuffixLogicalFreeSlots is the file ending for a free logical slot storage
 */
-const FILE_SUFFIX_LOGICAL_FREE_SLOTS = "ixf"
+const FileSuffixLogicalFreeSlots = "ixf"
 
 /*
-File ending for physical slot storage.
+FileSuffixPhysicalSlots is the file ending for a physical slot storage
 */
-const FILE_SUFFIX_PHYSICAL_SLOTS = "db"
+const FileSuffixPhysicalSlots = "db"
 
 /*
-File ending for free physical slot storage.
+FileSuffixPhysicalFreeSlots is the file ending for a free physical slot storage
 */
-const FILE_SUFFIX_PHYSICAL_FREE_SLOTS = "dbf"
+const FileSuffixPhysicalFreeSlots = "dbf"
 
 /*
-Physical slots will contain actual data they need to have fairly large block sizes.
+BlockSizePhysicalSlots is the block for a physical slot file. Physical slots will
+contain actual data they need to have fairly large block sizes.
 */
-const BLOCK_SIZE_PHYSICAL_SLOTs = 1024 * 8
+const BlockSizePhysicalSlots = 1024 * 8
 
 /*
-Logical slots contain only data they only need small blocks.
+BlockSizeLogicalSlots is the block for a logical slot file. Logical slots contain only
+pointers they only need small blocks.
 */
-const BLOCK_SIZE_LOGICAL_SLOTS = 1024 * 2
+const BlockSizeLogicalSlots = 1024 * 2
 
 /*
-Files containing only free slot pointers will always be small. They only need
-tiny blocks.
+BlockSizeFreeSlots is the block for a free slot files. Files containing only free slot
+pointers will always be small. They only need tiny blocks.
 */
-const BLOCK_SIZE_FREE_SLOTS = 1024
+const BlockSizeFreeSlots = 1024
 
 /*
 DiskStorageManager data structure
@@ -84,19 +88,19 @@ type DiskStorageManager struct {
 	transDisabled bool        // Flag if transactions are enabled
 	mutex         *sync.Mutex // Mutex to protect actual file operations
 
-	physical_slots_sf         *file.StorageFile        // StorageFile for physical slots
-	physical_slots_pager      *paging.PagedStorageFile // Pager for physical slots StorageFile
-	physical_free_slots_sf    *file.StorageFile        // StorageFile for free physical slots
-	physical_free_slots_pager *paging.PagedStorageFile // Pager for free physical slots StorageFile
+	physicalSlotsSf        *file.StorageFile        // StorageFile for physical slots
+	physicalSlotsPager     *paging.PagedStorageFile // Pager for physical slots StorageFile
+	physicalFreeSlotsSf    *file.StorageFile        // StorageFile for free physical slots
+	physicalFreeSlotsPager *paging.PagedStorageFile // Pager for free physical slots StorageFile
 
-	physical_slot_manager *slotting.PhysicalSlotManager // Manager for physical slots
+	physicalSlotManager *slotting.PhysicalSlotManager // Manager for physical slots
 
-	logical_slots_sf         *file.StorageFile        // StorageFile for logical slots
-	logical_slots_pager      *paging.PagedStorageFile // Pager for logical slots StorageFile
-	logical_free_slots_sf    *file.StorageFile        // StorageFile for free logical slots
-	logical_free_slots_pager *paging.PagedStorageFile // Pager for free logical slots StorageFile
+	logicalSlotsSf        *file.StorageFile        // StorageFile for logical slots
+	logicalSlotsPager     *paging.PagedStorageFile // Pager for logical slots StorageFile
+	logicalFreeSlotsSf    *file.StorageFile        // StorageFile for free logical slots
+	logicalFreeSlotsPager *paging.PagedStorageFile // Pager for free logical slots StorageFile
 
-	logical_slot_manager *slotting.LogicalSlotManager // Manager for physical slots
+	logicalSlotManager *slotting.LogicalSlotManager // Manager for physical slots
 
 	lockfile *lockutil.LockFile // Lockfile manager
 }
@@ -114,7 +118,7 @@ func NewDiskStorageManager(filename string, onlyAppend bool, transDisabled bool,
 	// Create a lockfile which is checked every 50 milliseconds
 
 	if !lockfileDisabled {
-		lf = lockutil.NewLockFile(fmt.Sprintf("%v.%v", filename, FILE_SUFFIX_LOCKFILE),
+		lf = lockutil.NewLockFile(fmt.Sprintf("%v.%v", filename, FileSiffixLockfile),
 			time.Duration(50)*time.Millisecond)
 	}
 
@@ -123,18 +127,18 @@ func NewDiskStorageManager(filename string, onlyAppend bool, transDisabled bool,
 
 	err := initDiskStorageManager(dsm)
 	if err != nil {
-		panic(fmt.Sprintf("Could not initialize DiskStroageManager:", filename))
+		panic(fmt.Sprintf("Could not initialize DiskStroageManager: %v", filename))
 	}
 
 	return dsm
 }
 
 /*
-Check if the main datastore file exists.
+DataFileExist checks if the main datastore file exists.
 */
-func StorageFileExist(filename string) bool {
+func DataFileExist(filename string) bool {
 	ret, err := fileutil.PathExists(fmt.Sprintf("%v.%v.0", filename,
-		FILE_SUFFIX_PHYSICAL_SLOTS))
+		FileSuffixPhysicalSlots))
 
 	if err != nil {
 		return false
@@ -143,6 +147,9 @@ func StorageFileExist(filename string) bool {
 	return ret
 }
 
+/*
+Name returns the name of the StorageManager instance.
+*/
 func (dsm *DiskStorageManager) Name() string {
 	return fmt.Sprint("DiskStorageFile:", dsm.filename)
 }
@@ -155,7 +162,7 @@ func (dsm *DiskStorageManager) Root(root int) uint64 {
 	defer dsm.mutex.Unlock()
 
 	dsm.checkFileOpen()
-	return dsm.physical_slots_pager.Header().Root(root)
+	return dsm.physicalSlotsPager.Header().Root(root)
 }
 
 /*
@@ -166,7 +173,7 @@ func (dsm *DiskStorageManager) SetRoot(root int, val uint64) {
 	defer dsm.mutex.Unlock()
 
 	dsm.checkFileOpen()
-	dsm.physical_slots_pager.Header().SetRoot(root, val)
+	dsm.physicalSlotsPager.Header().SetRoot(root, val)
 }
 
 /*
@@ -193,14 +200,14 @@ func (dsm *DiskStorageManager) Insert(o interface{}) (uint64, error) {
 
 	// Store the data in a physical slot
 
-	ploc, err := dsm.physical_slot_manager.Insert(bb.Bytes(), 0, uint32(bb.Len()))
+	ploc, err := dsm.physicalSlotManager.Insert(bb.Bytes(), 0, uint32(bb.Len()))
 	if err != nil {
 		return 0, err
 	}
 
 	// Get a logical slot for the physical slot
 
-	loc, err := dsm.logical_slot_manager.Insert(ploc)
+	loc, err := dsm.logicalSlotManager.Insert(ploc)
 	if err != nil {
 		return 0, err
 	}
@@ -222,7 +229,7 @@ func (dsm *DiskStorageManager) Update(loc uint64, o interface{}) error {
 	// Get the physical slot for the given logical slot
 
 	dsm.mutex.Lock()
-	ploc, err := dsm.logical_slot_manager.Fetch(loc)
+	ploc, err := dsm.logicalSlotManager.Fetch(loc)
 	dsm.mutex.Unlock()
 	if err != nil {
 		return err
@@ -251,7 +258,7 @@ func (dsm *DiskStorageManager) Update(loc uint64, o interface{}) error {
 
 	// Update the physical record
 
-	newPloc, err := dsm.physical_slot_manager.Update(ploc, bb.Bytes(), 0, uint32(bb.Len()))
+	newPloc, err := dsm.physicalSlotManager.Update(ploc, bb.Bytes(), 0, uint32(bb.Len()))
 	if err != nil {
 		return err
 	}
@@ -264,7 +271,7 @@ func (dsm *DiskStorageManager) Update(loc uint64, o interface{}) error {
 	// Update the logical slot if the physical slot has changed
 
 	if newPloc != ploc {
-		return dsm.logical_slot_manager.Update(loc, newPloc)
+		return dsm.logicalSlotManager.Update(loc, newPloc)
 	}
 
 	return nil
@@ -280,7 +287,7 @@ func (dsm *DiskStorageManager) Fetch(loc uint64, o interface{}) error {
 	// Get the physical slot for the given logical slot
 
 	dsm.mutex.Lock()
-	ploc, err := dsm.logical_slot_manager.Fetch(loc)
+	ploc, err := dsm.logicalSlotManager.Fetch(loc)
 	dsm.mutex.Unlock()
 	if err != nil {
 		return err
@@ -298,7 +305,7 @@ func (dsm *DiskStorageManager) Fetch(loc uint64, o interface{}) error {
 	// Request the stored bytes
 
 	dsm.mutex.Lock()
-	err = dsm.physical_slot_manager.Fetch(ploc, bb)
+	err = dsm.physicalSlotManager.Fetch(ploc, bb)
 	dsm.mutex.Unlock()
 	if err != nil {
 		return err
@@ -340,7 +347,7 @@ func (dsm *DiskStorageManager) Free(loc uint64) error {
 
 	// Get the physical slot for the given logical slot
 
-	ploc, err := dsm.logical_slot_manager.Fetch(loc)
+	ploc, err := dsm.logicalSlotManager.Fetch(loc)
 	if err != nil {
 		return err
 	}
@@ -353,7 +360,7 @@ func (dsm *DiskStorageManager) Free(loc uint64) error {
 	// First try to free the physical slot since here is the data
 	// if this fails we don't touch the logical slot
 
-	err = dsm.physical_slot_manager.Free(ploc)
+	err = dsm.physicalSlotManager.Free(ploc)
 	if err != nil {
 		return err
 	}
@@ -361,7 +368,7 @@ func (dsm *DiskStorageManager) Free(loc uint64) error {
 	// This is very unlikely to fail - either way we can't do anything
 	// at this point since the physical slot has already gone away
 
-	return dsm.logical_slot_manager.Free(loc)
+	return dsm.logicalSlotManager.Free(loc)
 }
 
 /*
@@ -379,27 +386,27 @@ func (dsm *DiskStorageManager) Flush() error {
 
 	// Write pending changes
 
-	if err := dsm.physical_slot_manager.Flush(); err != nil {
+	if err := dsm.physicalSlotManager.Flush(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.logical_slot_manager.Flush(); err != nil {
+	if err := dsm.logicalSlotManager.Flush(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.physical_slots_pager.Flush(); err != nil {
+	if err := dsm.physicalSlotsPager.Flush(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.physical_free_slots_pager.Flush(); err != nil {
+	if err := dsm.physicalFreeSlotsPager.Flush(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.logical_slots_pager.Flush(); err != nil {
+	if err := dsm.logicalSlotsPager.Flush(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.logical_free_slots_pager.Flush(); err != nil {
+	if err := dsm.logicalFreeSlotsPager.Flush(); err != nil {
 		ce.Add(err)
 	}
 
@@ -434,29 +441,29 @@ func (dsm *DiskStorageManager) Rollback() error {
 
 	// Write pending manager changes to transaction log
 
-	if err := dsm.physical_slot_manager.Flush(); err != nil {
+	if err := dsm.physicalSlotManager.Flush(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.logical_slot_manager.Flush(); err != nil {
+	if err := dsm.logicalSlotManager.Flush(); err != nil {
 		ce.Add(err)
 	}
 
 	// Rollback current transaction
 
-	if err := dsm.physical_slots_pager.Rollback(); err != nil {
+	if err := dsm.physicalSlotsPager.Rollback(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.physical_free_slots_pager.Rollback(); err != nil {
+	if err := dsm.physicalFreeSlotsPager.Rollback(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.logical_slots_pager.Rollback(); err != nil {
+	if err := dsm.logicalSlotsPager.Rollback(); err != nil {
 		ce.Add(err)
 	}
 
-	if err := dsm.logical_free_slots_pager.Rollback(); err != nil {
+	if err := dsm.logicalFreeSlotsPager.Rollback(); err != nil {
 		ce.Add(err)
 	}
 
@@ -484,16 +491,16 @@ func (dsm *DiskStorageManager) Close() error {
 
 	// Try to close all files and collect any errors which are returned
 
-	if err := dsm.physical_slots_pager.Close(); err != nil {
+	if err := dsm.physicalSlotsPager.Close(); err != nil {
 		ce.Add(err)
 	}
-	if err := dsm.physical_free_slots_pager.Close(); err != nil {
+	if err := dsm.physicalFreeSlotsPager.Close(); err != nil {
 		ce.Add(err)
 	}
-	if err := dsm.logical_slots_pager.Close(); err != nil {
+	if err := dsm.logicalSlotsPager.Close(); err != nil {
 		ce.Add(err)
 	}
-	if err := dsm.logical_free_slots_pager.Close(); err != nil {
+	if err := dsm.logicalFreeSlotsPager.Close(); err != nil {
 		ce.Add(err)
 	}
 
@@ -505,16 +512,16 @@ func (dsm *DiskStorageManager) Close() error {
 
 	// Release all file related objects
 
-	dsm.physical_slots_sf = nil
-	dsm.physical_slots_pager = nil
-	dsm.physical_free_slots_sf = nil
-	dsm.physical_free_slots_pager = nil
-	dsm.physical_slot_manager = nil
-	dsm.logical_slots_sf = nil
-	dsm.logical_slots_pager = nil
-	dsm.logical_free_slots_sf = nil
-	dsm.logical_free_slots_pager = nil
-	dsm.logical_slot_manager = nil
+	dsm.physicalSlotsSf = nil
+	dsm.physicalSlotsPager = nil
+	dsm.physicalFreeSlotsSf = nil
+	dsm.physicalFreeSlotsPager = nil
+	dsm.physicalSlotManager = nil
+	dsm.logicalSlotsSf = nil
+	dsm.logicalSlotsPager = nil
+	dsm.logicalFreeSlotsSf = nil
+	dsm.logicalFreeSlotsPager = nil
+	dsm.logicalSlotManager = nil
 
 	if dsm.lockfile != nil {
 		return dsm.lockfile.Finish()
@@ -527,7 +534,7 @@ func (dsm *DiskStorageManager) Close() error {
 checkFileOpen checks that the files on disk are still open.
 */
 func (dsm *DiskStorageManager) checkFileOpen() {
-	if dsm.physical_slots_sf == nil {
+	if dsm.physicalSlotsSf == nil {
 		panic(fmt.Sprint("Trying to access DiskStorageManager after it was closed: ", dsm.filename))
 	}
 	if dsm.lockfile != nil && !dsm.lockfile.WatcherRunning() {
@@ -555,57 +562,57 @@ func initDiskStorageManager(dsm *DiskStorageManager) error {
 	ce := errorutil.NewCompositeError()
 
 	sf, pager, err := createFileAndPager(
-		fmt.Sprintf("%v.%v", dsm.filename, FILE_SUFFIX_PHYSICAL_SLOTS),
-		BLOCK_SIZE_PHYSICAL_SLOTs, dsm)
+		fmt.Sprintf("%v.%v", dsm.filename, FileSuffixPhysicalSlots),
+		BlockSizePhysicalSlots, dsm)
 
 	if err != nil {
 		ce.Add(err)
 	}
 
-	dsm.physical_slots_sf = sf
-	dsm.physical_slots_pager = pager
+	dsm.physicalSlotsSf = sf
+	dsm.physicalSlotsPager = pager
 
 	sf, pager, err = createFileAndPager(
-		fmt.Sprintf("%v.%v", dsm.filename, FILE_SUFFIX_PHYSICAL_FREE_SLOTS),
-		BLOCK_SIZE_FREE_SLOTS, dsm)
+		fmt.Sprintf("%v.%v", dsm.filename, FileSuffixPhysicalFreeSlots),
+		BlockSizeFreeSlots, dsm)
 
 	if err != nil {
 		ce.Add(err)
 	}
 
-	dsm.physical_free_slots_sf = sf
-	dsm.physical_free_slots_pager = pager
+	dsm.physicalFreeSlotsSf = sf
+	dsm.physicalFreeSlotsPager = pager
 
 	if !ce.HasErrors() {
-		dsm.physical_slot_manager = slotting.NewPhysicalSlotManager(dsm.physical_slots_pager,
-			dsm.physical_free_slots_pager, dsm.onlyAppend)
+		dsm.physicalSlotManager = slotting.NewPhysicalSlotManager(dsm.physicalSlotsPager,
+			dsm.physicalFreeSlotsPager, dsm.onlyAppend)
 	}
 
 	sf, pager, err = createFileAndPager(
-		fmt.Sprintf("%v.%v", dsm.filename, FILE_SUFFIX_LOGICAL_SLOTS),
-		BLOCK_SIZE_LOGICAL_SLOTS, dsm)
+		fmt.Sprintf("%v.%v", dsm.filename, FileSuffixLogicalSlots),
+		BlockSizeLogicalSlots, dsm)
 
 	if err != nil {
 		ce.Add(err)
 	}
 
-	dsm.logical_slots_sf = sf
-	dsm.logical_slots_pager = pager
+	dsm.logicalSlotsSf = sf
+	dsm.logicalSlotsPager = pager
 
 	sf, pager, err = createFileAndPager(
-		fmt.Sprintf("%v.%v", dsm.filename, FILE_SUFFIX_LOGICAL_FREE_SLOTS),
-		BLOCK_SIZE_FREE_SLOTS, dsm)
+		fmt.Sprintf("%v.%v", dsm.filename, FileSuffixLogicalFreeSlots),
+		BlockSizeFreeSlots, dsm)
 
 	if err != nil {
 		ce.Add(err)
 	}
 
-	dsm.logical_free_slots_sf = sf
-	dsm.logical_free_slots_pager = pager
+	dsm.logicalFreeSlotsSf = sf
+	dsm.logicalFreeSlotsPager = pager
 
 	if !ce.HasErrors() {
-		dsm.logical_slot_manager = slotting.NewLogicalSlotManager(dsm.logical_slots_pager,
-			dsm.logical_free_slots_pager)
+		dsm.logicalSlotManager = slotting.NewLogicalSlotManager(dsm.logicalSlotsPager,
+			dsm.logicalFreeSlotsPager)
 	}
 
 	// If there were any file related errors return at this point
@@ -623,7 +630,7 @@ func initDiskStorageManager(dsm *DiskStorageManager) error {
 
 	// Check version
 
-	version := dsm.Root(ROOT_ID_VERSION)
+	version := dsm.Root(RootIDVersion)
 	if version > VERSION {
 
 		// Try to clean up
@@ -636,7 +643,7 @@ func initDiskStorageManager(dsm *DiskStorageManager) error {
 	}
 
 	if version != VERSION {
-		dsm.SetRoot(ROOT_ID_VERSION, VERSION)
+		dsm.SetRoot(RootIDVersion, VERSION)
 	}
 
 	return nil

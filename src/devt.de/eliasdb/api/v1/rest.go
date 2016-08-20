@@ -9,7 +9,7 @@
  */
 
 /*
-Definition for EliasDB REST API Version 1
+Package v1 contains EliasDB REST API Version 1.
 */
 package v1
 
@@ -21,19 +21,29 @@ import (
 	"devt.de/eliasdb/api"
 )
 
-const API_VERSION_V1 = "/v1"
-
-const HTTP_HEADER_TOTAL_COUNT = "X-Total-Count"
-const HTTP_HEADER_CACHE_ID = "X-Cache-Id"
+/*
+APIv1 is the directory for version 1 of the API
+*/
+const APIv1 = "/v1"
 
 /*
-Map of urls to endpoints
+HTTPHeaderTotalCount is a special header value containing the total count of objects.
+*/
+const HTTPHeaderTotalCount = "X-Total-Count"
+
+/*
+HTTPHeaderCacheID is a special header value containing a cache ID for a quick follow up query.
+*/
+const HTTPHeaderCacheID = "X-Cache-Id"
+
+/*
+V1EndpointMap is a map of urls to endpoints for version 1 of the API
 */
 var V1EndpointMap = map[string]api.RestEndpointInst{
-	ENDPOINT_INDEX_QUERY: IndexEndpointInst,
-	ENDPOINT_QUERY:       QueryEndpointInst,
-	ENDPOINT_GRAPH:       GraphEndpointInst,
-	ENDPOINT_INFO_QUERY:  InfoEndpointInst,
+	EndpointIndexQuery: IndexEndpointInst,
+	EndpointQuery:      QueryEndpointInst,
+	EndpointGraph:      GraphEndpointInst,
+	EndpointInfoQuery:  InfoEndpointInst,
 }
 
 // Helper functions

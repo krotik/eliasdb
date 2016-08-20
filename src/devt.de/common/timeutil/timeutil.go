@@ -8,7 +8,7 @@
  */
 
 /*
-Common function for time related operations.
+Package timeutil contains common function for time related operations.
 */
 package timeutil
 

@@ -9,6 +9,8 @@
  */
 
 /*
+Package file deals with low level file storage and transaction management.
+
 StorageFile models a logical storage file which stores fixed size records on
 disk. Each record has a unique record id. On disk this record file might be
 split into several smaller files. StorageFiles can be reused after they were
@@ -41,15 +43,15 @@ var (
 	ErrNilData       = newStorageFileError("Record has nil data")
 )
 
-/**
- * Default size of a record
- */
-const DEFAULT_RECORD_SIZE = 4096
+/*
+DefaultRecordSize is the default size of a record in bytes
+*/
+const DefaultRecordSize = 4096
 
-/**
- * Default size of a physical file (10GB)
- */
-const DEFAULT_FILE_SIZE = 0x2540BE401 // 10000000001 Bytes
+/*
+DefaultFileSize is the default size of a physical file (10GB)
+*/
+const DefaultFileSize = 0x2540BE401 // 10000000001 Bytes
 
 /*
 StorageFile data structure
@@ -75,14 +77,14 @@ NewDefaultStorageFile creates a new storage file with default record size and
 returns a reference to it.
 */
 func NewDefaultStorageFile(name string, transDisabled bool) (*StorageFile, error) {
-	return NewStorageFile(name, DEFAULT_RECORD_SIZE, transDisabled)
+	return NewStorageFile(name, DefaultRecordSize, transDisabled)
 }
 
 /*
 NewStorageFile creates a new storage file and returns a reference to it.
 */
 func NewStorageFile(name string, recordSize uint32, transDisabled bool) (*StorageFile, error) {
-	maxFileSize := DEFAULT_FILE_SIZE - DEFAULT_FILE_SIZE%uint64(recordSize)
+	maxFileSize := DefaultFileSize - DefaultFileSize%uint64(recordSize)
 
 	ret := &StorageFile{name, transDisabled, recordSize, maxFileSize,
 		make(map[uint64]*Record), make(map[uint64]*Record), make(map[uint64]*Record),
@@ -181,7 +183,7 @@ func (s *StorageFile) getFile(offset uint64) (*os.File, error) {
 		s.files = append(s.files, nil)
 	}
 
-	var ret *os.File = nil
+	var ret *os.File
 
 	if len(s.files) > filenumber {
 		ret = s.files[filenumber]
@@ -228,7 +230,7 @@ func (s *StorageFile) createRecord(id uint64) *Record {
 		record = NewRecord(id, make([]byte, s.recordSize, s.recordSize))
 	}
 
-	record.SetId(id)
+	record.SetID(id)
 	record.SetPageView(nil)
 	record.ClearDirty()
 
@@ -243,7 +245,7 @@ func (s *StorageFile) writeRecord(record *Record) error {
 
 	if data != nil {
 
-		offset := record.Id() * uint64(s.recordSize)
+		offset := record.ID() * uint64(s.recordSize)
 
 		file, err := s.getFile(offset)
 		if err != nil {
@@ -255,7 +257,7 @@ func (s *StorageFile) writeRecord(record *Record) error {
 		return nil
 	}
 
-	return ErrNilData.fireError(s, fmt.Sprintf("Record %v", record.Id()))
+	return ErrNilData.fireError(s, fmt.Sprintf("Record %v", record.ID()))
 }
 
 /*
@@ -264,10 +266,10 @@ readRecord fills a given record object with data.
 func (s *StorageFile) readRecord(record *Record) error {
 
 	if record.Data() == nil {
-		return ErrNilData.fireError(s, fmt.Sprintf("Record %v", record.Id()))
+		return ErrNilData.fireError(s, fmt.Sprintf("Record %v", record.ID()))
 	}
 
-	offset := record.Id() * uint64(s.recordSize)
+	offset := record.ID() * uint64(s.recordSize)
 
 	file, err := s.getFile(offset)
 	if err != nil {
@@ -300,7 +302,7 @@ func (s *StorageFile) Discard(record *Record) {
 		return
 	}
 
-	delete(s.inUse, record.Id())
+	delete(s.inUse, record.ID())
 }
 
 /*
@@ -312,22 +314,22 @@ func (s *StorageFile) releaseInTrans(record *Record, recycle bool) {
 		return
 	}
 
-	_, ok := s.inTrans[record.Id()]
+	_, ok := s.inTrans[record.ID()]
 
 	if ok {
-		delete(s.inTrans, record.Id())
+		delete(s.inTrans, record.ID())
 
 		if recycle {
-			s.free[record.Id()] = record
+			s.free[record.ID()] = record
 		}
 	}
 }
 
 /*
-ReleaseInUseId releases a record given by its id from the in-use map. The
+ReleaseInUseID releases a record given by its id from the in-use map. The
 client code may indicate if the record is not dirty.
 */
-func (s *StorageFile) ReleaseInUseId(id uint64, dirty bool) error {
+func (s *StorageFile) ReleaseInUseID(id uint64, dirty bool) error {
 	record, ok := s.inUse[id]
 
 	if !ok {
@@ -352,7 +354,7 @@ func (s *StorageFile) ReleaseInUse(record *Record) {
 		return
 	}
 
-	id := record.Id()
+	id := record.ID()
 
 	// Panic if a record which is release was not in-use.
 	if _, ok := s.inUse[id]; !ok {
@@ -504,13 +506,13 @@ func (s *StorageFile) String() string {
 
 	buf.WriteString("====\n")
 
-	printRecordIdMap(buf, &s.free, "Free")
+	printRecordIDMap(buf, &s.free, "Free")
 	buf.WriteString("\n")
-	printRecordIdMap(buf, &s.inUse, "InUse")
+	printRecordIDMap(buf, &s.inUse, "InUse")
 	buf.WriteString("\n")
-	printRecordIdMap(buf, &s.inTrans, "InTrans")
+	printRecordIDMap(buf, &s.inTrans, "InTrans")
 	buf.WriteString("\n")
-	printRecordIdMap(buf, &s.dirty, "Dirty")
+	printRecordIDMap(buf, &s.dirty, "Dirty")
 	buf.WriteString("\n")
 
 	buf.WriteString("Open files: ")
@@ -536,9 +538,9 @@ func (s *StorageFile) String() string {
 }
 
 /*
-Append the ids of a record map to a given buffer.
+printRecordIDMap appends the ids of a record map to a given buffer.
 */
-func printRecordIdMap(buf *bytes.Buffer, recordMap *map[uint64]*Record, name string) {
+func printRecordIDMap(buf *bytes.Buffer, recordMap *map[uint64]*Record, name string) {
 	buf.WriteString(name)
 	buf.WriteString(" Records: ")
 

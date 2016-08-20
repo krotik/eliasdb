@@ -9,6 +9,8 @@
  */
 
 /*
+Package parser contains the EQL parser.
+
 Parser related errors.
 */
 package parser
@@ -22,13 +24,13 @@ import (
 newParserError creates a new ParserError object.
 */
 func (p *parser) newParserError(t error, d string, token LexToken) error {
-	return &ParserError{p.name, t, d, token.Lline, token.Lpos}
+	return &Error{p.name, t, d, token.Lline, token.Lpos}
 }
 
 /*
-Parser related error
+Error models a parser related error
 */
-type ParserError struct {
+type Error struct {
 	Source string // Name of the source which was given to the parser
 	Type   error  // Error type (to be used for equal checks)
 	Detail string // Details of this error
@@ -39,7 +41,7 @@ type ParserError struct {
 /*
 Error returns a human-readable string representation of this error.
 */
-func (pe *ParserError) Error() string {
+func (pe *Error) Error() string {
 	var ret string
 
 	if pe.Detail != "" {

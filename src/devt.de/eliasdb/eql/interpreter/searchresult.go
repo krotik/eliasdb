@@ -8,6 +8,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/*
+Package interpreter contains the EQL interpreter.
+
+A search result represents the result of an EQL query.
+*/
 package interpreter
 
 import (
@@ -20,6 +25,9 @@ import (
 	"devt.de/eliasdb/graph/data"
 )
 
+/*
+SearchHeader is the header of a search result
+*/
 type SearchHeader struct {
 	ResPrimaryKind string   // Primary node kind
 	ColLabels      []string // Labels for columns
@@ -58,7 +66,7 @@ func (sh *SearchHeader) Data() []string {
 }
 
 /*
-Search result data structure.
+SearchResult data structure.
 */
 type SearchResult struct {
 	name      string     // Name to identify the result
@@ -202,7 +210,7 @@ func (sr *SearchResult) finish() {
 	if len(sr.withFlags.notnullCol) > 0 || len(sr.withFlags.uniqueCol) > 0 {
 
 		uniqueMaps := make([]map[string]int, len(sr.withFlags.uniqueCol))
-		for i, _ := range uniqueMaps {
+		for i := range uniqueMaps {
 			uniqueMaps[i] = make(map[string]int)
 		}
 
@@ -230,7 +238,7 @@ func (sr *SearchResult) finish() {
 
 			for j, u := range sr.withFlags.uniqueCol {
 				if _, ok := uniqueMaps[j][fmt.Sprint(row[u])]; ok {
-					uniqueMaps[j][fmt.Sprint(row[u])] += 1
+					uniqueMaps[j][fmt.Sprint(row[u])]++
 					sr.Data = append(sr.Data[:i], sr.Data[i+1:]...)
 					break
 				} else {
@@ -255,7 +263,7 @@ func (sr *SearchResult) finish() {
 
 	for i, ordering := range sr.withFlags.ordering {
 
-		sort.Stable(&SearchResultRowComparator{ordering == WITH_ORDERING_ASCENDING,
+		sort.Stable(&SearchResultRowComparator{ordering == withOrderingAscending,
 			sr.withFlags.orderingCol[i], sr.Data})
 	}
 
@@ -304,7 +312,6 @@ func (sr *SearchResult) RowSources() [][]string {
 	return sr.Source
 }
 
-
 /*
 String returns a string representation of this search result.
 */
@@ -346,8 +353,9 @@ func (sr *SearchResult) String() string {
 // Util functions
 // ==============
 
-// Comparator object used for sorting the result
-
+/*
+SearchResultRowComparator is a comparator object used for sorting the result
+*/
 type SearchResultRowComparator struct {
 	Ascening bool            // Sort should be ascending
 	Column   int             // Column to sort
@@ -368,17 +376,16 @@ func (c SearchResultRowComparator) Less(i, j int) bool {
 		if err == nil {
 			if c.Ascening {
 				return num1 < num2
-			} else {
-				return num1 > num2
 			}
+			return num1 > num2
 		}
 	}
 
 	if c.Ascening {
 		return fmt.Sprintf("%v", c1) < fmt.Sprintf("%v", c2)
-	} else {
-		return fmt.Sprintf("%v", c1) > fmt.Sprintf("%v", c2)
 	}
+
+	return fmt.Sprintf("%v", c1) > fmt.Sprintf("%v", c2)
 }
 
 func (c SearchResultRowComparator) Swap(i, j int) {

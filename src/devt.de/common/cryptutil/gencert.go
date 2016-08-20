@@ -1,15 +1,11 @@
 /*
- * Public Domain Software
- *
- * I (Matthias Ladkau) am the author of the source code in this file.
- * I have placed the source code in this file in the public domain.
- *
- * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
- */
+Package cryptutil contains cryptographic utility functions.
 
-/*
 Certificate generation code based on
 go source src/crypto/tls/generate_cert.go
+
+Copyright 2009 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
 */
 package cryptutil
 
@@ -31,7 +27,7 @@ import (
 )
 
 /*
-Generate certificate files in a given path.
+GenCert generates certificate files in a given path.
 
 path       - Path to generate the certificate in.
 certFile   - Certificate file to generate.
@@ -65,7 +61,7 @@ func GenCert(path string, certFile string, keyFile string, host string,
 	} else {
 		notBefore, err = time.Parse("Jan 2 15:04:05 2006", validFrom)
 		if err != nil {
-			return errors.New(fmt.Sprintf("Failed to parse creation date: %s", err))
+			return fmt.Errorf("Failed to parse creation date: %s", err)
 		}
 	}
 
@@ -87,11 +83,11 @@ func GenCert(path string, certFile string, keyFile string, host string,
 	case "P521":
 		priv, err = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	default:
-		err = errors.New(fmt.Sprintf("Unrecognized elliptic curve: %q", ecdsaCurve))
+		err = fmt.Errorf("Unrecognized elliptic curve: %q", ecdsaCurve)
 	}
 
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to generate private key: %s", err))
+		return fmt.Errorf("Failed to generate private key: %s", err)
 	}
 
 	// Generate serial random number
@@ -142,7 +138,7 @@ func GenCert(path string, certFile string, keyFile string, host string,
 		defer certOut.Close()
 
 		if err != nil {
-			return errors.New(fmt.Sprintf("Failed to open %s for writing: %s", certFile, err))
+			return fmt.Errorf("Failed to open %s for writing: %s", certFile, err)
 		}
 
 		pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
@@ -153,7 +149,7 @@ func GenCert(path string, certFile string, keyFile string, host string,
 		defer keyOut.Close()
 
 		if err != nil {
-			return errors.New(fmt.Sprintf("Failed to open %s for writing:", keyFile, err))
+			return fmt.Errorf("Failed to open %v for writing: %v", keyFile, err)
 		}
 
 		pem.Encode(keyOut, pemBlockForKey(priv))

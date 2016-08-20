@@ -27,9 +27,9 @@ import (
 	"devt.de/eliasdb/graph/graphstorage"
 )
 
-const TESTDB = "testdb"
+const testdb = "testdb"
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const invalidFileName = "**" + string(0x0)
 
 var printLog = []string{}
 var errorLog = []string{}
@@ -39,7 +39,7 @@ var printLogging = false
 func TestMain(m *testing.M) {
 	flag.Parse()
 
-	basepath = TESTDB + "/"
+	basepath = testdb + "/"
 
 	// Log all print and error messagesí
 
@@ -61,20 +61,20 @@ func TestMain(m *testing.M) {
 		basepath = ""
 	}()
 
-	if res, _ := fileutil.PathExists(TESTDB); res {
-		if err := os.RemoveAll(TESTDB); err != nil {
+	if res, _ := fileutil.PathExists(testdb); res {
+		if err := os.RemoveAll(testdb); err != nil {
 			fmt.Print("Could not remove test directory:", err.Error())
 		}
 	}
 
-	ensurePath(TESTDB)
+	ensurePath(testdb)
 
 	// Run the tests
 
 	res := m.Run()
 
-	if res, _ := fileutil.PathExists(TESTDB); res {
-		if err := os.RemoveAll(TESTDB); err != nil {
+	if res, _ := fileutil.PathExists(testdb); res {
+		if err := os.RemoveAll(testdb); err != nil {
 			fmt.Print("Could not remove test directory:", err.Error())
 		}
 	}
@@ -91,11 +91,11 @@ func TestMainNormalCase(t *testing.T) {
 	// Make sure to remove any files
 
 	defer func() {
-		if err := os.RemoveAll(TESTDB); err != nil {
+		if err := os.RemoveAll(testdb); err != nil {
 			fmt.Print("Could not remove test directory:", err.Error())
 		}
 		time.Sleep(time.Duration(100) * time.Millisecond)
-		ensurePath(TESTDB)
+		ensurePath(testdb)
 	}()
 
 	// Reset logs
@@ -172,11 +172,11 @@ func TestMainErrorCases(t *testing.T) {
 	// Make sure to remove any files
 
 	defer func() {
-		if err := os.RemoveAll(TESTDB); err != nil {
+		if err := os.RemoveAll(testdb); err != nil {
 			fmt.Print("Could not remove test directory:", err.Error())
 		}
 		time.Sleep(time.Duration(100) * time.Millisecond)
-		ensurePath(TESTDB)
+		ensurePath(testdb)
 	}()
 
 	// Setup config and logs
@@ -186,7 +186,7 @@ func TestMainErrorCases(t *testing.T) {
 	origBasePath := basepath
 
 	basepath = ""
-	ConfigFile = INVALID_FILE_NAME
+	ConfigFile = invalidFileName
 
 	printLog = []string{}
 	errorLog = []string{}
@@ -218,7 +218,7 @@ func TestMainErrorCases(t *testing.T) {
 
 	// Test db access error
 
-	Config[LocationDatastore] = INVALID_FILE_NAME
+	Config[LocationDatastore] = invalidFileName
 
 	main()
 
@@ -242,7 +242,7 @@ func TestMainErrorCases(t *testing.T) {
 
 	// Test failed ssl key generation
 
-	Config[HTTPSKey] = INVALID_FILE_NAME
+	Config[HTTPSKey] = invalidFileName
 
 	main()
 

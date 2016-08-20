@@ -22,7 +22,7 @@ func TestSlotInfoPage(t *testing.T) {
 
 	// Make sure the record has a correct magic
 
-	view.NewPageView(r, view.TYPE_DATA_PAGE)
+	view.NewPageView(r, view.TypeDataPage)
 
 	si := NewSlotInfoPage(r)
 

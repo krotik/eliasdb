@@ -61,7 +61,7 @@ func TestFreeLogicalSlotManager(t *testing.T) {
 
 	// Check pages are allocated
 
-	cursor := paging.NewPageCursor(flsm.pager, view.TYPE_FREE_LOGICAL_SLOT_PAGE, 0)
+	cursor := paging.NewPageCursor(flsm.pager, view.TypeFreeLogicalSlotPage, 0)
 
 	if page, err := cursor.Next(); page != 1 || err != nil {
 		t.Error("Unexpected free logical slot page:", page, err)
@@ -72,17 +72,17 @@ func TestFreeLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	page := flsm.pager.First(view.TYPE_FREE_LOGICAL_SLOT_PAGE)
+	page := flsm.pager.First(view.TypeFreeLogicalSlotPage)
 	if page != 1 {
 		t.Error("Unexpected first free logical slot page")
 		return
 	}
 
-	flsp_rec, err := sf.Get(1)
+	flspRec, err := sf.Get(1)
 	if err != nil {
 		t.Error(err)
 	}
-	flsp := pageview.NewFreeLogicalSlotPage(flsp_rec)
+	flsp := pageview.NewFreeLogicalSlotPage(flspRec)
 
 	if fsc := flsp.FreeSlotCount(); fsc != 2 {
 		t.Error("Unexpected number of stored free slots", fsc)
@@ -100,7 +100,7 @@ func TestFreeLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	sf.ReleaseInUse(flsp_rec)
+	sf.ReleaseInUse(flspRec)
 
 	// Check that we can find them
 
@@ -141,7 +141,7 @@ func TestFreeLogicalSlotManager(t *testing.T) {
 
 	checkLocation(t, loc, 4, 21)
 
-	err = sf.ReleaseInUseId(rec.Id(), false)
+	err = sf.ReleaseInUseID(rec.ID(), false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -186,7 +186,7 @@ func TestFreeLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	err = sf.ReleaseInUseId(rec.Id(), false)
+	err = sf.ReleaseInUseID(rec.ID(), false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -237,18 +237,18 @@ func TestFreeLogicalSlotManager(t *testing.T) {
 
 	// Manually free all slots on the first page
 
-	flsp_rec, err = sf.Get(1)
+	flspRec, err = sf.Get(1)
 	if err != nil {
 		t.Error(err)
 	}
-	flsp = pageview.NewFreeLogicalSlotPage(flsp_rec)
+	flsp = pageview.NewFreeLogicalSlotPage(flspRec)
 
 	var j uint16
 	for j = 0; j < flsp.MaxSlots(); j++ {
 		flsp.ReleaseSlotInfo(j)
 	}
 
-	sf.ReleaseInUse(flsp_rec)
+	sf.ReleaseInUse(flspRec)
 
 	// Check we get slotlocation 0 from second page
 
@@ -320,7 +320,7 @@ func TestFreeLogiclaSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := sf.ReleaseInUseId(1, false); err != nil {
+	if err := sf.ReleaseInUseID(1, false); err != nil {
 		t.Error(err)
 		return
 	}
@@ -339,7 +339,7 @@ func TestFreeLogiclaSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := shadow.ReleaseInUseId(1, false); err != nil {
+	if err := shadow.ReleaseInUseID(1, false); err != nil {
 		t.Error(err)
 		return
 	}
@@ -355,7 +355,7 @@ func TestFreeLogiclaSlotManagerScale(t *testing.T) {
 
 	// Count the allocated pages
 
-	c, err := paging.CountPages(flsm.pager, view.TYPE_FREE_LOGICAL_SLOT_PAGE)
+	c, err := paging.CountPages(flsm.pager, view.TypeFreeLogicalSlotPage)
 	if c != 10 || err != nil {
 		t.Error("Unexpected counting result:", c, err)
 		return
@@ -372,7 +372,7 @@ func TestFreeLogiclaSlotManagerScale(t *testing.T) {
 
 	// Count the allocated pages (one page should be free now)
 
-	c, err = paging.CountPages(flsm.pager, view.TYPE_FREE_LOGICAL_SLOT_PAGE)
+	c, err = paging.CountPages(flsm.pager, view.TypeFreeLogicalSlotPage)
 	if c != 9 || err != nil {
 		t.Error("Unexpected counting result:", c, err)
 		return
@@ -389,7 +389,7 @@ func TestFreeLogiclaSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	c, err = paging.CountPages(flsm.pager, view.TYPE_FREE_LOGICAL_SLOT_PAGE)
+	c, err = paging.CountPages(flsm.pager, view.TypeFreeLogicalSlotPage)
 	if c != 10 || err != nil {
 		t.Error("Unexpected counting result:", c, err)
 		return

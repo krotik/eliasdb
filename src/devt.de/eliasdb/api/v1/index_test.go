@@ -19,7 +19,7 @@ import (
 )
 
 func TestIndexQuery(t *testing.T) {
-	queryURL := "http://localhost" + TESTPORT + ENDPOINT_INDEX_QUERY
+	queryURL := "http://localhost" + TESTPORT + EndpointIndexQuery
 
 	st, _, res := sendTestRequest(queryURL+"//main/x/", "GET", nil)
 	if st != "400 Bad Request" || res != "Need a partition, entity type (n or e) and a kind" {
@@ -112,11 +112,11 @@ func TestIndexQuery(t *testing.T) {
 		return
 	}
 
-	msm := gmMSM.StorageManager("main"+"Song"+graph.STORAGE_SUFFIX_NODES_INDEX,
+	msm := gmMSM.StorageManager("main"+"Song"+graph.StorageSuffixNodesIndex,
 		true).(*storage.MemoryStorageManager)
 
 	for i := 2; i < 30; i++ {
-		msm.AccessMap[uint64(i)] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+		msm.AccessMap[uint64(i)] = storage.AccessCacheAndFetchError
 	}
 
 	st, _, res = sendTestRequest(queryURL+"//main/n/Song?attr=name&value=Aria1", "GET", nil)
@@ -131,7 +131,7 @@ func TestIndexQuery(t *testing.T) {
 		delete(msm.AccessMap, uint64(i))
 	}
 
-	msm.AccessMap[1] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[1] = storage.AccessCacheAndFetchError
 
 	st, _, res = sendTestRequest(queryURL+"//main/n/Song?attr=name&value=Aria1", "GET", nil)
 

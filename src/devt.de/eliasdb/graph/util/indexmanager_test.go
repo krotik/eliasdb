@@ -37,7 +37,7 @@ func TestIndexManager(t *testing.T) {
 		return
 	}
 
-	CASE_SENSITIVE_WORD_INDEX = true
+	CaseSensitiveWordIndex = true
 
 	sm = storage.NewMemoryStorageManager("testsm")
 	htree, _ = hash.NewHTree(sm)
@@ -56,7 +56,7 @@ func TestIndexManager(t *testing.T) {
 		return
 	}
 
-	CASE_SENSITIVE_WORD_INDEX = false
+	CaseSensitiveWordIndex = false
 
 	sm = storage.NewMemoryStorageManager("testsm")
 	htree, _ = hash.NewHTree(sm)
@@ -71,7 +71,7 @@ func TestIndexManager(t *testing.T) {
 	}
 
 	for i := 0; i < 6; i++ {
-		sm.AccessMap[uint64(i)] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+		sm.AccessMap[uint64(i)] = storage.AccessCacheAndFetchError
 	}
 
 	if _, err := im.LookupWord("aaa", "ddd"); !strings.Contains(err.Error(), "Slot not found") {
@@ -192,7 +192,7 @@ func TestPhraseSearch(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		sm.AccessMap[uint64(i)] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+		sm.AccessMap[uint64(i)] = storage.AccessCacheAndFetchError
 	}
 
 	res, err = im.LookupPhrase("aaa", "grass is green")
@@ -231,7 +231,7 @@ func TestUpdateIndex(t *testing.T) {
 
 	// Check that the entries exist
 
-	entry, _ := htree.Get([]byte(PREFIX_ATTR_WORD + "aaa" + "ddd"))
+	entry, _ := htree.Get([]byte(PrefixAttrWord + "aaa" + "ddd"))
 	pos := entry.(*indexEntry).WordPos["123"]
 
 	if fmt.Sprint(bitutil.UnpackList(pos)) != "[1]" {
@@ -239,7 +239,7 @@ func TestUpdateIndex(t *testing.T) {
 		return
 	}
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "aaa" + "voldaaa"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "aaa" + "voldaaa"))
 	pos = entry.(*indexEntry).WordPos["123"]
 
 	if fmt.Sprint(bitutil.UnpackList(pos)) != "[2]" {
@@ -247,7 +247,7 @@ func TestUpdateIndex(t *testing.T) {
 		return
 	}
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "ccc" + "ccc"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "ccc" + "ccc"))
 	pos = entry.(*indexEntry).WordPos["123"]
 
 	if fmt.Sprint(bitutil.UnpackList(pos)) != "[1]" {
@@ -271,7 +271,7 @@ func TestUpdateIndex(t *testing.T) {
 
 	// Check that the entries exist
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "aaa" + "ddd"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "aaa" + "ddd"))
 	pos = entry.(*indexEntry).WordPos["123"]
 
 	if fmt.Sprint(bitutil.UnpackList(pos)) != "[2]" {
@@ -279,14 +279,14 @@ func TestUpdateIndex(t *testing.T) {
 		return
 	}
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "aaa" + "voldaaa"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "aaa" + "voldaaa"))
 
 	if entry != nil {
 		t.Error("Unexpected result")
 		return
 	}
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "aaa" + "vnewaaa"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "aaa" + "vnewaaa"))
 	pos = entry.(*indexEntry).WordPos["123"]
 
 	if fmt.Sprint(bitutil.UnpackList(pos)) != "[1]" {
@@ -294,7 +294,7 @@ func TestUpdateIndex(t *testing.T) {
 		return
 	}
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "bbb" + "vbbb"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "bbb" + "vbbb"))
 	pos = entry.(*indexEntry).WordPos["123"]
 
 	if fmt.Sprint(bitutil.UnpackList(pos)) != "[1]" {
@@ -332,14 +332,14 @@ func TestAddRemoveIndexHashEntry(t *testing.T) {
 
 	im := NewIndexManager(htree)
 
-	oldsetting := CASE_SENSITIVE_WORD_INDEX
+	oldsetting := CaseSensitiveWordIndex
 
-	CASE_SENSITIVE_WORD_INDEX = false
+	CaseSensitiveWordIndex = false
 
 	im.addIndexHashEntry("mykey2", "myattr", "testvalue")
 	im.addIndexHashEntry("mykey3", "myattr", "testvalue")
 
-	sm.AccessMap[2] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	sm.AccessMap[2] = storage.AccessCacheAndFetchError
 
 	if err := im.addIndexHashEntry("mykey2", "myattr", "testvalue"); err != storage.ErrSlotNotFound {
 		t.Error(err)
@@ -388,7 +388,7 @@ func TestAddRemoveIndexHashEntry(t *testing.T) {
 
 	// Test case sensitive case
 
-	CASE_SENSITIVE_WORD_INDEX = true
+	CaseSensitiveWordIndex = true
 
 	im.addIndexHashEntry("mykey2", "myattr", "testValue")
 	im.addIndexHashEntry("mykey3", "myattr", "testValue")
@@ -426,7 +426,7 @@ func TestAddRemoveIndexHashEntry(t *testing.T) {
 		return
 	}
 
-	CASE_SENSITIVE_WORD_INDEX = oldsetting
+	CaseSensitiveWordIndex = oldsetting
 }
 
 func TestAddRemoveIndexEntry(t *testing.T) {
@@ -439,7 +439,7 @@ func TestAddRemoveIndexEntry(t *testing.T) {
 	im.addIndexEntry("mykey", "myattr", "myword", []uint64{1, 5, 7})
 	im.addIndexEntry("mykey2", "myattr", "myword", []uint64{10, 12, 80})
 
-	entry, _ := htree.Get([]byte(PREFIX_ATTR_WORD + "myattr" + "myword"))
+	entry, _ := htree.Get([]byte(PrefixAttrWord + "myattr" + "myword"))
 
 	pos := entry.(*indexEntry).WordPos["mykey"]
 
@@ -457,7 +457,7 @@ func TestAddRemoveIndexEntry(t *testing.T) {
 
 	testAddIndexPanic(t, im)
 
-	sm.AccessMap[2] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	sm.AccessMap[2] = storage.AccessCacheAndFetchError
 
 	if res := im.addIndexEntry("mykey2", "myattr", "myword", []uint64{10, 12, 80}); res != storage.ErrSlotNotFound {
 		t.Error("Unexpected result:", res)
@@ -473,7 +473,7 @@ func TestAddRemoveIndexEntry(t *testing.T) {
 
 	im.removeIndexEntry("mykey", "myattr", "myword", []uint64{1, 5, 7})
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "myattr" + "myword"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "myattr" + "myword"))
 
 	if res := len(entry.(*indexEntry).WordPos); res != 1 {
 		t.Error("Unexpected length:", res)
@@ -492,7 +492,7 @@ func TestAddRemoveIndexEntry(t *testing.T) {
 		return
 	}
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "myattr" + "myword"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "myattr" + "myword"))
 
 	if len(entry.(*indexEntry).WordPos) != 1 {
 		t.Error("Unexpected length")
@@ -504,7 +504,7 @@ func TestAddRemoveIndexEntry(t *testing.T) {
 		return
 	}
 
-	entry, _ = htree.Get([]byte(PREFIX_ATTR_WORD + "myattr" + "myword"))
+	entry, _ = htree.Get([]byte(PrefixAttrWord + "myattr" + "myword"))
 
 	if len(entry.(*indexEntry).WordPos) != 1 {
 		t.Error("Unexpected length")
@@ -555,7 +555,7 @@ func TestIndexManagerHashErrors(t *testing.T) {
 
 	im.Index("testkey", obj1)
 
-	sm.AccessMap[4] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	sm.AccessMap[4] = storage.AccessCacheAndFetchError
 	if err := im.Index("testkey", obj1); err == nil {
 		t.Error("Error expected")
 		return
@@ -568,7 +568,7 @@ func TestIndexManagerHashErrors(t *testing.T) {
 		t.Error("Error expected")
 		return
 	}
-	sm.AccessMap[5] = storage.ACCESS_UPDATE_ERROR
+	sm.AccessMap[5] = storage.AccessUpdateError
 	if err := im.Reindex("testkey", obj1, obj2); err == nil {
 		t.Error("Error expected")
 		return
@@ -588,9 +588,9 @@ func testAddIndexPanic(t *testing.T, in *IndexManager) {
 
 func TestExtractWords(t *testing.T) {
 
-	oldsetting := CASE_SENSITIVE_WORD_INDEX
+	oldsetting := CaseSensitiveWordIndex
 
-	CASE_SENSITIVE_WORD_INDEX = false
+	CaseSensitiveWordIndex = false
 
 	ws := extractWords("   aaa BBB  ;,   ccc...aaa ddd-bbb xxxx aaaa    test1\n" +
 		"test2 xxxx bbb")
@@ -607,7 +607,7 @@ func TestExtractWords(t *testing.T) {
 		t.Error("Unexpected WordSet string result:", res)
 	}
 
-	CASE_SENSITIVE_WORD_INDEX = true
+	CaseSensitiveWordIndex = true
 
 	ws = extractWords("   aaa BBB     ccc aaa ddd bbb xxxx aaaa    test1\n" +
 		"test2 xxxx bbb")
@@ -625,7 +625,7 @@ func TestExtractWords(t *testing.T) {
 		t.Error("Unexpected WordSet string result:", res)
 	}
 
-	CASE_SENSITIVE_WORD_INDEX = oldsetting
+	CaseSensitiveWordIndex = oldsetting
 }
 
 func TestWordSet(t *testing.T) {

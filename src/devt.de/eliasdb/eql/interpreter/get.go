@@ -9,6 +9,8 @@
  */
 
 /*
+Package interpreter contains the EQL interpreter.
+
 RuntimeProvider and Runtime for GET queries.
 */
 package interpreter
@@ -30,11 +32,11 @@ type getInst func(*GetRuntimeProvider, *parser.ASTNode) parser.Runtime
 Runtime map for GET query specific components
 */
 var getProviderMap = map[string]getInst{
-	parser.N_GET: getRuntimeInst,
+	parser.NodeGET: getRuntimeInst,
 }
 
 /*
-Runtime provider data structure
+GetRuntimeProvider data structure
 */
 type GetRuntimeProvider struct {
 	*eqlRuntimeProvider
@@ -44,7 +46,7 @@ type GetRuntimeProvider struct {
 NewGetRuntimeProvider creates a new GetRuntimeProvider object. This provider
 can interpret GET queries.
 */
-func NewGetRuntimeProvider(name string, part string, gm *graph.GraphManager, ni NodeInfo) *GetRuntimeProvider {
+func NewGetRuntimeProvider(name string, part string, gm *graph.Manager, ni NodeInfo) *GetRuntimeProvider {
 	return &GetRuntimeProvider{&eqlRuntimeProvider{name, part, gm, ni, "", false, nil, "",
 		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}}
 }
@@ -110,7 +112,7 @@ func (rt *getRuntime) Validate() error {
 		// Try to lookup group node
 
 		nodes, _, err := rt.rtp.gm.TraverseMulti(rt.rtp.part, rt.rtp.groupScope,
-			GROUP_NODE_KIND, ":::"+startKind, false)
+			GroupNodeKind, ":::"+startKind, false)
 
 		if err != nil {
 			return err
@@ -142,7 +144,7 @@ func (rt *getRuntime) Eval() (interface{}, error) {
 
 	// First validate the query and reset the runtime provider datastructures
 
-	if rt.rtp.specs == nil || !ALLOW_MULTI_EVAL {
+	if rt.rtp.specs == nil || !allowMultiEval {
 		if err := rt.Validate(); err != nil {
 			return nil, err
 		}

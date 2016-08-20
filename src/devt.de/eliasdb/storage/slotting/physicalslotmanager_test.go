@@ -53,11 +53,11 @@ func TestPhysicalSlotManager(t *testing.T) {
 	// Build up a data array
 
 	arr := make([]byte, 9000)
-	for i := 0; i < 9000; i += 1 {
+	for i := 0; i < 9000; i++ {
 		arr[i] = byte(i%5) + 1
 	}
 	arr2 := make([]byte, 9000)
-	for i := 0; i < 9000; i += 1 {
+	for i := 0; i < 9000; i++ {
 		arr2[i] = byte(i%5) + 5
 	}
 
@@ -272,7 +272,6 @@ func TestPhysicalSlotManager(t *testing.T) {
 
 	sf.ReleaseInUse(record)
 
-
 	if err := psf.Close(); err != nil {
 		t.Error(err)
 		return
@@ -349,7 +348,7 @@ func TestPhysicalSlotManagerReadWrite(t *testing.T) {
 	// Build up a data array
 
 	arr := make([]byte, 9000)
-	for i := 0; i < 9000; i += 1 {
+	for i := 0; i < 9000; i++ {
 		arr[i] = byte(i%5) + 1
 	}
 
@@ -405,7 +404,7 @@ func TestPhysicalSlotManagerReadWrite(t *testing.T) {
 		return
 	}
 
-	if record.ReadByte(20) != 0x04 || record.ReadByte(4095) != 0x04 {
+	if record.ReadSingleByte(20) != 0x04 || record.ReadSingleByte(4095) != 0x04 {
 		t.Error("Unexpected record data:", record)
 		return
 	}
@@ -433,12 +432,12 @@ func TestPhysicalSlotManagerReadWrite(t *testing.T) {
 	// 9003 - 4076 page1 - 4076 page2 = 851 bytes for the last page
 	// 20 bytes header + 851 written bytes = 871 bytes (offset 870)
 
-	if lastByte := record.ReadByte(870); lastByte != 5 {
+	if lastByte := record.ReadSingleByte(870); lastByte != 5 {
 		t.Error("Unexpected last byte:", lastByte)
 		return
 	}
 
-	if lastByteAfter := record.ReadByte(871); lastByteAfter != 0 {
+	if lastByteAfter := record.ReadSingleByte(871); lastByteAfter != 0 {
 		t.Error("Unexpected byte after last byte:", lastByteAfter)
 		return
 	}
@@ -614,7 +613,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 		return
 	}
 
-	checkLocation(t, loc, 1, pageview.OFFSET_DATA)
+	checkLocation(t, loc, 1, pageview.OffsetData)
 
 	// Error case existing page is already in use
 
@@ -640,9 +639,9 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 
 	// Expected offset is 524
 
-	// Page header (20) + prev. allocated data (500) + SIZE_INFO_SIZE header (4)
+	// Page header (20) + prev. allocated data (500) + SizeInfoSize header (4)
 
-	exploc := pageview.OFFSET_DATA + 500 + util.SIZE_INFO_SIZE
+	exploc := pageview.OffsetData + 500 + util.SizeInfoSize
 	if exploc != 524 {
 		t.Error("Expected location should be 532 but is:", exploc)
 		return
@@ -658,7 +657,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 
 	// Expected offset is 538
 
-	// Last offset (524) + prev. allocated data (10) + SIZE_INFO_SIZE header (4)
+	// Last offset (524) + prev. allocated data (10) + SizeInfoSize header (4)
 
 	checkLocation(t, loc, 1, 538)
 
@@ -672,7 +671,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 
 	// Expected offset is 3466 (+ 1 page)
 
-	// Last offset (538) + prev. allocated data (7000) + SIZE_INFO_SIZE header (4)
+	// Last offset (538) + prev. allocated data (7000) + SizeInfoSize header (4)
 	// Default size for one record is 4096 - 20 bytes header = 4076
 	// 7542 - 4076 = 3466
 
@@ -686,7 +685,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 
 	// Expected offset is 3480
 
-	// Last offset (3466) + prev. allocated data (10) + SIZE_INFO_SIZE header (4)
+	// Last offset (3466) + prev. allocated data (10) + SizeInfoSize header (4)
 
 	checkLocation(t, loc, 2, 3480)
 
@@ -701,7 +700,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 
 	// Expected offset is 1256 (+ 3 pages)
 
-	// Last offset (3480) + prev. allocated data (10000) + SIZE_INFO_SIZE header (4)
+	// Last offset (3480) + prev. allocated data (10000) + SizeInfoSize header (4)
 	// Default size for one record is 4096 - 20 bytes header = 4076
 	// 13484 - 4076 - 4076 - 4076 = 1256
 
@@ -723,7 +722,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 	// With the allocated space we should fill page 7
 	// Rounded up by 1
 
-	if lap := psm.pager.Last(view.TYPE_DATA_PAGE); lap != 7 {
+	if lap := psm.pager.Last(view.TypeDataPage); lap != 7 {
 		t.Error("Unexpected last allocated page", lap)
 		return
 	}
@@ -742,7 +741,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 
 	// Construct a page where not enough space is free for an allocation
 
-	page, err := psm.pager.AllocatePage(view.TYPE_DATA_PAGE)
+	page, err := psm.pager.AllocatePage(view.TypeDataPage)
 	if err != nil {
 		t.Error(err)
 		return
@@ -757,7 +756,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 	pv := pageview.NewDataPage(record)
 	pv.SetOffsetFirst(uint16(4093))
 
-	psm.storagefile.ReleaseInUseId(page, true)
+	psm.storagefile.ReleaseInUseID(page, true)
 
 	loc, err = psm.allocateNew(10, 9)
 	if err != nil {

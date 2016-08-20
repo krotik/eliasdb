@@ -19,19 +19,19 @@ import (
 	"devt.de/common/fileutil"
 )
 
-const DBDIR = "storagefiletest"
+const DBDir = "storagefiletest"
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const InvalidFileName = "**" + string(0x0)
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
 	// Setup
-	if res, _ := fileutil.PathExists(DBDIR); res {
-		os.RemoveAll(DBDIR)
+	if res, _ := fileutil.PathExists(DBDir); res {
+		os.RemoveAll(DBDir)
 	}
 
-	err := os.Mkdir(DBDIR, 0770)
+	err := os.Mkdir(DBDir, 0770)
 	if err != nil {
 		fmt.Print("Could not create test directory:", err.Error())
 		os.Exit(1)
@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 	res := m.Run()
 
 	// Teardown
-	err = os.RemoveAll(DBDIR)
+	err = os.RemoveAll(DBDir)
 	if err != nil {
 		fmt.Print("Could not remove test directory:", err.Error())
 	}
@@ -53,31 +53,31 @@ func TestStorageFileInitialisation(t *testing.T) {
 
 	// \0 and / are the only illegal characters for filenames in unix
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/"+INVALID_FILE_NAME, true)
+	sf, err := NewDefaultStorageFile(DBDir+"/"+InvalidFileName, true)
 	if err == nil {
 		t.Error("Invalid name should cause an error")
 		return
 	}
 
-	sf, err = NewDefaultStorageFile(DBDIR+"/test1", true)
+	sf, err = NewDefaultStorageFile(DBDir+"/test1", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 
-	if sf.Name() != DBDIR+"/test1" {
+	if sf.Name() != DBDir+"/test1" {
 		t.Error("Unexpected name of StorageFile:", sf.Name())
 		return
 	}
 
-	if sf.RecordSize() != DEFAULT_RECORD_SIZE {
+	if sf.RecordSize() != DefaultRecordSize {
 		t.Error("Unexpected record size:", sf.RecordSize())
 		return
 	}
 
 	defer sf.Close()
 
-	res, err := fileutil.PathExists(DBDIR + "/test1.0")
+	res, err := fileutil.PathExists(DBDir + "/test1.0")
 	if err != nil {
 		t.Error(err)
 		return
@@ -94,7 +94,7 @@ func TestStorageFileInitialisation(t *testing.T) {
 }
 
 func TestGetFile(t *testing.T) {
-	sf := &StorageFile{DBDIR + "/test2", true, 10, 10, nil, nil, nil, nil,
+	sf := &StorageFile{DBDir + "/test2", true, 10, 10, nil, nil, nil, nil,
 		make([]*os.File, 0), nil}
 	defer sf.Close()
 
@@ -104,71 +104,71 @@ func TestGetFile(t *testing.T) {
 		return
 	}
 
-	if file.Name() != DBDIR+"/test2.0" {
+	if file.Name() != DBDir+"/test2.0" {
 		t.Error("Unexpected file from getFile")
 		return
 	}
-	checkFilesArray(t, sf, 1, 0, DBDIR+"/test2.0")
+	checkFilesArray(t, sf, 1, 0, DBDir+"/test2.0")
 
 	file, err = sf.getFile(42)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	if file.Name() != DBDIR+"/test2.4" {
+	if file.Name() != DBDir+"/test2.4" {
 		t.Error("Unexpected file from getFile")
 		return
 	}
-	checkFilesArray(t, sf, 5, 0, DBDIR+"/test2.0")
+	checkFilesArray(t, sf, 5, 0, DBDir+"/test2.0")
 	checkFilesArray(t, sf, 5, 1, "")
 	checkFilesArray(t, sf, 5, 2, "")
 	checkFilesArray(t, sf, 5, 3, "")
-	checkFilesArray(t, sf, 5, 4, DBDIR+"/test2.4")
+	checkFilesArray(t, sf, 5, 4, DBDir+"/test2.4")
 
 	file, err = sf.getFile(25)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	if file.Name() != DBDIR+"/test2.2" {
+	if file.Name() != DBDir+"/test2.2" {
 		t.Error("Unexpected file from getFile")
 		return
 	}
-	checkFilesArray(t, sf, 5, 0, DBDIR+"/test2.0")
+	checkFilesArray(t, sf, 5, 0, DBDir+"/test2.0")
 	checkFilesArray(t, sf, 5, 1, "")
-	checkFilesArray(t, sf, 5, 2, DBDIR+"/test2.2")
+	checkFilesArray(t, sf, 5, 2, DBDir+"/test2.2")
 	checkFilesArray(t, sf, 5, 3, "")
-	checkFilesArray(t, sf, 5, 4, DBDIR+"/test2.4")
+	checkFilesArray(t, sf, 5, 4, DBDir+"/test2.4")
 
 	file, err = sf.getFile(11)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	if file.Name() != DBDIR+"/test2.1" {
+	if file.Name() != DBDir+"/test2.1" {
 		t.Error("Unexpected file from getFile")
 		return
 	}
-	checkFilesArray(t, sf, 5, 0, DBDIR+"/test2.0")
-	checkFilesArray(t, sf, 5, 1, DBDIR+"/test2.1")
-	checkFilesArray(t, sf, 5, 2, DBDIR+"/test2.2")
+	checkFilesArray(t, sf, 5, 0, DBDir+"/test2.0")
+	checkFilesArray(t, sf, 5, 1, DBDir+"/test2.1")
+	checkFilesArray(t, sf, 5, 2, DBDir+"/test2.2")
 	checkFilesArray(t, sf, 5, 3, "")
-	checkFilesArray(t, sf, 5, 4, DBDIR+"/test2.4")
+	checkFilesArray(t, sf, 5, 4, DBDir+"/test2.4")
 
 	file, err = sf.getFile(49)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
-	if file.Name() != DBDIR+"/test2.4" {
+	if file.Name() != DBDir+"/test2.4" {
 		t.Error("Unexpected file from getFile")
 		return
 	}
-	checkFilesArray(t, sf, 5, 0, DBDIR+"/test2.0")
-	checkFilesArray(t, sf, 5, 1, DBDIR+"/test2.1")
-	checkFilesArray(t, sf, 5, 2, DBDIR+"/test2.2")
+	checkFilesArray(t, sf, 5, 0, DBDir+"/test2.0")
+	checkFilesArray(t, sf, 5, 1, DBDir+"/test2.1")
+	checkFilesArray(t, sf, 5, 2, DBDir+"/test2.2")
 	checkFilesArray(t, sf, 5, 3, "")
-	checkFilesArray(t, sf, 5, 4, DBDIR+"/test2.4")
+	checkFilesArray(t, sf, 5, 4, DBDir+"/test2.4")
 }
 
 func checkFilesArray(t *testing.T, sf *StorageFile, explen int, pos int, name string) {
@@ -191,17 +191,17 @@ func TestLowLevelReadWrite(t *testing.T) {
 
 	// Create a new record and write it
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/test3", true)
+	sf, err := NewDefaultStorageFile(DBDir+"/test3", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 
 	record := sf.createRecord(1)
-	record.WriteByte(5, 0x42)
+	record.WriteSingleByte(5, 0x42)
 
 	oldfiles := sf.files
-	sf.name = DBDIR + "/" + INVALID_FILE_NAME
+	sf.name = DBDir + "/" + InvalidFileName
 	sf.files = make([]*os.File, 0)
 
 	_, err = sf.Get(1)
@@ -218,7 +218,7 @@ func TestLowLevelReadWrite(t *testing.T) {
 		return
 	}
 
-	sf.name = DBDIR + "/test3"
+	sf.name = DBDir + "/test3"
 	sf.files = oldfiles
 
 	err = sf.writeRecord(record)
@@ -230,7 +230,7 @@ func TestLowLevelReadWrite(t *testing.T) {
 
 	sf.Close()
 
-	sf, err = NewDefaultStorageFile(DBDIR+"/test3", true)
+	sf, err = NewDefaultStorageFile(DBDir+"/test3", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -239,7 +239,7 @@ func TestLowLevelReadWrite(t *testing.T) {
 	record = sf.createRecord(1)
 
 	oldfiles = sf.files
-	sf.name = DBDIR + "/" + INVALID_FILE_NAME
+	sf.name = DBDir + "/" + InvalidFileName
 	sf.files = make([]*os.File, 0)
 
 	record.data = nil
@@ -260,11 +260,11 @@ func TestLowLevelReadWrite(t *testing.T) {
 		return
 	}
 
-	sf.name = DBDIR + "/test3"
+	sf.name = DBDir + "/test3"
 	sf.files = oldfiles
 
 	oldrecordSize := sf.recordSize
-	sf.recordSize = DEFAULT_RECORD_SIZE - 1
+	sf.recordSize = DefaultRecordSize - 1
 
 	testReadRecordPanic(t, sf, record)
 
@@ -279,7 +279,7 @@ func TestLowLevelReadWrite(t *testing.T) {
 
 	sf.Close()
 
-	if record.ReadByte(5) != 0x42 {
+	if record.ReadSingleByte(5) != 0x42 {
 		t.Error("Couldn't read byte which was written before.")
 		return
 	}
@@ -299,7 +299,7 @@ func TestHighLevelGetRelease(t *testing.T) {
 
 	// Create some records and write to them
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/test4", true)
+	sf, err := NewDefaultStorageFile(DBDir+"/test4", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -314,16 +314,16 @@ func TestHighLevelGetRelease(t *testing.T) {
 	}
 
 	checkPath(t, "test4.0")
-	checkMap(t, &sf.inUse, record1.Id(), true, "Record1", "in use")
+	checkMap(t, &sf.inUse, record1.ID(), true, "Record1", "in use")
 
-	record2, err := sf.Get((DEFAULT_FILE_SIZE/DEFAULT_RECORD_SIZE)*4 + 5)
+	record2, err := sf.Get((DefaultFileSize/DefaultRecordSize)*4 + 5)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	checkPath(t, "test4.4")
-	checkMap(t, &sf.inUse, record2.Id(), true, "Record2", "in use")
+	checkMap(t, &sf.inUse, record2.ID(), true, "Record2", "in use")
 
 	record3, err := sf.Get(2)
 	if err != nil {
@@ -335,11 +335,11 @@ func TestHighLevelGetRelease(t *testing.T) {
 
 	// Make sure the retrieved records are marked in use
 
-	checkMap(t, &sf.inUse, record3.Id(), true, "Record3", "in use")
+	checkMap(t, &sf.inUse, record3.ID(), true, "Record3", "in use")
 
-	checkMap(t, &sf.free, record1.Id(), false, "Record1", "in use")
-	checkMap(t, &sf.free, record2.Id(), false, "Record2", "in use")
-	checkMap(t, &sf.free, record3.Id(), false, "Record3", "in use")
+	checkMap(t, &sf.free, record1.ID(), false, "Record1", "in use")
+	checkMap(t, &sf.free, record2.ID(), false, "Record2", "in use")
+	checkMap(t, &sf.free, record3.ID(), false, "Record3", "in use")
 
 	// Now use the records and release them
 
@@ -356,32 +356,32 @@ func TestHighLevelGetRelease(t *testing.T) {
 	// Check that the records have been released and scheduled for write
 	// (i.e. they are in the dirty table)
 
-	checkMap(t, &sf.dirty, record2.Id(), true, "Record2", "dirty")
-	checkMap(t, &sf.inUse, record2.Id(), false, "Record2", "in use")
+	checkMap(t, &sf.dirty, record2.ID(), true, "Record2", "dirty")
+	checkMap(t, &sf.inUse, record2.ID(), false, "Record2", "in use")
 
-	_, err = sf.Get((DEFAULT_FILE_SIZE/DEFAULT_RECORD_SIZE)*4 + 5)
+	_, err = sf.Get((DefaultFileSize/DefaultRecordSize)*4 + 5)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	checkMap(t, &sf.dirty, record2.Id(), false, "Record2", "dirty")
-	checkMap(t, &sf.inUse, record2.Id(), true, "Record2", "in use")
+	checkMap(t, &sf.dirty, record2.ID(), false, "Record2", "dirty")
+	checkMap(t, &sf.inUse, record2.ID(), true, "Record2", "in use")
 
 	sf.ReleaseInUse(record1)
-	checkMap(t, &sf.dirty, record1.Id(), true, "Record1", "dirty")
-	checkMap(t, &sf.inUse, record1.Id(), false, "Record1", "in use")
-	checkMap(t, &sf.dirty, record2.Id(), false, "Record2", "dirty")
-	checkMap(t, &sf.inUse, record2.Id(), true, "Record2", "in use")
-	checkMap(t, &sf.dirty, record3.Id(), false, "Record3", "dirty")
-	checkMap(t, &sf.inUse, record3.Id(), true, "Record3", "in use")
+	checkMap(t, &sf.dirty, record1.ID(), true, "Record1", "dirty")
+	checkMap(t, &sf.inUse, record1.ID(), false, "Record1", "in use")
+	checkMap(t, &sf.dirty, record2.ID(), false, "Record2", "dirty")
+	checkMap(t, &sf.inUse, record2.ID(), true, "Record2", "in use")
+	checkMap(t, &sf.dirty, record3.ID(), false, "Record3", "dirty")
+	checkMap(t, &sf.inUse, record3.ID(), true, "Record3", "in use")
 
-	sf.ReleaseInUseId(record2.Id(), true)
-	checkMap(t, &sf.dirty, record1.Id(), true, "Record1", "dirty")
-	checkMap(t, &sf.inUse, record1.Id(), false, "Record1", "in use")
-	checkMap(t, &sf.dirty, record2.Id(), true, "Record2", "dirty")
-	checkMap(t, &sf.inUse, record2.Id(), false, "Record2", "in use")
-	checkMap(t, &sf.dirty, record3.Id(), false, "Record3", "dirty")
-	checkMap(t, &sf.inUse, record3.Id(), true, "Record3", "in use")
+	sf.ReleaseInUseID(record2.ID(), true)
+	checkMap(t, &sf.dirty, record1.ID(), true, "Record1", "dirty")
+	checkMap(t, &sf.inUse, record1.ID(), false, "Record1", "in use")
+	checkMap(t, &sf.dirty, record2.ID(), true, "Record2", "dirty")
+	checkMap(t, &sf.inUse, record2.ID(), false, "Record2", "in use")
+	checkMap(t, &sf.dirty, record3.ID(), false, "Record3", "dirty")
+	checkMap(t, &sf.inUse, record3.ID(), true, "Record3", "in use")
 
 	if err = sf.Flush(); err != ErrInUse {
 		t.Error("StorageFile should complain about records being in use")
@@ -394,17 +394,17 @@ func TestHighLevelGetRelease(t *testing.T) {
 	}
 
 	sf.ReleaseInUse(record3)
-	checkMap(t, &sf.dirty, record1.Id(), true, "Record1", "dirty")
-	checkMap(t, &sf.inUse, record1.Id(), false, "Record1", "in use")
-	checkMap(t, &sf.dirty, record2.Id(), true, "Record2", "dirty")
-	checkMap(t, &sf.inUse, record2.Id(), false, "Record2", "in use")
+	checkMap(t, &sf.dirty, record1.ID(), true, "Record1", "dirty")
+	checkMap(t, &sf.inUse, record1.ID(), false, "Record1", "in use")
+	checkMap(t, &sf.dirty, record2.ID(), true, "Record2", "dirty")
+	checkMap(t, &sf.inUse, record2.ID(), false, "Record2", "in use")
 
 	// Check that a record which has not been written to is put into the
 	// free map
 
-	checkMap(t, &sf.free, record3.Id(), true, "Record3", "free")
-	checkMap(t, &sf.dirty, record3.Id(), false, "Record3", "dirty")
-	checkMap(t, &sf.inUse, record3.Id(), false, "Record3", "in use")
+	checkMap(t, &sf.free, record3.ID(), true, "Record3", "free")
+	checkMap(t, &sf.dirty, record3.ID(), false, "Record3", "dirty")
+	checkMap(t, &sf.inUse, record3.ID(), false, "Record3", "in use")
 
 	// Test string representation of the StorageFile
 
@@ -427,34 +427,34 @@ func TestHighLevelGetRelease(t *testing.T) {
 
 	sf.Flush()
 
-	checkMap(t, &sf.dirty, record1.Id(), false, "Record1", "dirty")
-	checkMap(t, &sf.inUse, record1.Id(), false, "Record1", "in use")
-	checkMap(t, &sf.free, record1.Id(), true, "Record1", "in use")
-	checkMap(t, &sf.dirty, record2.Id(), false, "Record2", "dirty")
-	checkMap(t, &sf.inUse, record2.Id(), false, "Record2", "in use")
-	checkMap(t, &sf.free, record2.Id(), true, "Record2", "in use")
-	checkMap(t, &sf.dirty, record3.Id(), false, "Record3", "dirty")
-	checkMap(t, &sf.inUse, record3.Id(), false, "Record3", "in use")
-	checkMap(t, &sf.free, record3.Id(), true, "Record3", "in use")
+	checkMap(t, &sf.dirty, record1.ID(), false, "Record1", "dirty")
+	checkMap(t, &sf.inUse, record1.ID(), false, "Record1", "in use")
+	checkMap(t, &sf.free, record1.ID(), true, "Record1", "in use")
+	checkMap(t, &sf.dirty, record2.ID(), false, "Record2", "dirty")
+	checkMap(t, &sf.inUse, record2.ID(), false, "Record2", "in use")
+	checkMap(t, &sf.free, record2.ID(), true, "Record2", "in use")
+	checkMap(t, &sf.dirty, record3.ID(), false, "Record3", "dirty")
+	checkMap(t, &sf.inUse, record3.ID(), false, "Record3", "in use")
+	checkMap(t, &sf.free, record3.ID(), true, "Record3", "in use")
 
-	_, err = sf.Get((DEFAULT_FILE_SIZE/DEFAULT_RECORD_SIZE)*4 + 5)
+	_, err = sf.Get((DefaultFileSize/DefaultRecordSize)*4 + 5)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	checkMap(t, &sf.free, record2.Id(), false, "Record2", "free")
-	checkMap(t, &sf.inUse, record2.Id(), true, "Record2", "in use")
+	checkMap(t, &sf.free, record2.ID(), false, "Record2", "free")
+	checkMap(t, &sf.inUse, record2.ID(), true, "Record2", "in use")
 
 	sf.ReleaseInUse(record2)
-	checkMap(t, &sf.free, record2.Id(), true, "Record2", "free")
-	checkMap(t, &sf.inUse, record2.Id(), false, "Record2", "in use")
+	checkMap(t, &sf.free, record2.ID(), true, "Record2", "free")
+	checkMap(t, &sf.inUse, record2.ID(), false, "Record2", "in use")
 
 	sf.Close()
 
 	// Open the storage file again with a different object and
 	// try to read back the written
 
-	sf, err = NewDefaultStorageFile(DBDIR+"/test4", true)
+	sf, err = NewDefaultStorageFile(DBDir+"/test4", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -476,14 +476,14 @@ func TestHighLevelGetRelease(t *testing.T) {
 		return
 	}
 
-	checkMap(t, &sf.inUse, record1.Id(), true, "Record1", "in use")
+	checkMap(t, &sf.inUse, record1.ID(), true, "Record1", "in use")
 
-	record2, err = sf.Get((DEFAULT_FILE_SIZE/DEFAULT_RECORD_SIZE)*4 + 5)
+	record2, err = sf.Get((DefaultFileSize/DefaultRecordSize)*4 + 5)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	checkMap(t, &sf.inUse, record2.Id(), true, "Record2", "in use")
+	checkMap(t, &sf.inUse, record2.ID(), true, "Record2", "in use")
 
 	// Check that we can read back the written data
 
@@ -505,11 +505,11 @@ func TestHighLevelGetRelease(t *testing.T) {
 	// Since record3 was just created and is empty it should not be in use
 
 	record3 = sf.createRecord(5)
-	checkMap(t, &sf.inUse, record3.Id(), false, "Record3", "in use")
+	checkMap(t, &sf.inUse, record3.ID(), false, "Record3", "in use")
 
 	// Record2 has been used
 
-	checkMap(t, &sf.inUse, record2.Id(), true, "Record2", "in use")
+	checkMap(t, &sf.inUse, record2.ID(), true, "Record2", "in use")
 
 	// An attempt to close the file should return an error
 
@@ -530,7 +530,7 @@ func TestHighLevelGetRelease(t *testing.T) {
 }
 
 func checkPath(t *testing.T, path string) {
-	res, err := fileutil.PathExists(DBDIR + "/" + path)
+	res, err := fileutil.PathExists(DBDir + "/" + path)
 	if err != nil {
 		t.Error(err)
 	}
@@ -553,7 +553,7 @@ func checkMap(t *testing.T, mapvar *map[uint64]*Record, id uint64, expected bool
 
 func TestFlushingClosing(t *testing.T) {
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/test5", true)
+	sf, err := NewDefaultStorageFile(DBDir+"/test5", true)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -569,7 +569,7 @@ func TestFlushingClosing(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	record.WriteByte(0, 0)
+	record.WriteSingleByte(0, 0)
 
 	if sf.Flush() != ErrInUse {
 		t.Error("Flushing should not be allowed while records are in use")
@@ -577,12 +577,12 @@ func TestFlushingClosing(t *testing.T) {
 	}
 
 	sf.ReleaseInUse(nil) // This should not cause a panic
-	if sf.ReleaseInUseId(5000, true) != ErrNotInUse {
+	if sf.ReleaseInUseID(5000, true) != ErrNotInUse {
 		t.Error("It should not be possible to release records which are not in use")
 		return
 	}
 	record.ClearDirty()
-	sf.ReleaseInUseId(1, true)
+	sf.ReleaseInUseID(1, true)
 
 	if !record.Dirty() {
 		t.Error("Record should be marked as dirty after it was released as dirty")
@@ -614,7 +614,7 @@ func TestFlushingClosing(t *testing.T) {
 	checkMap(t, &sf.inUse, 1, true, "Record1", "in use")
 
 	// Need to correct the id otherwise the discarding will not work
-	record.SetId(1)
+	record.SetID(1)
 
 	sf.Discard(nil) // This should not cause a panic
 	sf.Discard(record)
@@ -631,11 +631,11 @@ func TestFlushingClosing(t *testing.T) {
 	}
 
 	// This should be possible even if the record is not dirty at all
-	sf.ReleaseInUseId(record.Id(), true)
+	sf.ReleaseInUseID(record.ID(), true)
 
 	checkMap(t, &sf.dirty, 5, true, "Record1", "dirty")
 
-	record_data := record.data
+	recordData := record.data
 	record.data = nil
 
 	if sf.Close() != ErrNilData {
@@ -643,7 +643,7 @@ func TestFlushingClosing(t *testing.T) {
 		return
 	}
 
-	record.data = record_data
+	record.data = recordData
 
 	err = sf.Close()
 	if err != nil {

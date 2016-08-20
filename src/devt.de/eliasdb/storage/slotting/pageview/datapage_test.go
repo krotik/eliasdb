@@ -24,7 +24,7 @@ func TestDataPage(t *testing.T) {
 
 	// Make sure the record has a correct magic
 
-	view.NewPageView(r, view.TYPE_DATA_PAGE)
+	view.NewPageView(r, view.TypeDataPage)
 
 	dp := NewDataPage(r)
 
@@ -64,5 +64,5 @@ func testCheckDataPageOffsetFirstPanic(t *testing.T, dp *DataPage) {
 		}
 	}()
 
-	dp.SetOffsetFirst(OFFSET_DATA - 1)
+	dp.SetOffsetFirst(OffsetData - 1)
 }

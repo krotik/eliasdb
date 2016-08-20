@@ -13,7 +13,7 @@ package v1
 import "testing"
 
 func TestInfoQuery(t *testing.T) {
-	queryURL := "http://localhost" + TESTPORT + ENDPOINT_INFO_QUERY
+	queryURL := "http://localhost" + TESTPORT + EndpointInfoQuery
 
 	// No special testing here - the correctness of returned values is tested
 	// elsewhere

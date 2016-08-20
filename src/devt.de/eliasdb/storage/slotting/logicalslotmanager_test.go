@@ -53,7 +53,7 @@ func TestLogicalSlotManager(t *testing.T) {
 
 	// Check return value when fetching from a logical slot which doesn't yet exist
 
-	slotinfo, err := lsm.Fetch(util.PackLocation(1, pageview.OFFSET_TRANS_DATA))
+	slotinfo, err := lsm.Fetch(util.PackLocation(1, pageview.OffsetTransData))
 	if slotinfo != 0 || err != nil {
 		t.Error("Unexpected fetch result:", slotinfo, err)
 	}
@@ -96,7 +96,7 @@ func TestLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	checkLocation(t, loc, 1, pageview.OFFSET_TRANS_DATA)
+	checkLocation(t, loc, 1, pageview.OffsetTransData)
 
 	// Test error checking when force inserting a location (page does not exist)
 
@@ -139,7 +139,7 @@ func TestLogicalSlotManager(t *testing.T) {
 
 	// Check that the physical slot infos have been stored in the logical slots
 
-	_testLogicalSlot(t, sf, 1, pageview.OFFSET_TRANS_DATA, 10, 11)
+	_testLogicalSlot(t, sf, 1, pageview.OffsetTransData, 10, 11)
 	_testLogicalSlot(t, sf, 2, 2, 12, 13)
 
 	// Free a slot

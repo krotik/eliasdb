@@ -9,6 +9,8 @@
  */
 
 /*
+Package paging contains functions and constants necessary for paging of records.
+
 PagedStorageFileHeader is a wrapper object for the header record of a StorageFile.
 The header record stores information about linked lists and root values.
 */
@@ -17,24 +19,24 @@ package paging
 import "devt.de/eliasdb/storage/file"
 
 /*
-Header magic number to identify page headers
+PageHeader is the magic number to identify page headers
 */
-const PAGE_HEADER = 0x1980
+const PageHeader = 0x1980
 
 /*
-Number of lists which can be stored in this header
+TotalLists is the number of lists which can be stored in this header
 */
-const TOTAL_LISTS = 5
+const TotalLists = 5
 
 /*
-Offset for list entries in this header
+OffsetLists is the offset for list entries in this header
 */
-const OFFSET_LISTS = 2
+const OffsetLists = 2
 
 /*
-Number of lists which can be stored in this header
+OffsetRoots is the number of lists which can be stored in this header
 */
-const OFFSET_ROOTS = OFFSET_LISTS + (2 * TOTAL_LISTS * file.SIZE_LONG)
+const OffsetRoots = OffsetLists + (2 * TotalLists * file.SizeLong)
 
 /*
 PagedStorageFileHeader data structure
@@ -45,10 +47,10 @@ type PagedStorageFileHeader struct {
 }
 
 /*
-Create a new NewPagedStorageFileHeader.
+NewPagedStorageFileHeader creates a new NewPagedStorageFileHeader.
 */
 func NewPagedStorageFileHeader(record *file.Record, isnew bool) *PagedStorageFileHeader {
-	totalRoots := (len(record.Data()) - OFFSET_ROOTS) / file.SIZE_LONG
+	totalRoots := (len(record.Data()) - OffsetRoots) / file.SizeLong
 	if totalRoots < 1 {
 		panic("Cannot store any roots - record is too small")
 	}
@@ -56,7 +58,7 @@ func NewPagedStorageFileHeader(record *file.Record, isnew bool) *PagedStorageFil
 	ret := &PagedStorageFileHeader{record, totalRoots}
 
 	if isnew {
-		record.WriteUInt16(0, PAGE_HEADER)
+		record.WriteUInt16(0, PageHeader)
 	} else {
 		ret.CheckMagic()
 	}
@@ -68,7 +70,7 @@ func NewPagedStorageFileHeader(record *file.Record, isnew bool) *PagedStorageFil
 CheckMagic checks the header magic value of this header.
 */
 func (psfh *PagedStorageFileHeader) CheckMagic() {
-	if psfh.record.ReadUInt16(0) != PAGE_HEADER {
+	if psfh.record.ReadUInt16(0) != PageHeader {
 		panic("Unexpected header found in PagedStorageFileHeader")
 	}
 }
@@ -98,7 +100,7 @@ func (psfh *PagedStorageFileHeader) SetRoot(root int, val uint64) {
 offsetRoot calculates the offset of a root in the header record.
 */
 func offsetRoot(root int) int {
-	return OFFSET_ROOTS + root*file.SIZE_LONG
+	return OffsetRoots + root*file.SizeLong
 }
 
 /*
@@ -133,12 +135,12 @@ func (psfh *PagedStorageFileHeader) SetLastListElement(list int16, val uint64) {
 offsetFirstListElement returns offset of the first element of a list.
 */
 func offsetFirstListElement(list int16) int {
-	return OFFSET_LISTS + 2*file.SIZE_LONG*int(list)
+	return OffsetLists + 2*file.SizeLong*int(list)
 }
 
 /*
 offsetLastListElement returns offset of the last element of a list.
 */
 func offsetLastListElement(list int16) int {
-	return offsetFirstListElement(list) + file.SIZE_LONG
+	return offsetFirstListElement(list) + file.SizeLong
 }

@@ -9,8 +9,11 @@
  */
 
 /*
-HTree implementation which uses a StorageManager. The HTree provides a persistent
-hashtable. It is not possible to store nil values. Storing a nil value
+Package hash provides a HTree implementation to provide key-value storage functionality
+for a StorageManager.
+
+The HTree provides a persistent hashtable. Storing values in buckets and buckets on
+pages as the tree gorwn. It is not possible to store nil values. Storing a nil value
 is equivalent to removing a key.
 
 The default tree has 4 levels each with 256 possible children. A hash code
@@ -26,26 +29,26 @@ import (
 )
 
 /*
-Maximum number of non-leaf levels in the tree (i.e. the complete tree has
+MaxTreeDepth is the maximum number of non-leaf levels in the tree (i.e. the complete tree has
 a total of MAX_DEPTH+1 levels)
 */
-const MAX_TREE_DEPTH = 3
+const MaxTreeDepth = 3
 
 /*
-Significant bits per page level
+PageLevelBits is the number of significant bits per page level
 */
-const PAGE_LEVEL_BITS = 8
+const PageLevelBits = 8
 
 /*
-Max number of children per page - (stored in 8 bit)
+MaxPageChildren is the maximum of children per page - (stored in PageLevelBits bits)
 */
-const MAX_PAGE_CHILDREN = 256
+const MaxPageChildren = 256
 
 /*
-Max number of elements a bucket can contain before it is converted into a page
-except leaf buckets which grow indefinitely
+MaxBucketElements is the maximum umber of elements a bucket can contain before it
+is converted into a page except leaf buckets which grow indefinitely
 */
-const MAX_BUCKET_ELEMENTS = 8
+const MaxBucketElements = 8
 
 /*
 HTree data structure
@@ -60,9 +63,9 @@ htreeNode data structure - this object models the
 HTree storage structure on disk
 */
 type htreeNode struct {
-	tree *HTree                 // Reference to the HTree which owns this node (not persisted)
-	loc  uint64                 // Storage location of this page (not persisted)
-	sm   storage.StorageManager // StorageManager instance which stores the tree data (not persisted)
+	tree *HTree          // Reference to the HTree which owns this node (not persisted)
+	loc  uint64          // Storage location of this page (not persisted)
+	sm   storage.Manager // StorageManager instance which stores the tree data (not persisted)
 
 	Depth      byte          // Depth of this node
 	Children   []uint64      // Storage locations of children (only used for pages)
@@ -93,7 +96,7 @@ func (n *htreeNode) fetchNode(loc uint64) (*htreeNode, error) {
 /*
 NewHTree creates a new HTree.
 */
-func NewHTree(sm storage.StorageManager) (*HTree, error) {
+func NewHTree(sm storage.Manager) (*HTree, error) {
 	tree := &HTree{}
 
 	// Protect tree creation
@@ -120,7 +123,7 @@ func NewHTree(sm storage.StorageManager) (*HTree, error) {
 /*
 LoadHTree fetches a HTree from storage
 */
-func LoadHTree(sm storage.StorageManager, loc uint64) (*HTree, error) {
+func LoadHTree(sm storage.Manager, loc uint64) (*HTree, error) {
 	var tree *HTree
 
 	// Protect tree creation
@@ -177,9 +180,9 @@ func (t *HTree) GetValueAndLocation(key []byte) (interface{}, uint64, error) {
 
 	if bucket != nil {
 		return res, bucket.loc, err
-	} else {
-		return res, 0, err
 	}
+
+	return res, 0, err
 }
 
 /*

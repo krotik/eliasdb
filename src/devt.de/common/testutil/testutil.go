@@ -8,7 +8,7 @@
  */
 
 /*
-Common datastructures and functions for testing.
+Package testutil contains common datastructures and functions for testing.
 */
 package testutil
 
@@ -18,7 +18,7 @@ import (
 )
 
 /*
-Testing object for gob errors.
+GobTestObject testing object for gob errors.
 */
 type GobTestObject struct {
 	Name   string
@@ -26,6 +26,9 @@ type GobTestObject struct {
 	DecErr bool
 }
 
+/*
+GobEncode returns a test encoded byte array or an error.
+*/
 func (t *GobTestObject) GobEncode() ([]byte, error) {
 	if t.EncErr {
 		return nil, errors.New("Encode error")
@@ -33,6 +36,9 @@ func (t *GobTestObject) GobEncode() ([]byte, error) {
 	return []byte(t.Name), nil
 }
 
+/*
+GobDecode decodes the given byte array are returns an error.
+*/
 func (t *GobTestObject) GobDecode(b []byte) error {
 	if t.DecErr {
 		return errors.New("Decode error")
@@ -42,7 +48,7 @@ func (t *GobTestObject) GobDecode(b []byte) error {
 }
 
 /*
-Testing buffer to test error handling for writing operations.
+ErrorTestingBuffer is a testing buffer to test error handling for writing operations.
 */
 type ErrorTestingBuffer struct {
 	RemainingSize int
@@ -50,7 +56,7 @@ type ErrorTestingBuffer struct {
 }
 
 /*
-Simulates writing to the test buffer. Returns error if it is full.
+Write simulates writing to the test buffer. Returns error if it is full.
 */
 func (etb *ErrorTestingBuffer) Write(p []byte) (n int, err error) {
 	if len(p) > etb.RemainingSize {
@@ -63,21 +69,21 @@ func (etb *ErrorTestingBuffer) Write(p []byte) (n int, err error) {
 }
 
 /*
-For simplicity the buffer itself implements the error interface.
+Error returns buffer errors. For simplicity the buffer itself implements the error interface.
 */
 func (etb ErrorTestingBuffer) Error() string {
 	return fmt.Sprintf("Buffer is full at: %v", etb.WrittenSize+etb.RemainingSize)
 }
 
 /*
-Use testing buffer as an io.File like object.
+ErrorTestingFile is a testing buffer which can be used as an io.File like object.
 */
 type ErrorTestingFile struct {
 	Buf *ErrorTestingBuffer
 }
 
 /*
-Create a new test file.
+NewTestingFile creates a new test file.
 */
 func NewTestingFile(size int) *ErrorTestingFile {
 	return &ErrorTestingFile{&ErrorTestingBuffer{size, 0}}

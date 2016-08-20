@@ -9,6 +9,8 @@
  */
 
 /*
+Package interpreter contains the EQL interpreter.
+
 Runtime provider for EQL. The eqlRuntimeProvider defines the main interpreter
 datastructure and all functions for general evaluation.
 */
@@ -24,10 +26,11 @@ import (
 	"devt.de/eliasdb/graph/data"
 )
 
-// Allow calls to eval of runtime components without resetting state
-// (used for testing)
-
-var ALLOW_MULTI_EVAL = false
+/*
+allowMultiEval allows multiple calls to eval of runtime components without
+resetting state (used for testing)
+*/
+var allowMultiEval = false
 
 // Special flags which can be set by with statements
 
@@ -40,13 +43,14 @@ type withFlags struct {
 }
 
 const (
-	WITH_ORDERING_ASCENDING  = 0x1
-	WITH_ORDERING_DESCENDING = 0x2
+	withOrderingAscending  = 0x1
+	withOrderingDescending = 0x2
 )
 
-// Special group node kind
-
-const GROUP_NODE_KIND = "group"
+/*
+GroupNodeKind is a special group node kind
+*/
+const GroupNodeKind = "group"
 
 // General runtime provider
 // ========================
@@ -55,11 +59,11 @@ const GROUP_NODE_KIND = "group"
 General runtime provider data structure
 */
 type eqlRuntimeProvider struct {
-	name       string              // Name to identify the input
-	part       string              // Graph partition to query
-	gm         *graph.GraphManager // GraphManager to operate on
-	ni         NodeInfo            // NodeInfo to use for formatting
-	groupScope string              // Group scope for query
+	name       string         // Name to identify the input
+	part       string         // Graph partition to query
+	gm         *graph.Manager // GraphManager to operate on
+	ni         NodeInfo       // NodeInfo to use for formatting
+	groupScope string         // Group scope for query
 
 	allowNilTraversal bool       // Flag if empty traversals should be included in the result
 	withFlags         *withFlags // Special flags which can be set by with statements
@@ -135,7 +139,7 @@ func (p *eqlRuntimeProvider) init(startKind string,
 
 	for _, child := range rootChildren {
 
-		if child.Name == parser.N_WHERE {
+		if child.Name == parser.NodeWHERE {
 
 			// Check if the show clause or some traversals are already populated
 
@@ -152,7 +156,7 @@ func (p *eqlRuntimeProvider) init(startKind string,
 
 			p.where = child
 
-		} else if child.Name == parser.N_TRAVERSE {
+		} else if child.Name == parser.NodeTRAVERSE {
 
 			// Check if show clause or where clause is already populated
 
@@ -169,17 +173,17 @@ func (p *eqlRuntimeProvider) init(startKind string,
 
 			p.traversals = append(p.traversals, child)
 
-		} else if child.Name == parser.N_SHOW {
+		} else if child.Name == parser.NodeSHOW {
 
 			p.show = child
 
-		} else if child.Name == parser.N_FROM {
+		} else if child.Name == parser.NodeFROM {
 
 			// Set the group state
 
 			p.groupScope = child.Children[0].Children[0].Token.Val
 
-		} else if child.Name == parser.N_PRIMARY {
+		} else if child.Name == parser.NodePRIMARY {
 
 			pk := child.Children[0].Token.Val
 
@@ -193,7 +197,7 @@ func (p *eqlRuntimeProvider) init(startKind string,
 				return p.newRuntimeError(ErrUnknownNodeKind, pk, child.Children[0])
 			}
 
-		} else if child.Name == parser.N_WITH {
+		} else if child.Name == parser.NodeWITH {
 
 			withChild = child
 
@@ -302,27 +306,27 @@ func (p *eqlRuntimeProvider) initWithFlags(withNode *parser.ASTNode,
 
 	for _, child := range withNode.Children {
 
-		if child.Name == parser.N_NULLTRAVERSAL && child.Children[0].Name == parser.N_TRUE {
+		if child.Name == parser.NodeNULLTRAVERSAL && child.Children[0].Name == parser.NodeTRUE {
 
 			p.allowNilTraversal = true
 
-		} else if child.Name == parser.N_FILTERING {
+		} else if child.Name == parser.NodeFILTERING {
 
 			for _, child := range child.Children {
 
-				if child.Name == parser.N_ISNOTNULL || child.Name == parser.N_UNIQUE || child.Name == parser.N_UNIQUECOUNT {
+				if child.Name == parser.NodeISNOTNULL || child.Name == parser.NodeUNIQUE || child.Name == parser.NodeUNIQUECOUNT {
 
 					c, err := findColumn(child.Children[0].Token.Val, child)
 					if err != nil {
 						return err
 					}
 
-					if child.Name == parser.N_ISNOTNULL {
+					if child.Name == parser.NodeISNOTNULL {
 						p.withFlags.notnullCol = append(p.withFlags.notnullCol, c)
-					} else if child.Name == parser.N_UNIQUE {
+					} else if child.Name == parser.NodeUNIQUE {
 						p.withFlags.uniqueCol = append(p.withFlags.uniqueCol, c)
 						p.withFlags.uniqueColCnt = append(p.withFlags.uniqueColCnt, false)
-					} else if child.Name == parser.N_UNIQUECOUNT {
+					} else if child.Name == parser.NodeUNIQUECOUNT {
 						p.withFlags.uniqueCol = append(p.withFlags.uniqueCol, c)
 						p.withFlags.uniqueColCnt = append(p.withFlags.uniqueColCnt, true)
 					}
@@ -331,21 +335,21 @@ func (p *eqlRuntimeProvider) initWithFlags(withNode *parser.ASTNode,
 				}
 			}
 
-		} else if child.Name == parser.N_ORDERING {
+		} else if child.Name == parser.NodeORDERING {
 
 			for _, child := range child.Children {
 
-				if child.Name == parser.N_ASCENDING || child.Name == parser.N_DESCENDING {
+				if child.Name == parser.NodeASCENDING || child.Name == parser.NodeDESCENDING {
 
 					c, err := findColumn(child.Children[0].Token.Val, child)
 					if err != nil {
 						return err
 					}
 
-					if child.Name == parser.N_ASCENDING {
-						p.withFlags.ordering = append(p.withFlags.ordering, WITH_ORDERING_ASCENDING)
+					if child.Name == parser.NodeASCENDING {
+						p.withFlags.ordering = append(p.withFlags.ordering, withOrderingAscending)
 					} else {
-						p.withFlags.ordering = append(p.withFlags.ordering, WITH_ORDERING_DESCENDING)
+						p.withFlags.ordering = append(p.withFlags.ordering, withOrderingDescending)
 					}
 
 					p.withFlags.orderingCol = append(p.withFlags.orderingCol, c)
@@ -443,7 +447,7 @@ func (p *eqlRuntimeProvider) initCols() (map[string][]int, map[string][]int, err
 
 		for _, col := range p.show.Children {
 
-			if col.Name != parser.N_SHOWTERM {
+			if col.Name != parser.NodeSHOWTERM {
 				return nil, nil, p.newRuntimeError(ErrInvalidConstruct, col.Name, col)
 			}
 
@@ -454,7 +458,7 @@ func (p *eqlRuntimeProvider) initCols() (map[string][]int, map[string][]int, err
 
 			// Create the correct colData value
 
-			if col.Token.Id == parser.T_AT {
+			if col.Token.ID == parser.TokenAT {
 
 				// We have a function get the attribute which it operates on
 
@@ -558,11 +562,11 @@ func (p *eqlRuntimeProvider) initCols() (map[string][]int, map[string][]int, err
 
 			for _, t := range col.Children {
 
-				if t.Name == parser.N_AS {
+				if t.Name == parser.NodeAS {
 					colLabel = t.Children[0].Token.Val
-				} else if t.Name == parser.N_FORMAT {
+				} else if t.Name == parser.NodeFORMAT {
 					colFormat = t.Children[0].Token.Val
-				} else if t.Name != parser.N_FUNC {
+				} else if t.Name != parser.NodeFUNC {
 					return nil, nil, p.newRuntimeError(ErrInvalidConstruct, t.Name, t)
 				}
 			}
@@ -598,24 +602,24 @@ func (p *eqlRuntimeProvider) next() (bool, error) {
 	if p._attrsNodesFetch == nil {
 
 		makeFetchList := func(attrs []map[string]string, isEdge bool) [][]string {
-			fetchlist := make([][]string, 0)
+			var fetchlist [][]string
 
 			for _, attrs := range attrs {
-				attrsFetch := make([]string, 0)
+				var attrsFetch []string
 
-				for attr, _ := range attrs {
+				for attr := range attrs {
 
 					// Condition needs to be different for nodes and edges
 
-					if !isEdge && attr != "" && attr != data.NODE_KEY && attr != data.NODE_KIND {
+					if !isEdge && attr != "" && attr != data.NodeKey && attr != data.NodeKind {
 
 						attrsFetch = append(attrsFetch, attr)
 
-					} else if attr != "" && attr != data.NODE_KEY && attr != data.NODE_KIND &&
-						attr != data.EDGE_END1_KEY && attr != data.EDGE_END1_KIND &&
-						attr != data.EDGE_END1_ROLE && attr != data.EDGE_END1_CASCADING &&
-						attr != data.EDGE_END2_KEY && attr != data.EDGE_END2_KIND &&
-						attr != data.EDGE_END2_ROLE && attr != data.EDGE_END2_CASCADING {
+					} else if attr != "" && attr != data.NodeKey && attr != data.NodeKind &&
+						attr != data.EdgeEnd1Key && attr != data.EdgeEnd1Kind &&
+						attr != data.EdgeEnd1Role && attr != data.EdgeEnd1Cascading &&
+						attr != data.EdgeEnd2Key && attr != data.EdgeEnd2Kind &&
+						attr != data.EdgeEnd2Role && attr != data.EdgeEnd2Cascading {
 
 						attrsFetch = append(attrsFetch, attr)
 					}
@@ -655,12 +659,12 @@ func (p *eqlRuntimeProvider) next() (bool, error) {
 		return false, err
 	}
 
-	// Fetch node - always require the key attribute 
+	// Fetch node - always require the key attribute
 	// to make sure we get a node back if it exists
 
 	node, err := p.gm.FetchNodePart(p.part, startKey, p.specs[0],
 		append(p._attrsNodesFetch[0], "key"))
-	
+
 	if err != nil || node == nil {
 		return false, err
 	}
@@ -689,7 +693,7 @@ func (p *eqlRuntimeProvider) next() (bool, error) {
 
 			// Clear out the row
 
-			for i, _ := range p.rowNode {
+			for i := range p.rowNode {
 				p.rowNode[i] = nil
 				p.rowEdge[i] = nil
 			}
@@ -740,49 +744,49 @@ type generalInst func(*eqlRuntimeProvider, *parser.ASTNode) parser.Runtime
 Runtime map for general components
 */
 var generalProviderMap = map[string]generalInst{
-	parser.N_EOF:      invalidRuntimeInst,
-	parser.N_VALUE:    valueRuntimeInst,
-	parser.N_TRUE:     valueRuntimeInst,
-	parser.N_FALSE:    valueRuntimeInst,
-	parser.N_NULL:     valueRuntimeInst,
-	parser.N_LIST:     valueRuntimeInst,
-	parser.N_FUNC:     valueRuntimeInst,
-	parser.N_TRAVERSE: traversalRuntimeInst,
-	parser.N_WHERE:    whereRuntimeInst,
+	parser.NodeEOF:      invalidRuntimeInst,
+	parser.NodeVALUE:    valueRuntimeInst,
+	parser.NodeTRUE:     valueRuntimeInst,
+	parser.NodeFALSE:    valueRuntimeInst,
+	parser.NodeNULL:     valueRuntimeInst,
+	parser.NodeLIST:     valueRuntimeInst,
+	parser.NodeFUNC:     valueRuntimeInst,
+	parser.NodeTRAVERSE: traversalRuntimeInst,
+	parser.NodeWHERE:    whereRuntimeInst,
 
 	// Condition components
 	// ====================
 
-	parser.N_EQ:  equalRuntimeInst,
-	parser.N_NEQ: notEqualRuntimeInst,
-	parser.N_LT:  lessThanRuntimeInst,
-	parser.N_LEQ: lessThanEqualsRuntimeInst,
-	parser.N_GT:  greaterThanRuntimeInst,
-	parser.N_GEQ: greaterThanEqualsRuntimeInst,
+	parser.NodeEQ:  equalRuntimeInst,
+	parser.NodeNEQ: notEqualRuntimeInst,
+	parser.NodeLT:  lessThanRuntimeInst,
+	parser.NodeLEQ: lessThanEqualsRuntimeInst,
+	parser.NodeGT:  greaterThanRuntimeInst,
+	parser.NodeGEQ: greaterThanEqualsRuntimeInst,
 
-	parser.N_NOT: notRuntimeInst,
-	parser.N_AND: andRuntimeInst,
-	parser.N_OR:  orRuntimeInst,
+	parser.NodeNOT: notRuntimeInst,
+	parser.NodeAND: andRuntimeInst,
+	parser.NodeOR:  orRuntimeInst,
 
 	// Simple arithmetic expressions
 
-	parser.N_PLUS:   plusRuntimeInst,
-	parser.N_MINUS:  minusRuntimeInst,
-	parser.N_TIMES:  timesRuntimeInst,
-	parser.N_DIV:    divRuntimeInst,
-	parser.N_MODINT: modIntRuntimeInst,
-	parser.N_DIVINT: divIntRuntimeInst,
+	parser.NodePLUS:   plusRuntimeInst,
+	parser.NodeMINUS:  minusRuntimeInst,
+	parser.NodeTIMES:  timesRuntimeInst,
+	parser.NodeDIV:    divRuntimeInst,
+	parser.NodeMODINT: modIntRuntimeInst,
+	parser.NodeDIVINT: divIntRuntimeInst,
 
 	// List operations
 
-	parser.N_IN:    inRuntimeInst,
-	parser.N_NOTIN: notInRuntimeInst,
+	parser.NodeIN:    inRuntimeInst,
+	parser.NodeNOTIN: notInRuntimeInst,
 
 	// String operations
 
-	parser.N_LIKE:        likeRuntimeInst,
-	parser.N_CONTAINS:    containsRuntimeInst,
-	parser.N_CONTAINSNOT: containsNotRuntimeInst,
-	parser.N_BEGINSWITH:  beginsWithRuntimeInst,
-	parser.N_ENDSWITH:    endsWithRuntimeInst,
+	parser.NodeLIKE:        likeRuntimeInst,
+	parser.NodeCONTAINS:    containsRuntimeInst,
+	parser.NodeCONTAINSNOT: containsNotRuntimeInst,
+	parser.NodeBEGINSWITH:  beginsWithRuntimeInst,
+	parser.NodeENDSWITH:    endsWithRuntimeInst,
 }

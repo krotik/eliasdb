@@ -9,6 +9,8 @@
  */
 
 /*
+Package graph contains the main API to the graph datastore.
+
 Graph rules provide automatic operations which help to keep the graph consistent.
 */
 package graph
@@ -26,12 +28,15 @@ import (
 GraphRulesManager data structure
 */
 type graphRulesManager struct {
-	gm       *GraphManager                // GraphManager which provides events
-	rules    map[string]GraphRule         // Map of graph rules
-	eventMap map[int]map[string]GraphRule // Map of events to graph rules
+	gm       *Manager                // GraphManager which provides events
+	rules    map[string]Rule         // Map of graph rules
+	eventMap map[int]map[string]Rule // Map of events to graph rules
 }
 
-type GraphRule interface {
+/*
+Rule models a graph rule.
+*/
+type Rule interface {
 
 	/*
 	   Name returns the name of the rule.
@@ -47,13 +52,13 @@ type GraphRule interface {
 		Handle handles an event. The function should write all changes to the
 		given transaction.
 	*/
-	Handle(gm *GraphManager, trans *GraphTrans, event int, data ...interface{}) error
+	Handle(gm *Manager, trans *Trans, event int, data ...interface{}) error
 }
 
 /*
 graphEvent main event handler which receives all graph related events.
 */
-func (gr *graphRulesManager) graphEvent(trans *GraphTrans, event int, data ...interface{}) error {
+func (gr *graphRulesManager) graphEvent(trans *Trans, event int, data ...interface{}) error {
 	var errors []string
 
 	rules, ok := gr.eventMap[event]
@@ -82,7 +87,7 @@ func (gr *graphRulesManager) graphEvent(trans *GraphTrans, event int, data ...in
 	}
 
 	if errors != nil {
-		return &util.GraphError{util.ErrRule, strings.Join(errors, ";")}
+		return &util.GraphError{Type: util.ErrRule, Detail: strings.Join(errors, ";")}
 	}
 
 	return nil
@@ -91,21 +96,21 @@ func (gr *graphRulesManager) graphEvent(trans *GraphTrans, event int, data ...in
 /*
 Clone a given graph manager and insert a new RWMutex.
 */
-func (gr *graphRulesManager) cloneGraphManager() *GraphManager {
-	return &GraphManager{gr.gm.gs, gr, gr.gm.nm, gr.gm.mapCache, &sync.RWMutex{}}
+func (gr *graphRulesManager) cloneGraphManager() *Manager {
+	return &Manager{gr.gm.gs, gr, gr.gm.nm, gr.gm.mapCache, &sync.RWMutex{}}
 }
 
 /*
 SetGraphRule sets a GraphRule.
 */
-func (gr *graphRulesManager) SetGraphRule(rule GraphRule) {
+func (gr *graphRulesManager) SetGraphRule(rule Rule) {
 	gr.rules[rule.Name()] = rule
 
 	for _, handledEvent := range rule.Handles() {
 
 		rules, ok := gr.eventMap[handledEvent]
 		if !ok {
-			rules = make(map[string]GraphRule)
+			rules = make(map[string]Rule)
 			gr.eventMap[handledEvent] = rules
 		}
 
@@ -119,7 +124,7 @@ GraphRules returns a list of all available graph rules.
 func (gr *graphRulesManager) GraphRules() []string {
 	ret := make([]string, 0, len(gr.rules))
 
-	for rule, _ := range gr.rules {
+	for rule := range gr.rules {
 		ret = append(ret, rule)
 	}
 
@@ -132,8 +137,8 @@ func (gr *graphRulesManager) GraphRules() []string {
 // =====================================
 
 /*
-System rule to delete all edges when a node is deleted. Deletes also the other
-end if the cascading flag is set on the edge.
+SystemRuleDeleteNodeEdges is a system rule to delete all edges when a node is
+deleted. Deletes also the other end if the cascading flag is set on the edge.
 */
 type SystemRuleDeleteNodeEdges struct {
 }
@@ -149,13 +154,13 @@ func (r *SystemRuleDeleteNodeEdges) Name() string {
 Handles returns a list of events which are handled by this rule.
 */
 func (r *SystemRuleDeleteNodeEdges) Handles() []int {
-	return []int{EVENT_NODE_DELETED}
+	return []int{EventNodeDeleted}
 }
 
 /*
 Handle handles an event.
 */
-func (r *SystemRuleDeleteNodeEdges) Handle(gm *GraphManager, trans *GraphTrans, event int, ed ...interface{}) error {
+func (r *SystemRuleDeleteNodeEdges) Handle(gm *Manager, trans *Trans, event int, ed ...interface{}) error {
 	part := ed[0].(string)
 	node := ed[1].(data.Node)
 
@@ -190,7 +195,7 @@ func (r *SystemRuleDeleteNodeEdges) Handle(gm *GraphManager, trans *GraphTrans, 
 // =====================================
 
 /*
-System rule to update node stat entries in the MainDB.
+SystemRuleUpdateNodeStats is a system rule to update node stat entries in the MainDB.
 */
 type SystemRuleUpdateNodeStats struct {
 }
@@ -206,27 +211,27 @@ func (r *SystemRuleUpdateNodeStats) Name() string {
 Handles returns a list of events which are handled by this rule.
 */
 func (r *SystemRuleUpdateNodeStats) Handles() []int {
-	return []int{EVENT_NODE_CREATED, EVENT_NODE_UPDATED,
-		EVENT_EDGE_CREATED, EVENT_EDGE_UPDATED}
+	return []int{EventNodeCreated, EventNodeUpdated,
+		EventEdgeCreated, EventEdgeUpdated}
 }
 
 /*
 Handle handles an event.
 */
-func (r *SystemRuleUpdateNodeStats) Handle(gm *GraphManager, trans *GraphTrans, event int, ed ...interface{}) error {
-	attrMap := MAINDB_NODE_ATTRS
+func (r *SystemRuleUpdateNodeStats) Handle(gm *Manager, trans *Trans, event int, ed ...interface{}) error {
+	attrMap := MainDBNodeAttrs
 
-	if event == EVENT_EDGE_CREATED {
+	if event == EventEdgeCreated {
 		edge := ed[1].(data.Edge)
 
 		updateNodeRels := func(key string, kind string) {
 			spec := edge.Spec(key)
-			specs := gm.getMainDBMap(MAINDB_NODE_EDGES + kind)
+			specs := gm.getMainDBMap(MainDBNodeEdges + kind)
 
 			if specs != nil {
 				if _, ok := specs[spec]; !ok {
 					specs[spec] = ""
-					gm.storeMainDBMap(MAINDB_NODE_EDGES+kind, specs)
+					gm.storeMainDBMap(MainDBNodeEdges+kind, specs)
 				}
 			}
 		}
@@ -236,7 +241,7 @@ func (r *SystemRuleUpdateNodeStats) Handle(gm *GraphManager, trans *GraphTrans, 
 		updateNodeRels(edge.End1Key(), edge.End1Kind())
 		updateNodeRels(edge.End2Key(), edge.End2Kind())
 
-		attrMap = MAINDB_EDGE_ATTRS
+		attrMap = MainDBEdgeAttrs
 	}
 
 	node := ed[1].(data.Node)
@@ -244,7 +249,7 @@ func (r *SystemRuleUpdateNodeStats) Handle(gm *GraphManager, trans *GraphTrans, 
 
 	// Check if a new partition or kind was used
 
-	if event == EVENT_NODE_CREATED || event == EVENT_EDGE_CREATED {
+	if event == EventNodeCreated || event == EventEdgeCreated {
 		part := ed[0].(string)
 
 		updateMainDB := func(entry string, val string) {
@@ -255,12 +260,12 @@ func (r *SystemRuleUpdateNodeStats) Handle(gm *GraphManager, trans *GraphTrans, 
 			}
 		}
 
-		updateMainDB(MAINDB_PARTS, part)
+		updateMainDB(MainDBParts, part)
 
-		if event == EVENT_NODE_CREATED {
-			updateMainDB(MAINDB_NODE_KINDS, kind)
+		if event == EventNodeCreated {
+			updateMainDB(MainDBNodeKinds, kind)
 		} else {
-			updateMainDB(MAINDB_EDGE_KINDS, kind)
+			updateMainDB(MainDBEdgeKinds, kind)
 		}
 	}
 
@@ -272,7 +277,7 @@ func (r *SystemRuleUpdateNodeStats) Handle(gm *GraphManager, trans *GraphTrans, 
 
 		// Update stored node attributes
 
-		for attr, _ := range node.Data() {
+		for attr := range node.Data() {
 			if _, ok := attrs[attr]; !ok {
 				attrs[attr] = ""
 				storeAttrs = true

@@ -33,14 +33,14 @@ func TestPageCursor(t *testing.T) {
 	plist := make([]uint64, 0, 5)
 
 	for i := 0; i < 5; i++ {
-		p, err := psf.AllocatePage(view.TYPE_DATA_PAGE)
+		p, err := psf.AllocatePage(view.TypeDataPage)
 		if err != nil {
 			t.Error(err)
 		}
 		plist = append(plist, p)
 	}
 
-	pc := NewPageCursor(psf, view.TYPE_DATA_PAGE, 0)
+	pc := NewPageCursor(psf, view.TypeDataPage, 0)
 
 	checkPrev(t, pc, 0)
 
@@ -97,7 +97,7 @@ func TestPageCursor(t *testing.T) {
 		return
 	}
 
-	sf.ReleaseInUseId(4, false)
+	sf.ReleaseInUseID(4, false)
 
 	psf.Close()
 }

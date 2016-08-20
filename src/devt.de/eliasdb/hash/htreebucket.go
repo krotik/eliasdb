@@ -9,6 +9,9 @@
  */
 
 /*
+Package hash provides a HTree implementation to provide key-value storage functionality
+for a StorageManager.
+
 Hash bucket which contains actual keys and values. The object stores multiple
 keys and values if there are hash collisions.
 */
@@ -33,8 +36,8 @@ htreeBucket creates a new bucket for the HTree.
 */
 func newHTreeBucket(tree *HTree, depth byte) *htreeBucket {
 	return &htreeBucket{&htreeNode{tree, 0, nil, depth, nil,
-		make([][]byte, MAX_BUCKET_ELEMENTS),
-		make([]interface{}, MAX_BUCKET_ELEMENTS), 0}}
+		make([][]byte, MaxBucketElements),
+		make([]interface{}, MaxBucketElements), 0}}
 }
 
 /*
@@ -48,7 +51,7 @@ func (b *htreeBucket) Size() byte {
 IsLeaf returns if this bucket is a leaf node.
 */
 func (b *htreeBucket) IsLeaf() bool {
-	return b.Depth == MAX_TREE_DEPTH+1
+	return b.Depth == MaxTreeDepth+1
 }
 
 /*
@@ -58,7 +61,7 @@ func (b *htreeBucket) HasRoom() bool {
 	if b.IsLeaf() {
 		return true
 	}
-	return b.BucketSize < MAX_BUCKET_ELEMENTS
+	return b.BucketSize < MaxBucketElements
 }
 
 /*
@@ -85,7 +88,7 @@ func (b *htreeBucket) Put(key []byte, value interface{}) interface{} {
 		panic("Bucket has no more room")
 	}
 
-	if b.BucketSize >= MAX_BUCKET_ELEMENTS {
+	if b.BucketSize >= MaxBucketElements {
 		b.Keys = append(b.Keys, key)
 		b.Values = append(b.Values, value)
 		b.BucketSize++
@@ -116,10 +119,10 @@ func (b *htreeBucket) Remove(key []byte) interface{} {
 
 			b.Keys[i] = b.Keys[b.BucketSize-1]
 			b.Values[i] = b.Values[b.BucketSize-1]
-		
+
 			b.Keys[b.BucketSize-1] = nil
 			b.Values[b.BucketSize-1] = nil
-		
+
 			b.BucketSize--
 
 			return old

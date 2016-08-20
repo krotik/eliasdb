@@ -9,6 +9,8 @@
  */
 
 /*
+Package slotting contains managers which deal with slots on pages.
+
 LogicalSlotManager is a list manager for logical slots. Logical slots are stored
 on translation pages which store just pointers to physical slots.
 */
@@ -49,7 +51,7 @@ func NewLogicalSlotManager(lsf *paging.PagedStorageFile,
 	recordSize := sf.RecordSize()
 
 	return &LogicalSlotManager{sf, lsf, freeManager,
-		recordSize, uint16((recordSize - pageview.OFFSET_TRANS_DATA) / util.LOCATION_SIZE)}
+		recordSize, uint16((recordSize - pageview.OffsetTransData) / util.LocationSize)}
 }
 
 /*
@@ -75,17 +77,17 @@ func (lsm *LogicalSlotManager) Insert(location uint64) (uint64, error) {
 
 		// Allocate a new page and give all its rows to the free manager
 
-		allocPage, err := lsm.pager.AllocatePage(view.TYPE_TRANSLATION_PAGE)
+		allocPage, err := lsm.pager.AllocatePage(view.TypeTranslationPage)
 		if err != nil {
 			return 0, err
 		}
 
-		offset := uint16(pageview.OFFSET_TRANS_DATA)
+		offset := uint16(pageview.OffsetTransData)
 
 		var i uint16
 		for i = 0; i < lsm.elementsPerPage; i++ {
 			lsm.freeManager.Add(util.PackLocation(allocPage, offset))
-			offset += util.LOCATION_SIZE
+			offset += util.LocationSize
 		}
 
 		err = lsm.Flush()
@@ -119,7 +121,7 @@ func (lsm *LogicalSlotManager) Insert(location uint64) (uint64, error) {
 ForceInsert inserts a given physical slot info at a given logical slot.
 */
 func (lsm *LogicalSlotManager) ForceInsert(logicalSlot uint64, location uint64) error {
-	page := lsm.pager.Last(view.TYPE_TRANSLATION_PAGE)
+	page := lsm.pager.Last(view.TypeTranslationPage)
 	targetPage := util.LocationRecord(logicalSlot)
 
 	// If the target page hasn't been allocated yet then create new pages
@@ -129,7 +131,7 @@ func (lsm *LogicalSlotManager) ForceInsert(logicalSlot uint64, location uint64) 
 	for page < targetPage {
 		var err error
 
-		page, err = lsm.pager.AllocatePage(view.TYPE_TRANSLATION_PAGE)
+		page, err = lsm.pager.AllocatePage(view.TypeTranslationPage)
 		if err != nil {
 			return err
 		}
@@ -140,7 +142,8 @@ func (lsm *LogicalSlotManager) ForceInsert(logicalSlot uint64, location uint64) 
 		return err
 	}
 	if slot != 0 {
-		panic(fmt.Sprintf("Cannot force insert into slot %s because it already exists", logicalSlot))
+		panic(fmt.Sprintf("Cannot force insert into slot %v because it already exists",
+			logicalSlot))
 	}
 
 	return lsm.Update(logicalSlot, location)
@@ -150,9 +153,9 @@ func (lsm *LogicalSlotManager) ForceInsert(logicalSlot uint64, location uint64) 
 Update updates a given logical slot with a physical slot info.
 */
 func (lsm *LogicalSlotManager) Update(logicalSlot uint64, location uint64) error {
-	recordId := util.LocationRecord(logicalSlot)
+	recordID := util.LocationRecord(logicalSlot)
 
-	record, err := lsm.storagefile.Get(recordId)
+	record, err := lsm.storagefile.Get(recordID)
 	if err != nil {
 		return err
 	}
@@ -162,7 +165,7 @@ func (lsm *LogicalSlotManager) Update(logicalSlot uint64, location uint64) error
 	page.SetSlotInfo(util.LocationOffset(logicalSlot), util.LocationRecord(location),
 		util.LocationOffset(location))
 
-	lsm.storagefile.ReleaseInUseId(recordId, true)
+	lsm.storagefile.ReleaseInUseID(recordID, true)
 
 	return nil
 }
@@ -171,9 +174,9 @@ func (lsm *LogicalSlotManager) Update(logicalSlot uint64, location uint64) error
 Free frees a given logical slot. The given slot is given to the FreeLogicalSlotManager.
 */
 func (lsm *LogicalSlotManager) Free(logicalSlot uint64) error {
-	recordId := util.LocationRecord(logicalSlot)
+	recordID := util.LocationRecord(logicalSlot)
 
-	record, err := lsm.storagefile.Get(recordId)
+	record, err := lsm.storagefile.Get(recordID)
 	if err != nil {
 		return err
 	}
@@ -183,7 +186,7 @@ func (lsm *LogicalSlotManager) Free(logicalSlot uint64) error {
 	page.SetSlotInfo(util.LocationOffset(logicalSlot), util.LocationRecord(0),
 		util.LocationOffset(0))
 
-	return lsm.storagefile.ReleaseInUseId(recordId, true)
+	return lsm.storagefile.ReleaseInUseID(recordID, true)
 }
 
 /*
@@ -191,17 +194,17 @@ Fetch looks up a physical slot using a given logical slot.
 */
 func (lsm *LogicalSlotManager) Fetch(logicalSlot uint64) (uint64, error) {
 
-	recordId := util.LocationRecord(logicalSlot)
+	recordID := util.LocationRecord(logicalSlot)
 	offset := util.LocationOffset(logicalSlot)
 
-	if lastPage := lsm.pager.Last(view.TYPE_TRANSLATION_PAGE); lastPage < recordId {
+	if lastPage := lsm.pager.Last(view.TypeTranslationPage); lastPage < recordID {
 
 		// Return if the requested page doesn't exist yet
 
 		return 0, nil
 	}
 
-	record, err := lsm.storagefile.Get(recordId)
+	record, err := lsm.storagefile.Get(recordID)
 	if err != nil {
 		return 0, err
 	}
@@ -210,7 +213,7 @@ func (lsm *LogicalSlotManager) Fetch(logicalSlot uint64) (uint64, error) {
 
 	slot := util.PackLocation(page.SlotInfoRecord(offset), page.SlotInfoOffset(offset))
 
-	lsm.storagefile.ReleaseInUseId(recordId, false)
+	lsm.storagefile.ReleaseInUseID(recordID, false)
 
 	return slot, nil
 }

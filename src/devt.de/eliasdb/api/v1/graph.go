@@ -9,6 +9,8 @@
  */
 
 /*
+Package v1 contains EliasDB REST API Version 1.
+
 REST endpoint to handle graph requests.
 
 /graph
@@ -95,9 +97,9 @@ import (
 )
 
 /*
-Graph endpoint definition (rooted). Handles everything under graph/...
+EndpointGraph is the graph endpoint URL (rooted). Handles everything under graph/...
 */
-const ENDPOINT_GRAPH = api.API_ROOT + API_VERSION_V1 + "/graph/"
+const EndpointGraph = api.APIRoot + APIv1 + "/graph/"
 
 /*
 GraphEndpointInst creates a new endpoint handler.
@@ -214,7 +216,7 @@ func (ge *graphEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resou
 
 			// Set total count header
 
-			w.Header().Add(HTTP_HEADER_TOTAL_COUNT, strconv.FormatUint(api.GM.NodeCount(resources[2]), 10))
+			w.Header().Add(HTTPHeaderTotalCount, strconv.FormatUint(api.GM.NodeCount(resources[2]), 10))
 
 			// Write data
 
@@ -334,10 +336,10 @@ if they already exist.
 */
 func (ge *graphEndpoint) HandlePUT(w http.ResponseWriter, r *http.Request, resources []string) {
 	ge.handleGraphRequest(w, r, resources,
-		func(trans *graph.GraphTrans, part string, node data.Node) error {
+		func(trans *graph.Trans, part string, node data.Node) error {
 			return trans.UpdateNode(part, node)
 		},
-		func(trans *graph.GraphTrans, part string, edge data.Edge) error {
+		func(trans *graph.Trans, part string, edge data.Edge) error {
 			return trans.StoreEdge(part, edge)
 		})
 }
@@ -348,10 +350,10 @@ existing elements. Nodes and edges are replaced if they already exist.
 */
 func (ge *graphEndpoint) HandlePOST(w http.ResponseWriter, r *http.Request, resources []string) {
 	ge.handleGraphRequest(w, r, resources,
-		func(trans *graph.GraphTrans, part string, node data.Node) error {
+		func(trans *graph.Trans, part string, node data.Node) error {
 			return trans.StoreNode(part, node)
 		},
-		func(trans *graph.GraphTrans, part string, edge data.Edge) error {
+		func(trans *graph.Trans, part string, edge data.Edge) error {
 			return trans.StoreEdge(part, edge)
 		})
 }
@@ -361,10 +363,10 @@ HandleDELETE handles a REST call to delete elements from the graph.
 */
 func (ge *graphEndpoint) HandleDELETE(w http.ResponseWriter, r *http.Request, resources []string) {
 	ge.handleGraphRequest(w, r, resources,
-		func(trans *graph.GraphTrans, part string, node data.Node) error {
+		func(trans *graph.Trans, part string, node data.Node) error {
 			return trans.RemoveNode(part, node.Key(), node.Kind())
 		},
-		func(trans *graph.GraphTrans, part string, edge data.Edge) error {
+		func(trans *graph.Trans, part string, edge data.Edge) error {
 			return trans.RemoveEdge(part, edge.Key(), edge.Kind())
 		})
 }
@@ -373,8 +375,8 @@ func (ge *graphEndpoint) HandleDELETE(w http.ResponseWriter, r *http.Request, re
 handleGraphRequest handles a graph query REST call.
 */
 func (ge *graphEndpoint) handleGraphRequest(w http.ResponseWriter, r *http.Request, resources []string,
-	transFuncNode func(trans *graph.GraphTrans, part string, node data.Node) error,
-	transFuncEdge func(trans *graph.GraphTrans, part string, edge data.Edge) error) {
+	transFuncNode func(trans *graph.Trans, part string, node data.Node) error,
+	transFuncEdge func(trans *graph.Trans, part string, edge data.Edge) error) {
 
 	var nDataList []map[string]interface{}
 	var eDataList []map[string]interface{}
@@ -733,7 +735,7 @@ func (c traversalResultComparator) Less(i, j int) bool {
 	c1 := c.Data[0][i]
 	c2 := c.Data[0][j]
 
-	return fmt.Sprintf("%v", c1[data.NODE_KEY]) < fmt.Sprintf("%v", c2[data.NODE_KEY])
+	return fmt.Sprintf("%v", c1[data.NodeKey]) < fmt.Sprintf("%v", c2[data.NodeKey])
 }
 
 func (c traversalResultComparator) Swap(i, j int) {

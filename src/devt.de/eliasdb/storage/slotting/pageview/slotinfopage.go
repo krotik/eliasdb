@@ -9,8 +9,10 @@
  */
 
 /*
+Package pageview contains object wrappers for different page types.
+
 SlotInfoPage is the super-struct for all page views which manage slotinfos.
-Slotinfo are location (see location.go) pointers into the data store containing 
+Slotinfo are location (see location.go) pointers into the data store containing
 record id and offset.
 */
 package pageview
@@ -53,6 +55,6 @@ func (lm *SlotInfoPage) SlotInfoOffset(offset uint16) uint16 {
 /*
 SetSlotInfo stores a slotinfo on the pageview's record.
 */
-func (lm *SlotInfoPage) SetSlotInfo(slotinfoOffset uint16, recordId uint64, offset uint16) {
-	lm.Record.WriteUInt64(int(slotinfoOffset), util.PackLocation(recordId, offset))
+func (lm *SlotInfoPage) SetSlotInfo(slotinfoOffset uint16, recordID uint64, offset uint16) {
+	lm.Record.WriteUInt64(int(slotinfoOffset), util.PackLocation(recordID, offset))
 }

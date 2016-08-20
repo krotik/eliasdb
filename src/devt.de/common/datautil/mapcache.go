@@ -8,8 +8,10 @@
  */
 
 /*
+Package datautil contains general data handling objects and helper methods.
+
 A map based cache object storing string->interface{}. It is possible to specify
-a maximum size which when reached causes the oldest entries to be removed.
+a maximum size, which when reached causes the oldest entries to be removed.
 It is also possible to set an expiry time for values which causes values which
 are too old to be purged.
 */
@@ -81,7 +83,7 @@ func (mc *MapCache) Put(k string, v interface{}) {
 }
 
 /*
-Put stores an item in the MapCache.
+Remove removes an item in the MapCache.
 */
 func (mc *MapCache) Remove(k string) bool {
 

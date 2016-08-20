@@ -9,6 +9,8 @@
  */
 
 /*
+Package util contains utility classes for the graph storage.
+
 Graph related errors. Low-level errors should be wrapped in a graph error
 before they are returned to a client.
 */
@@ -20,7 +22,7 @@ import (
 )
 
 /*
-Graph related error
+GraphError is a graph related error
 */
 type GraphError struct {
 	Type   error  // Error type (to be used for equal checks)
@@ -33,9 +35,9 @@ Error returns a human-readable string representation of this error.
 func (ge *GraphError) Error() string {
 	if ge.Detail != "" {
 		return fmt.Sprintf("GraphError: %v (%v)", ge.Type, ge.Detail)
-	} else {
-		return fmt.Sprintf("GraphError: %v", ge.Type)
 	}
+
+	return fmt.Sprintf("GraphError: %v", ge.Type)
 }
 
 /*

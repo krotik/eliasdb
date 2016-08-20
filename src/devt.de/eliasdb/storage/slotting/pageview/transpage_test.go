@@ -24,7 +24,7 @@ func TestTransPage(t *testing.T) {
 
 	// Make sure the record has a correct magic
 
-	view.NewPageView(r, view.TYPE_TRANSLATION_PAGE)
+	view.NewPageView(r, view.TypeTranslationPage)
 
 	NewTransPage(r)
 }

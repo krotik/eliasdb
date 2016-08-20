@@ -25,11 +25,11 @@ import (
 )
 
 func TestSimpleNodeStorage(t *testing.T) {
-	if !RUN_DISK_STORAGE_TESTS {
+	if !RunDiskStorageTests {
 		return
 	}
 
-	dgs, err := graphstorage.NewDiskGraphStorage(GRAPHMANAGER_TEST_DBDIR2)
+	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2)
 	if err != nil {
 		t.Error(err)
 		return
@@ -64,13 +64,13 @@ func TestSimpleNodeStorage(t *testing.T) {
 	if !gm.IsValidAttr("Name") {
 		t.Error("Name should be a valid attribute")
 	}
-	if !gm.IsValidAttr(data.NODE_KEY) {
+	if !gm.IsValidAttr(data.NodeKey) {
 		t.Error("key should be a valid attribute")
 	}
-	if !gm.IsValidAttr(data.NODE_KIND) {
+	if !gm.IsValidAttr(data.NodeKind) {
 		t.Error("kind should be a valid attribute")
 	}
-	if !gm.IsValidAttr(data.EDGE_END1_CASCADING) {
+	if !gm.IsValidAttr(data.EdgeEnd1Cascading) {
 		t.Error("end1cascading should be a valid attribute")
 	}
 
@@ -160,7 +160,7 @@ func TestSimpleNodeStorage(t *testing.T) {
 
 	// Check that we can do the lookup with a new graph storage
 
-	dgs2, err := graphstorage.NewDiskGraphStorage(GRAPHMANAGER_TEST_DBDIR2)
+	dgs2, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2)
 	if err != nil {
 		t.Error(err)
 		return
@@ -270,11 +270,11 @@ func TestSimpleNodeStorage(t *testing.T) {
 }
 
 func TestSimpleNodeUpdate(t *testing.T) {
-	if !RUN_DISK_STORAGE_TESTS {
+	if !RunDiskStorageTests {
 		return
 	}
 
-	dgs, err := graphstorage.NewDiskGraphStorage(GRAPHMANAGER_TEST_DBDIR2)
+	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2)
 	if err != nil {
 		t.Error(err)
 		return
@@ -420,10 +420,10 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 		return
 	}
 
-	msm := mgs.StorageManager("testpart"+"testkind"+STORAGE_SUFFIX_NODES,
+	msm := mgs.StorageManager("testpart"+"testkind"+StorageSuffixNodes,
 		true).(*storage.MemoryStorageManager)
 
-	msm.AccessMap[4] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[4] = storage.AccessCacheAndFetchError
 
 	if res, err := gm.readNode("123", "testkind", nil, attTree, valTree); res != nil ||
 		err.Error() != "GraphError: Could not read graph information "+
@@ -456,7 +456,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 		return
 	}
 
-	msm.AccessMap[3] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[3] = storage.AccessCacheAndFetchError
 
 	if res, err := gm.readNode("123", "testkind", nil, attTree, valTree); res != nil ||
 		err.Error() != "GraphError: Could not read graph information "+
@@ -495,15 +495,15 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 	edge := data.NewGraphEdge()
 	edge.SetAttr("key", "abc")
 	edge.SetAttr("kind", "myedge")
-	edge.SetAttr(data.EDGE_END1_KEY, node1.Key())
-	edge.SetAttr(data.EDGE_END1_KIND, node1.Kind())
-	edge.SetAttr(data.EDGE_END1_ROLE, "node1")
-	edge.SetAttr(data.EDGE_END1_CASCADING, false)
+	edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+	edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+	edge.SetAttr(data.EdgeEnd1Role, "node1")
+	edge.SetAttr(data.EdgeEnd1Cascading, false)
 
-	edge.SetAttr(data.EDGE_END2_KEY, node2.Key())
-	edge.SetAttr(data.EDGE_END2_KIND, node2.Kind())
-	edge.SetAttr(data.EDGE_END2_ROLE, "node2")
-	edge.SetAttr(data.EDGE_END2_CASCADING, false)
+	edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+	edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+	edge.SetAttr(data.EdgeEnd2Role, "node2")
+	edge.SetAttr(data.EdgeEnd2Cascading, false)
 
 	if err := gm.StoreNode("testpart ", node2); err.Error() !=
 		"GraphError: Invalid data (Partition name testpart  is not alphanumeric - can only contain [a-zA-Z0-9_])" {
@@ -512,10 +512,10 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 		return
 	}
 
-	delete(mgs.MainDB(), MAINDB_NODE_COUNT+"testkind")
+	delete(mgs.MainDB(), MainDBNodeCount+"testkind")
 
-	sm := mgs.StorageManager("testpart"+node2.Kind()+STORAGE_SUFFIX_NODES, false).(*storage.MemoryStorageManager)
-	sm.AccessMap[1] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	sm := mgs.StorageManager("testpart"+node2.Kind()+StorageSuffixNodes, false).(*storage.MemoryStorageManager)
+	sm.AccessMap[1] = storage.AccessCacheAndFetchError
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
 		"GraphError: Failed to access graph storage component (Slot not found (mystorage/testparttestkind.nodes - Location:1))" {
@@ -526,10 +526,10 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 
 	delete(sm.AccessMap, 1)
 
-	sm = mgs.StorageManager("testpart"+edge.Kind()+STORAGE_SUFFIX_EDGES, true).(*storage.MemoryStorageManager)
-	sm.AccessMap[1] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	sm = mgs.StorageManager("testpart"+edge.Kind()+StorageSuffixEdges, true).(*storage.MemoryStorageManager)
+	sm.AccessMap[1] = storage.AccessCacheAndFetchError
 
-	sm.SetRoot(ROOT_ID_NODE_HTREE, 1)
+	sm.SetRoot(RootIDNodeHTree, 1)
 
 	if err := gm.StoreEdge("testpart", edge); err.Error() !=
 		"GraphError: Failed to access graph storage component (Slot not found (mystorage/testpartmyedge.edges - Location:1))" {
@@ -539,7 +539,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 
 	delete(sm.AccessMap, 1)
 
-	msm.AccessMap[5] = storage.ACCESS_INSERT_ERROR
+	msm.AccessMap[5] = storage.AccessInsertError
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
 		"GraphError: Could not write graph information (Record is already in-use (? - ))" {
@@ -550,7 +550,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 
 	delete(msm.AccessMap, 5)
 
-	msm.AccessMap[5] = storage.ACCESS_INSERT_ERROR
+	msm.AccessMap[5] = storage.AccessInsertError
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
 		"GraphError: Could not write graph information (Record is already in-use (? - ))" {
@@ -564,7 +564,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 	node2.SetAttr("key", "123")
 	node2.SetAttr("Name", nil)
 
-	msm.AccessMap[3] = storage.ACCESS_FREE_ERROR
+	msm.AccessMap[3] = storage.AccessFreeError
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
 		"GraphError: Could not write graph information (Slot not found (mystorage/testparttestkind.nodes - Location:3))" {
@@ -578,7 +578,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 	node2.SetAttr("key", "456")
 	node2.SetAttr("Name", "A new name")
 
-	graphstorage.MgsRetFlushMain = &util.GraphError{util.ErrFlushing, errors.New("Test").Error()}
+	graphstorage.MgsRetFlushMain = &util.GraphError{Type: util.ErrFlushing, Detail: errors.New("Test").Error()}
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
 		"GraphError: Failed to flush changes (Test)" {
@@ -589,11 +589,11 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 
 	graphstorage.MgsRetFlushMain = nil
 
-	is := gm.gs.StorageManager("testpart"+"testkind"+STORAGE_SUFFIX_NODES_INDEX,
+	is := gm.gs.StorageManager("testpart"+"testkind"+StorageSuffixNodesIndex,
 		false).(*storage.MemoryStorageManager)
 
 	for i := 0; i < 10; i++ {
-		is.AccessMap[uint64(i)] = storage.ACCESS_INSERT_ERROR
+		is.AccessMap[uint64(i)] = storage.AccessInsertError
 	}
 
 	node2.SetAttr("key", "789")
@@ -615,7 +615,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		is.AccessMap[uint64(i)] = storage.ACCESS_UPDATE_ERROR
+		is.AccessMap[uint64(i)] = storage.AccessUpdateError
 	}
 
 	if res, err := gm.RemoveNode("testpart", "789", "testkind"); !strings.Contains(err.Error(),
@@ -629,7 +629,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 		delete(is.AccessMap, uint64(i))
 	}
 
-	msm.AccessMap[9] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[9] = storage.AccessCacheAndFetchError
 
 	// This call does delete the node by blowing
 	// away the attribute list - the node is removed though its attribute
@@ -651,7 +651,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 
 	gm.StoreNode("testpart", node2)
 
-	graphstorage.MgsRetFlushMain = &util.GraphError{util.ErrFlushing, errors.New("Test").Error()}
+	graphstorage.MgsRetFlushMain = &util.GraphError{Type: util.ErrFlushing, Detail: errors.New("Test").Error()}
 
 	if _, err := gm.RemoveNode("testpart", node2.Key(), node2.Kind()); err.Error() !=
 		"GraphError: Failed to flush changes (Test)" {
@@ -664,11 +664,11 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 }
 
 func TestGraphManagerDiskStorage(t *testing.T) {
-	if !RUN_DISK_STORAGE_TESTS {
+	if !RunDiskStorageTests {
 		return
 	}
 
-	dgs, err := graphstorage.NewDiskGraphStorage(GRAPHMANAGER_TEST_DBDIR1)
+	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -676,14 +676,14 @@ func TestGraphManagerDiskStorage(t *testing.T) {
 
 	gm := newGraphManagerNoRules(dgs)
 
-	if gm.Name() != "Graph "+GRAPHMANAGER_TEST_DBDIR1 {
+	if gm.Name() != "Graph "+GraphManagerTestDBDir1 {
 		t.Error("Unexpected name:", gm.Name())
 		return
 	}
 
 	sm := dgs.StorageManager("my1", true)
 
-	htree, err := gm.getHTree(sm, ROOT_ID_NODE_HTREE)
+	htree, err := gm.getHTree(sm, RootIDNodeHTree)
 	if err != nil {
 		t.Error(err)
 		return
@@ -693,37 +693,37 @@ func TestGraphManagerDiskStorage(t *testing.T) {
 
 	dgs.Close()
 
-	dgs2, err := graphstorage.NewDiskGraphStorage(GRAPHMANAGER_TEST_DBDIR1)
+	dgs2, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir1)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	dgs2.MainDB()[MAINDB_VERSION] = strconv.Itoa(VERSION + 1)
+	dgs2.MainDB()[MainDBVersion] = strconv.Itoa(VERSION + 1)
 	dgs2.FlushMain()
 
 	testVersionPanic(t, dgs2)
 
-	dgs2.MainDB()[MAINDB_VERSION] = strconv.Itoa(VERSION)
+	dgs2.MainDB()[MainDBVersion] = strconv.Itoa(VERSION)
 	dgs2.FlushMain()
 
 	// This should now succeed
 
 	newGraphManagerNoRules(dgs2)
 
-	dgs2.MainDB()[MAINDB_VERSION] = strconv.Itoa(VERSION - 1)
+	dgs2.MainDB()[MainDBVersion] = strconv.Itoa(VERSION - 1)
 	dgs2.FlushMain()
 
 	gm = newGraphManagerNoRules(dgs2)
 
-	if dgs2.MainDB()[MAINDB_VERSION] != strconv.Itoa(VERSION) {
+	if dgs2.MainDB()[MainDBVersion] != strconv.Itoa(VERSION) {
 		t.Error("Version should have been corrected")
 		return
 	}
 
 	sm2 := dgs2.StorageManager("my1", true)
 
-	htree2, err := gm.getHTree(sm2, ROOT_ID_NODE_HTREE)
+	htree2, err := gm.getHTree(sm2, RootIDNodeHTree)
 	if err != nil {
 		t.Error(err)
 		return
@@ -740,9 +740,9 @@ func TestGraphManagerDiskStorage(t *testing.T) {
 
 	msm := storage.NewMemoryStorageManager("mytest")
 
-	msm.AccessMap[1] = storage.ACCESS_INSERT_ERROR
+	msm.AccessMap[1] = storage.AccessInsertError
 
-	_, err = gm.getHTree(msm, ROOT_ID_NODE_HTREE)
+	_, err = gm.getHTree(msm, RootIDNodeHTree)
 
 	if err.(*util.GraphError).Type != util.ErrAccessComponent {
 		t.Error(err)
@@ -751,11 +751,11 @@ func TestGraphManagerDiskStorage(t *testing.T) {
 
 	delete(msm.AccessMap, 1)
 
-	msm.SetRoot(ROOT_ID_NODE_HTREE, 2)
+	msm.SetRoot(RootIDNodeHTree, 2)
 
-	msm.AccessMap[2] = storage.ACCESS_INSERT_ERROR
+	msm.AccessMap[2] = storage.AccessInsertError
 
-	_, err = gm.getHTree(msm, ROOT_ID_NODE_HTREE)
+	_, err = gm.getHTree(msm, RootIDNodeHTree)
 
 	if err.(*util.GraphError).Type != util.ErrAccessComponent {
 		t.Error(err)

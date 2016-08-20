@@ -27,19 +27,19 @@ storagefile_test.go
 
 func TestTransactionManagerInitialisation(t *testing.T) {
 
-	if _, err := NewDefaultStorageFile(INVALID_FILE_NAME, false); err == nil {
+	if _, err := NewDefaultStorageFile(InvalidFileName, false); err == nil {
 		t.Error("Invalid name for transaction log should cause an error")
 		return
 	}
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/trans_test1", false)
+	sf, err := NewDefaultStorageFile(DBDir+"/trans_test1", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 
 	oldname := sf.name
-	sf.name = INVALID_FILE_NAME
+	sf.name = InvalidFileName
 	if _, err = NewTransactionManager(sf, true); err == nil {
 		t.Error("Invalid name for transaction log should cause an error")
 		return
@@ -50,23 +50,23 @@ func TestTransactionManagerInitialisation(t *testing.T) {
 	}
 	sf.name = oldname
 
-	if sf.Name() != DBDIR+"/trans_test1" {
+	if sf.Name() != DBDir+"/trans_test1" {
 		t.Error("Unexpected name of StorageFile:", sf.Name())
 		return
 	}
 
-	if sf.RecordSize() != DEFAULT_RECORD_SIZE {
+	if sf.RecordSize() != DefaultRecordSize {
 		t.Error("Unexpected record size:", sf.RecordSize())
 		return
 	}
 
-	tm_name := sf.tm.name
+	tmName := sf.tm.name
 	if err = sf.Close(); err != nil {
 		t.Error(err)
 		return
 	}
 
-	res, err := fileutil.PathExists(DBDIR + "/trans_test1.0")
+	res, err := fileutil.PathExists(DBDir + "/trans_test1.0")
 	if err != nil {
 		t.Error(err)
 		return
@@ -76,7 +76,7 @@ func TestTransactionManagerInitialisation(t *testing.T) {
 		return
 	}
 
-	res, err = fileutil.PathExists(DBDIR + "/trans_test1." + LOG_FILE_SUFFIX)
+	res, err = fileutil.PathExists(DBDir + "/trans_test1." + LogFileSuffix)
 	if err != nil {
 		t.Error(err)
 		return
@@ -88,7 +88,7 @@ func TestTransactionManagerInitialisation(t *testing.T) {
 
 	// Test Magic
 
-	file, err := os.OpenFile(tm_name, os.O_CREATE|os.O_TRUNC, 0660)
+	file, err := os.OpenFile(tmName, os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,7 +103,7 @@ func TestTransactionManagerInitialisation(t *testing.T) {
 	}
 	tm.close()
 
-	file, err = os.OpenFile(tm_name, os.O_RDONLY, 0660)
+	file, err = os.OpenFile(tmName, os.O_RDONLY, 0660)
 	if err != nil {
 		t.Error(err)
 		return
@@ -115,7 +115,7 @@ func TestTransactionManagerInitialisation(t *testing.T) {
 		return
 	}
 
-	if !reflect.DeepEqual(buf, TRANSACTION_LOG_HEADER) {
+	if !reflect.DeepEqual(buf, TransactionLogHeader) {
 		t.Error("Magic should have been restored in the transaction file")
 	}
 
@@ -137,12 +137,12 @@ func TestTransactionManagerInitialisation(t *testing.T) {
 
 	// Test corrupted transaction log
 
-	file, err = os.OpenFile(tm_name, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0660)
+	file, err = os.OpenFile(tmName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0660)
 	if err != nil {
 		t.Error(err)
 	}
 
-	file.Write(TRANSACTION_LOG_HEADER)
+	file.Write(TransactionLogHeader)
 	file.WriteString("*")
 	file.Close()
 
@@ -151,12 +151,12 @@ func TestTransactionManagerInitialisation(t *testing.T) {
 		return
 	}
 
-	file, err = os.OpenFile(tm_name, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0660)
+	file, err = os.OpenFile(tmName, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0660)
 	if err != nil {
 		t.Error(err)
 	}
 
-	file.Write(TRANSACTION_LOG_HEADER)
+	file.Write(TransactionLogHeader)
 	file.Write([]byte{0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 	file.WriteString("HalloTEST")
 	file.Close()
@@ -168,7 +168,7 @@ func TestTransactionManagerInitialisation(t *testing.T) {
 
 func TestTMSimpleHighLevelGetRelease(t *testing.T) {
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/trans_test2", false)
+	sf, err := NewDefaultStorageFile(DBDir+"/trans_test2", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -179,7 +179,7 @@ func TestTMSimpleHighLevelGetRelease(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	record.WriteByte(5, 0x42)
+	record.WriteSingleByte(5, 0x42)
 	sf.ReleaseInUse(record)
 
 	if err = sf.Close(); err != nil {
@@ -196,7 +196,7 @@ func TestTMSimpleHighLevelGetRelease(t *testing.T) {
 	// StorageFiles with transaction management cannot be reused after they
 	// were closed.
 
-	sf, err = NewDefaultStorageFile(DBDIR+"/trans_test2", false)
+	sf, err = NewDefaultStorageFile(DBDir+"/trans_test2", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -208,7 +208,7 @@ func TestTMSimpleHighLevelGetRelease(t *testing.T) {
 		return
 	}
 
-	if record.ReadByte(5) != 0x42 {
+	if record.ReadSingleByte(5) != 0x42 {
 		t.Error("Unexpected value in record")
 	}
 
@@ -227,7 +227,7 @@ func TestTMComplexHighLevelGetRelease(t *testing.T) {
 
 	// Test the auto commit of many transactions
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/trans_test3", false)
+	sf, err := NewDefaultStorageFile(DBDir+"/trans_test3", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -236,26 +236,26 @@ func TestTMComplexHighLevelGetRelease(t *testing.T) {
 	// Releasing a nil pointer should have no effect
 	sf.releaseInTrans(nil, true)
 
-	for i := 0; i < DEFAULT_TRANS_IN_LOG+1; i++ {
+	for i := 0; i < DefaultTransInLog+1; i++ {
 		record, err := sf.Get(1 + uint64(i))
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		record.WriteByte(5+i, 0x42)
+		record.WriteSingleByte(5+i, 0x42)
 		sf.ReleaseInUse(record)
 
-		if i == DEFAULT_TRANS_IN_LOG {
-			if len(sf.inTrans) != DEFAULT_TRANS_IN_LOG {
-				t.Error("Expected", DEFAULT_TRANS_IN_LOG, "records in transaction")
+		if i == DefaultTransInLog {
+			if len(sf.inTrans) != DefaultTransInLog {
+				t.Error("Expected", DefaultTransInLog, "records in transaction")
 			}
 		}
 
 		sf.Flush()
 
-		if i == DEFAULT_TRANS_IN_LOG {
+		if i == DefaultTransInLog {
 			if len(sf.inTrans) != 1 && len(sf.free) == 10 {
-				t.Error("Expected", DEFAULT_TRANS_IN_LOG, "records to be free")
+				t.Error("Expected", DefaultTransInLog, "records to be free")
 			}
 			out := sf.String()
 
@@ -292,7 +292,7 @@ func TestTMComplexHighLevelGetRelease(t *testing.T) {
 				return
 			}
 
-			if len(sf.free) != DEFAULT_TRANS_IN_LOG-1 {
+			if len(sf.free) != DefaultTransInLog-1 {
 				t.Error("Expected that a free record would be reused")
 			}
 			for _, b := range record.data {
@@ -302,7 +302,7 @@ func TestTMComplexHighLevelGetRelease(t *testing.T) {
 				}
 			}
 
-			record.WriteByte(5+i+1, 0x42)
+			record.WriteSingleByte(5+i+1, 0x42)
 			sf.ReleaseInUse(record)
 			sf.Flush()
 		}
@@ -318,7 +318,7 @@ func TestTMComplexHighLevelGetRelease(t *testing.T) {
 	defer tm.logFile.Close()
 	sf.tm = tm
 
-	sf.name = INVALID_FILE_NAME
+	sf.name = InvalidFileName
 
 	record := NewRecord(5, make([]byte, sf.recordSize, sf.recordSize))
 
@@ -355,7 +355,7 @@ func TestTMComplexHighLevelGetRelease(t *testing.T) {
 
 func TestRecover(t *testing.T) {
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/trans_test4", false)
+	sf, err := NewDefaultStorageFile(DBDir+"/trans_test4", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -366,7 +366,7 @@ func TestRecover(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	record.WriteByte(5, 0x42)
+	record.WriteSingleByte(5, 0x42)
 	sf.ReleaseInUse(record)
 	sf.Flush()
 
@@ -378,7 +378,7 @@ func TestRecover(t *testing.T) {
 		return
 	}
 	sf.ReleaseInUse(record)
-	if sf.inTrans[record.Id()] == nil {
+	if sf.inTrans[record.ID()] == nil {
 		t.Error("Record should still be part of the transaction")
 		return
 	}
@@ -388,7 +388,7 @@ func TestRecover(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	record.WriteByte(6, 0x42)
+	record.WriteSingleByte(6, 0x42)
 	sf.ReleaseInUse(record)
 
 	// Not let an error happen which makes the transaction log file unavailable
@@ -403,12 +403,12 @@ func TestRecover(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	record.WriteByte(7, 0x42)
+	record.WriteSingleByte(7, 0x42)
 	sf.ReleaseInUse(record)
 
 	// The record should still be in a transaction and should have now both changes
-	if record.ReadByte(5) != 0 || record.ReadByte(6) != 0x42 ||
-		record.ReadByte(7) != 0x42 {
+	if record.ReadSingleByte(5) != 0 || record.ReadSingleByte(6) != 0x42 ||
+		record.ReadSingleByte(7) != 0x42 {
 
 		t.Error("Unexpected data in record:", record)
 		return
@@ -443,7 +443,7 @@ func TestRecover(t *testing.T) {
 
 	// Open the StorageFile again and hope that recover() does the right thing
 
-	sf, err = NewDefaultStorageFile(DBDIR+"/trans_test4", false)
+	sf, err = NewDefaultStorageFile(DBDir+"/trans_test4", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -461,16 +461,16 @@ func TestRecover(t *testing.T) {
 	}
 
 	// Check that expected values are there / not there
-	if record.ReadByte(5) != 0x42 || record.ReadByte(6) != 0 ||
-		record.ReadByte(7) != 0 {
+	if record.ReadSingleByte(5) != 0x42 || record.ReadSingleByte(6) != 0 ||
+		record.ReadSingleByte(7) != 0 {
 
 		t.Error("Unexpected data in record1:", record)
 		return
 	}
 
 	// All transactions on record2 should have failed
-	if record2.ReadByte(5) != 0 || record2.ReadByte(6) != 0 ||
-		record2.ReadByte(7) != 0 {
+	if record2.ReadSingleByte(5) != 0 || record2.ReadSingleByte(6) != 0 ||
+		record2.ReadSingleByte(7) != 0 {
 
 		t.Error("Unexpected data in record2:", record)
 		return
@@ -490,7 +490,7 @@ func TestRecover(t *testing.T) {
 
 func TestRollback(t *testing.T) {
 
-	sf, err := NewDefaultStorageFile(DBDIR+"/trans_test5", false)
+	sf, err := NewDefaultStorageFile(DBDir+"/trans_test5", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -501,7 +501,7 @@ func TestRollback(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	record.WriteByte(5, 0x42)
+	record.WriteSingleByte(5, 0x42)
 	sf.ReleaseInUse(record)
 
 	sf.Flush()
@@ -511,7 +511,7 @@ func TestRollback(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	record.WriteByte(6, 0x42)
+	record.WriteSingleByte(6, 0x42)
 	sf.ReleaseInUse(record)
 
 	if err := sf.Rollback(); err != nil {
@@ -524,7 +524,7 @@ func TestRollback(t *testing.T) {
 		return
 	}
 
-	sf, err = NewDefaultStorageFile(DBDIR+"/trans_test2", false)
+	sf, err = NewDefaultStorageFile(DBDir+"/trans_test2", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -542,14 +542,14 @@ func TestRollback(t *testing.T) {
 	}
 
 	// Check that expected values are there / not there
-	if record.ReadByte(5) != 0x42 || record.ReadByte(6) != 0 {
+	if record.ReadSingleByte(5) != 0x42 || record.ReadSingleByte(6) != 0 {
 
 		t.Error("Unexpected data in record1:", record)
 		return
 	}
 
 	// All transactions on record2 should have failed
-	if record2.ReadByte(5) != 0 || record2.ReadByte(6) != 0 {
+	if record2.ReadSingleByte(5) != 0 || record2.ReadSingleByte(6) != 0 {
 
 		t.Error("Unexpected data in record2:", record)
 		return
@@ -562,7 +562,7 @@ func TestRollback(t *testing.T) {
 }
 
 func TestRollbackFail(t *testing.T) {
-	sf, err := NewDefaultStorageFile(DBDIR+"/trans_test6", false)
+	sf, err := NewDefaultStorageFile(DBDir+"/trans_test6", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
@@ -573,7 +573,7 @@ func TestRollbackFail(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	record.WriteByte(5, 0x42)
+	record.WriteSingleByte(5, 0x42)
 
 	if err = sf.Rollback(); err != ErrInUse {
 		t.Error("It should not be possible to rollback while records are still in use")
@@ -582,7 +582,7 @@ func TestRollbackFail(t *testing.T) {
 	sf.ReleaseInUse(record)
 
 	sf.tm.logFile.Close()
-	sf.tm.name = DBDIR + "/" + INVALID_FILE_NAME + "." + LOG_FILE_SUFFIX
+	sf.tm.name = DBDir + "/" + InvalidFileName + "." + LogFileSuffix
 	if err = sf.Rollback(); err == nil {
 		t.Error("Rollback should fail when using invalid filename for transaction log")
 		return
@@ -592,19 +592,19 @@ func TestRollbackFail(t *testing.T) {
 	sf.transDisabled = true
 	sf.Close()
 
-	sf, err = NewDefaultStorageFile(DBDIR+"/trans_test6", false)
+	sf, err = NewDefaultStorageFile(DBDir+"/trans_test6", false)
 	if err != nil {
 		t.Error(err.Error())
 		return
 	}
 
-	sf.inTrans[record.Id()] = record
+	sf.inTrans[record.ID()] = record
 	if err = sf.Rollback(); err != ErrInTrans {
 		t.Error("It should not be possible to rollback while records are still in transaction")
 		return
 	}
 
-	delete(sf.inTrans, record.Id())
+	delete(sf.inTrans, record.ID())
 
 	sf.Close()
 }

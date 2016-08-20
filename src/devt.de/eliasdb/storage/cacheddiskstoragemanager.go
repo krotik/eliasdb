@@ -9,6 +9,8 @@
  */
 
 /*
+Package storage contains API classes for data storage in slots.
+
 Cache wrapper for DiskStorageManager. The cache has a fixed size and keeps the
 most recent elements.
 */

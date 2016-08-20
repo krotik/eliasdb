@@ -9,6 +9,8 @@
  */
 
 /*
+Package paging contains functions and constants necessary for paging of records.
+
 PageCursor is a pointer into a PagedStorageFile and can be used to traverse
 a linked list of pages (see also PagedStorageFileHeader which stores the
 entry points).
@@ -16,7 +18,7 @@ entry points).
 package paging
 
 /*
-PagedStorageFile data structure
+PageCursor data structure
 */
 type PageCursor struct {
 	psf     *PagedStorageFile // Pager to be used

@@ -260,7 +260,7 @@ func TestSmallListPacking(t *testing.T) {
 func checkListAndPresentation2bit(t *testing.T, list []byte, packedlist []byte, packedLen int) {
 	res := PackList2Bit(list)
 	if res != string(packedlist) {
-		t.Error(fmt.Sprintf("Unexpected result: %X", []byte(res)))
+		t.Errorf("Unexpected result: %X", []byte(res))
 		return
 	}
 	if len(res) != packedLen {
@@ -268,7 +268,7 @@ func checkListAndPresentation2bit(t *testing.T, list []byte, packedlist []byte, 
 		return
 	}
 	if dres := UnpackSmallList(res); string(dres) != string(list) {
-		t.Error(fmt.Sprintf("Unexpected result: %X", []byte(dres)))
+		t.Errorf("Unexpected result: %X", []byte(dres))
 		return
 	}
 }
@@ -276,7 +276,7 @@ func checkListAndPresentation2bit(t *testing.T, list []byte, packedlist []byte, 
 func checkListAndPresentation3bit(t *testing.T, list []byte, packedlist []byte, packedLen int) {
 	res := PackList3Bit(list)
 	if res != string(packedlist) {
-		t.Error(fmt.Sprintf("Unexpected result: %X", []byte(res)))
+		t.Errorf("Unexpected result: %X", []byte(res))
 		return
 	}
 	if len(res) != packedLen {
@@ -284,7 +284,7 @@ func checkListAndPresentation3bit(t *testing.T, list []byte, packedlist []byte, 
 		return
 	}
 	if dres := UnpackSmallList(res); string(dres) != string(list) {
-		t.Error(fmt.Sprintf("Unexpected result: %X", []byte(dres)))
+		t.Errorf("Unexpected result: %X", []byte(dres))
 		return
 	}
 }
@@ -297,7 +297,7 @@ func checkListAndPresentation6bit(t *testing.T, list []byte) {
 	packedlist[0] = packedlist[0] | 0xC0
 
 	if res != string(packedlist) {
-		t.Error(fmt.Sprintf("Unexpected result: %X vs %X", []byte(res), packedlist))
+		t.Errorf("Unexpected result: %X vs %X", []byte(res), packedlist)
 		return
 	}
 	if len(res) != len(list) {
@@ -305,18 +305,18 @@ func checkListAndPresentation6bit(t *testing.T, list []byte) {
 		return
 	}
 	if dres := UnpackSmallList(res); string(dres) != string(list) {
-		t.Error(fmt.Sprintf("Unexpected result: %X", []byte(dres)))
+		t.Errorf("Unexpected result: %X", []byte(dres))
 		return
 	}
 }
 
 func TestList2byte2bit(t *testing.T) {
 	if res := list2byte2bit(0x01, 0x2, 0x03, 0x01); res != 0x6D {
-		t.Error(fmt.Sprintf("Unexpected result: %X", res))
+		t.Errorf("Unexpected result: %X", res)
 		return
 	}
 	if res := list2byte3bitAndHeader(0x00, 0x07, 0x03); res != 0x3B {
-		t.Error(fmt.Sprintf("Unexpected result: %X", res))
+		t.Errorf("Unexpected result: %X", res)
 		return
 	}
 }

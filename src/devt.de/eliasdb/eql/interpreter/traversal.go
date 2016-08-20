@@ -9,6 +9,8 @@
  */
 
 /*
+Package interpreter contains the EQL interpreter.
+
 Traversal runtime component.
 */
 package interpreter
@@ -70,13 +72,13 @@ func (rt *traversalRuntime) Validate() error {
 
 	for _, child := range rt.node.Children[1:] {
 
-		if child.Name == parser.N_TRAVERSE {
+		if child.Name == parser.NodeTRAVERSE {
 
 			if err := child.Runtime.Validate(); err != nil {
 				return err
 			}
 
-		} else if child.Name == parser.N_WHERE {
+		} else if child.Name == parser.NodeWHERE {
 
 			whereRuntime := child.Runtime.(*whereRuntime)
 
@@ -104,7 +106,7 @@ nodes. If the result is negative then a new source node is required.
 */
 func (rt *traversalRuntime) hasMoreNodes() bool {
 	for _, child := range rt.node.Children[1:] {
-		if child.Name == parser.N_TRAVERSE {
+		if child.Name == parser.NodeTRAVERSE {
 			childRuntime := child.Runtime.(*traversalRuntime)
 			if childRuntime.hasMoreNodes() {
 				return true
@@ -223,7 +225,7 @@ func (rt *traversalRuntime) Eval() (interface{}, error) {
 	// Check if a child can handle the call
 
 	for _, child := range rt.node.Children[1:] {
-		if child.Name == parser.N_TRAVERSE {
+		if child.Name == parser.NodeTRAVERSE {
 			childRuntime := child.Runtime.(*traversalRuntime)
 			if childRuntime.hasMoreNodes() {
 				return childRuntime.Eval()
@@ -257,7 +259,7 @@ func (rt *traversalRuntime) Eval() (interface{}, error) {
 	// Give the new source to the children and let them evaluate
 
 	for _, child := range rt.node.Children[1:] {
-		if child.Name == parser.N_TRAVERSE {
+		if child.Name == parser.NodeTRAVERSE {
 			childRuntime := child.Runtime.(*traversalRuntime)
 
 			if err := childRuntime.newSource(rt.rtp.rowNode[rt.specIndex]); err != nil {

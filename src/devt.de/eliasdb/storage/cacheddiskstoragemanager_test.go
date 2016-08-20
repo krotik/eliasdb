@@ -40,7 +40,7 @@ func TestCachedDiskStorageManager(t *testing.T) {
 		return
 	}
 
-	if cdsm.Root(ROOT_ID_VERSION) != dsm.Root(ROOT_ID_VERSION) || dsm.Root(ROOT_ID_VERSION) == 0 {
+	if cdsm.Root(RootIDVersion) != dsm.Root(RootIDVersion) || dsm.Root(RootIDVersion) == 0 {
 		t.Error("Unexpected result asking for the version")
 		return
 	}
@@ -73,7 +73,7 @@ func TestCachedDiskStorageManager(t *testing.T) {
 
 	cdsm.Rollback()
 
-	checkLocation(t, loc, 1, pageview.OFFSET_TRANS_DATA)
+	checkLocation(t, loc, 1, pageview.OffsetTransData)
 
 	if _, ok := cdsm.cache[loc]; !ok {
 		t.Error("Cache entry should not be empty")
@@ -174,7 +174,7 @@ func TestCachedDiskStorageManager(t *testing.T) {
 		return
 	}
 
-	record, err := dsm.physical_slots_sf.Get(1)
+	record, err := dsm.physicalSlotsSf.Get(1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -196,7 +196,7 @@ func TestCachedDiskStorageManager(t *testing.T) {
 		return
 	}
 
-	dsm.physical_slots_sf.ReleaseInUse(record)
+	dsm.physicalSlotsSf.ReleaseInUse(record)
 
 	// Flush should now succeed
 
@@ -260,7 +260,7 @@ func TestCachedDiskStorageManagerTransactions(t *testing.T) {
 
 	// Check free error
 
-	record, err := dsm.physical_slots_sf.Get(1)
+	record, err := dsm.physicalSlotsSf.Get(1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -271,7 +271,7 @@ func TestCachedDiskStorageManagerTransactions(t *testing.T) {
 		return
 	}
 
-	dsm.physical_slots_sf.ReleaseInUse(record)
+	dsm.physicalSlotsSf.ReleaseInUse(record)
 
 	// Check that nothing was lost
 
@@ -369,7 +369,7 @@ func TestCachedDiskStorageManagerCacheManagement(t *testing.T) {
 		return
 	}
 
-	record, err := dsm.physical_slots_sf.Get(1)
+	record, err := dsm.physicalSlotsSf.Get(1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -387,7 +387,7 @@ func TestCachedDiskStorageManagerCacheManagement(t *testing.T) {
 		return
 	}
 
-	dsm.physical_slots_sf.ReleaseInUse(record)
+	dsm.physicalSlotsSf.ReleaseInUse(record)
 
 	entry = cdsm.removeOldestFromCache()
 	if entry.location != loc3 {

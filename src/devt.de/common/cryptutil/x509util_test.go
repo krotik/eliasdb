@@ -16,13 +16,13 @@ import (
 
 func TestCertificateDecoding(t *testing.T) {
 
-	_, err := ReadX509CertsFromFile(INVALID_FILE_NAME)
+	_, err := ReadX509CertsFromFile(invalidFileName)
 	if err == nil {
 		t.Error("Attempting to load an invalid file should result in an error")
 		return
 	}
 
-	google_cert := `
+	googleCert := `
 -----BEGIN CERTIFICATE-----
 MIIEgDCCA2igAwIBAgIIORWTXMrZJggwDQYJKoZIhvcNAQELBQAwSTELMAkGA1UE
 BhMCVVMxEzARBgNVBAoTCkdvb2dsZSBJbmMxJTAjBgNVBAMTHEdvb2dsZSBJbnRl
@@ -52,7 +52,7 @@ TV6Wsg==
 -----END CERTIFICATE-----
 `
 
-	c, err := ReadX509Certs([]byte(google_cert))
+	c, err := ReadX509Certs([]byte(googleCert))
 	if err != nil {
 		t.Error(err)
 		return
@@ -80,13 +80,13 @@ TV6Wsg==
 
 	// Test error cases
 
-	_, err = ReadX509Certs([]byte(google_cert[2:]))
+	_, err = ReadX509Certs([]byte(googleCert[2:]))
 	if err.Error() != "PEM not parsed" {
 		t.Error("PEM parsing error expected:", err)
 		return
 	}
 
-	_, err = ReadX509Certs([]byte(google_cert[0:29] + "Mi" + google_cert[31:]))
+	_, err = ReadX509Certs([]byte(googleCert[0:29] + "Mi" + googleCert[31:]))
 	if strings.HasPrefix("asn1: structure error", err.Error()) {
 		t.Error("asn1 parsing error expected:", err)
 		return

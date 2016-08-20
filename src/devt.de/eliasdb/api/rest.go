@@ -9,17 +9,12 @@
  */
 
 /*
+Package api contains general REST API definitions.
+
 RESTful API for EliasDB. This REST API provides an interface to EliasDB.
 It allows querying and modifying of the datastore. The API responds to GET,
 POST, PUT and DELETE requests in JSON if the request was successful
 (Return code 200 OK) and plain text in all other cases.
-
-Version 1 API root: /db/v1
-
-API endpoints:
-
-/db/v1/graph - Access to the graph
-/db/v1/query - Run a search query
 */
 package api
 
@@ -31,19 +26,32 @@ import (
 )
 
 /*
-API root directory for the REST API
+APIVersion is the version of the REST API
 */
-const API_ROOT = "/db"
+const APIVersion = "1.0.0"
 
 /*
-Supported schemes by the API
+APIRoot is the root directory for the REST API
 */
-var API_SCHEMES = []string{"https"}
+const APIRoot = "/db"
 
 /*
-Host definition for REST API
+APISchemes is a list of supported protocol schemes
 */
-var API_HOST = "localhost:9090"
+var APISchemes = []string{"https"}
+
+/*
+APIHost is the host definition for the REST API
+*/
+var APIHost = "localhost:9090"
+
+/*
+GeneralEndpointMap contains general endpoints which should always be available
+*/
+var GeneralEndpointMap = map[string]RestEndpointInst{
+	EndpointAbout:   AboutEndpointInst,
+	EndpointSwagger: SwaggerEndpointInst,
+}
 
 /*
 RestEndpointInst models a factory function for REST endpoint handlers.
@@ -82,9 +90,9 @@ type RestEndpointHandler interface {
 }
 
 /*
-GraphManager instance which should be used by the REST API.
+GM is the GraphManager instance which should be used by the REST API.
 */
-var GM *graph.GraphManager
+var GM *graph.Manager
 
 /*
 Map of all registered endpoint handlers.
@@ -93,11 +101,13 @@ var registered = map[string]RestEndpointInst{}
 
 /*
 HandleFunc to use for registering handlers
+
+Should be of type: func(pattern string, handler func(http.ResponseWriter, *http.Request))
 */
-var HandleFunc func(pattern string, handler func(http.ResponseWriter, *http.Request)) = http.HandleFunc
+var HandleFunc = http.HandleFunc
 
 /*
-Register all given REST endpoint handlers.
+RegisterRestEndpoints registers all given REST endpoint handlers.
 */
 func RegisterRestEndpoints(endpointInsts map[string]RestEndpointInst) {
 
@@ -151,23 +161,35 @@ func RegisterRestEndpoints(endpointInsts map[string]RestEndpointInst) {
 }
 
 /*
-Default endpoint handler.
+DefaultEndpointHandler represents the default endpoint handler.
 */
 type DefaultEndpointHandler struct {
 }
 
+/*
+HandleGET is a method stub returning an error.
+*/
 func (de *DefaultEndpointHandler) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
+/*
+HandlePOST is a method stub returning an error.
+*/
 func (de *DefaultEndpointHandler) HandlePOST(w http.ResponseWriter, r *http.Request, resources []string) {
 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
+/*
+HandlePUT is a method stub returning an error.
+*/
 func (de *DefaultEndpointHandler) HandlePUT(w http.ResponseWriter, r *http.Request, resources []string) {
 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
+/*
+HandleDELETE is a method stub returning an error.
+*/
 func (de *DefaultEndpointHandler) HandleDELETE(w http.ResponseWriter, r *http.Request, resources []string) {
 	http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 }

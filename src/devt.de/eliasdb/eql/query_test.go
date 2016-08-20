@@ -166,7 +166,7 @@ get
 
 }
 
-func songGraph() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
+func songGraph() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 
 	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
 	gm := graph.NewGraphManager(mgs)
@@ -177,15 +177,15 @@ func songGraph() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
 		edge.SetAttr("key", key)
 		edge.SetAttr("kind", "Wrote")
 
-		edge.SetAttr(data.EDGE_END1_KEY, node1.Key())
-		edge.SetAttr(data.EDGE_END1_KIND, node1.Kind())
-		edge.SetAttr(data.EDGE_END1_ROLE, "Author")
-		edge.SetAttr(data.EDGE_END1_CASCADING, true)
+		edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+		edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+		edge.SetAttr(data.EdgeEnd1Role, "Author")
+		edge.SetAttr(data.EdgeEnd1Cascading, true)
 
-		edge.SetAttr(data.EDGE_END2_KEY, node2.Key())
-		edge.SetAttr(data.EDGE_END2_KIND, node2.Kind())
-		edge.SetAttr(data.EDGE_END2_ROLE, "Song")
-		edge.SetAttr(data.EDGE_END2_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+		edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+		edge.SetAttr(data.EdgeEnd2Role, "Song")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
 
 		edge.SetAttr("number", number)
 
@@ -235,12 +235,12 @@ func songGraph() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
 	return gm, mgs.(*graphstorage.MemoryGraphStorage)
 }
 
-func songGraphGroups() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
+func songGraphGroups() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 	gm, mgs := songGraph()
 
 	node0 := data.NewGraphNode()
 	node0.SetAttr("key", "Best")
-	node0.SetAttr("kind", GROUP_NODE_KIND)
+	node0.SetAttr("kind", GroupNodeKind)
 	gm.StoreNode("main", node0)
 
 	constructEdge := func(songkey string) data.Edge {
@@ -249,15 +249,15 @@ func songGraphGroups() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
 		edge.SetAttr("key", songkey)
 		edge.SetAttr("kind", "Contains")
 
-		edge.SetAttr(data.EDGE_END1_KEY, node0.Key())
-		edge.SetAttr(data.EDGE_END1_KIND, node0.Kind())
-		edge.SetAttr(data.EDGE_END1_ROLE, "group")
-		edge.SetAttr(data.EDGE_END1_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd1Key, node0.Key())
+		edge.SetAttr(data.EdgeEnd1Kind, node0.Kind())
+		edge.SetAttr(data.EdgeEnd1Role, "group")
+		edge.SetAttr(data.EdgeEnd1Cascading, false)
 
-		edge.SetAttr(data.EDGE_END2_KEY, songkey)
-		edge.SetAttr(data.EDGE_END2_KIND, "Song")
-		edge.SetAttr(data.EDGE_END2_ROLE, "Song")
-		edge.SetAttr(data.EDGE_END2_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd2Key, songkey)
+		edge.SetAttr(data.EdgeEnd2Kind, "Song")
+		edge.SetAttr(data.EdgeEnd2Role, "Song")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
 
 		return edge
 	}

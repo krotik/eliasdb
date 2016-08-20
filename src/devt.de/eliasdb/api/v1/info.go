@@ -9,6 +9,8 @@
  */
 
 /*
+Package v1 contains EliasDB REST API Version 1.
+
 REST endpoint to return general database information.
 
 /info
@@ -33,9 +35,9 @@ import (
 )
 
 /*
-Query endpoint definition (rooted). Handles everything under info/...
+EndpointInfoQuery is the info endpoint URL (rooted). Handles everything under info/...
 */
-const ENDPOINT_INFO_QUERY = api.API_ROOT + API_VERSION_V1 + "/info/"
+const EndpointInfoQuery = api.APIRoot + APIv1 + "/info/"
 
 /*
 InfoEndpointInst creates a new endpoint handler.
@@ -54,7 +56,7 @@ type infoEndpoint struct {
 /*
 HandleGET handles a search query REST call.
 */
-func (eq *infoEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
+func (ie *infoEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
 
 	data := make(map[string]interface{})
 
@@ -93,7 +95,7 @@ func (eq *infoEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resour
 /*
 SwaggerDefs is used to describe the endpoint in swagger.
 */
-func (ge *infoEndpoint) SwaggerDefs(s map[string]interface{}) {
+func (ie *infoEndpoint) SwaggerDefs(s map[string]interface{}) {
 
 	s["paths"].(map[string]interface{})["/v1/info"] = map[string]interface{}{
 		"get": map[string]interface{}{

@@ -9,6 +9,8 @@
  */
 
 /*
+Package v1 contains EliasDB REST API Version 1.
+
 REST endpoint to handle queries.
 
 /query
@@ -60,23 +62,30 @@ import (
 	"devt.de/eliasdb/eql"
 )
 
-var RESULTCACHE_MAXSIZE uint64 = 0
-var RESULTCACHE_MAXAGE int64 = 0
+/*
+ResultCacheMaxSize is the maximum size for the result cache
+*/
+var ResultCacheMaxSize uint64
 
 /*
-Cache for result sets (by default no expiry and no limit)
+ResultCacheMaxAge is the maximum age a result cache entry can have in seconds
+*/
+var ResultCacheMaxAge int64
+
+/*
+ResultCache is a cache for result sets (by default no expiry and no limit)
 */
 var ResultCache *datautil.MapCache
 
 /*
-Id counter for results
+idCount is an ID counter for results
 */
 var idCount = time.Now().Unix()
 
 /*
-Query endpoint definition (rooted). Handles everything under query/...
+EndpointQuery is the query endpoint URL (rooted). Handles everything under query/...
 */
-const ENDPOINT_QUERY = api.API_ROOT + API_VERSION_V1 + "/query/"
+const EndpointQuery = api.APIRoot + APIv1 + "/query/"
 
 /*
 QueryEndpointInst creates a new endpoint handler.
@@ -86,7 +95,7 @@ func QueryEndpointInst() api.RestEndpointHandler {
 	// Init the result cache if necessary
 
 	if ResultCache == nil {
-		ResultCache = datautil.NewMapCache(RESULTCACHE_MAXSIZE, RESULTCACHE_MAXAGE)
+		ResultCache = datautil.NewMapCache(ResultCacheMaxSize, ResultCacheMaxAge)
 	}
 
 	return &queryEndpoint{}
@@ -222,8 +231,8 @@ func (eq *queryEndpoint) writeResultData(w http.ResponseWriter, res eql.SearchRe
 
 	// Set response header values
 
-	w.Header().Add(HTTP_HEADER_TOTAL_COUNT, fmt.Sprint(res.RowCount()))
-	w.Header().Add(HTTP_HEADER_CACHE_ID, resID)
+	w.Header().Add(HTTPHeaderTotalCount, fmt.Sprint(res.RowCount()))
+	w.Header().Add(HTTPHeaderCacheID, resID)
 
 	w.Header().Set("content-type", "application/json; charset=utf-8")
 

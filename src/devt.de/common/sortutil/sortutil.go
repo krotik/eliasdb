@@ -7,11 +7,16 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/*
+Package sortutil contains common sorting definitions.
+*/
 package sortutil
 
 import "sort"
 
-// Sort interface for int64
+/*
+Int64Slice is a special type implementing the sort interface for int64
+*/
 type Int64Slice []int64
 
 func (p Int64Slice) Len() int           { return len(p) }
@@ -23,7 +28,9 @@ Int64s sorts a slice of int64s in increasing order.
 */
 func Int64s(a []int64) { sort.Sort(Int64Slice(a)) }
 
-// Sort interface for uint64
+/*
+UInt64Slice is a special type implementing the sort interface for uint64
+*/
 type UInt64Slice []uint64
 
 func (p UInt64Slice) Len() int           { return len(p) }

@@ -13,7 +13,7 @@ package v1
 import "testing"
 
 func TestQueryPagination(t *testing.T) {
-	queryURL := "http://localhost" + TESTPORT + ENDPOINT_QUERY
+	queryURL := "http://localhost" + TESTPORT + EndpointQuery
 
 	st, _, res := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key);offset=p&limit=2", "GET", nil)
 	if st != "400 Bad Request" || res != "Invalid parameter value: offset should be a positive integer number" {
@@ -90,12 +90,12 @@ func TestQueryPagination(t *testing.T) {
 
 	// Check header values
 
-	if tc := h.Get(HTTP_HEADER_TOTAL_COUNT); tc != "9" {
+	if tc := h.Get(HTTPHeaderTotalCount); tc != "9" {
 		t.Error("Unexpected total count:", tc)
 		return
 	}
 
-	rid := h.Get(HTTP_HEADER_CACHE_ID)
+	rid := h.Get(HTTPHeaderCacheID)
 
 	if _, ok := ResultCache.Get(rid); !ok {
 		t.Error("Given result id should be in the cache")
@@ -186,7 +186,7 @@ func TestQueryPagination(t *testing.T) {
 }
 
 func TestQuery(t *testing.T) {
-	queryURL := "http://localhost" + TESTPORT + ENDPOINT_QUERY
+	queryURL := "http://localhost" + TESTPORT + EndpointQuery
 
 	// POST requests should not be allowed
 

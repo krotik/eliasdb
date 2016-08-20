@@ -19,19 +19,19 @@ import (
 	"devt.de/common/fileutil"
 )
 
-const LFDIR = "lockfiletest"
+const lfdir = "lockfiletest"
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const invalidFileName = "**" + string(0x0)
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
 	// Setup
-	if res, _ := fileutil.PathExists(LFDIR); res {
-		os.RemoveAll(LFDIR)
+	if res, _ := fileutil.PathExists(lfdir); res {
+		os.RemoveAll(lfdir)
 	}
 
-	err := os.Mkdir(LFDIR, 0770)
+	err := os.Mkdir(lfdir, 0770)
 	if err != nil {
 		fmt.Print("Could not create test directory:", err.Error())
 		os.Exit(1)
@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 	res := m.Run()
 
 	// Teardown
-	err = os.RemoveAll(LFDIR)
+	err = os.RemoveAll(lfdir)
 	if err != nil {
 		fmt.Print("Could not remove test directory:", err.Error())
 	}
@@ -55,7 +55,7 @@ func TestLockFile(t *testing.T) {
 
 	// Straight case
 
-	lf := NewLockFile(LFDIR+"/test1.lck", duration)
+	lf := NewLockFile(lfdir+"/test1.lck", duration)
 
 	if err := lf.Start(); err != nil {
 		t.Error(err)
@@ -69,13 +69,13 @@ func TestLockFile(t *testing.T) {
 
 	// Simulate 2 process opening the same lockfile
 
-	lf1 := &LockFile{LFDIR + "/test2.lck", 1, duration, nil, false}
+	lf1 := &LockFile{lfdir + "/test2.lck", 1, duration, nil, false}
 	if err := lf1.Start(); err != nil {
 		t.Error(err)
 		return
 	}
 
-	lf2 := &LockFile{LFDIR + "/test2.lck", 2, duration, nil, false}
+	lf2 := &LockFile{lfdir + "/test2.lck", 2, duration, nil, false}
 	if err := lf2.Start(); err == nil {
 		t.Error("Unexpected result while starting lockfile watch:", err)
 		return
@@ -88,13 +88,13 @@ func TestLockFile(t *testing.T) {
 
 	// Test error cases
 
-	lf3 := &LockFile{LFDIR + "/" + INVALID_FILE_NAME, 1, duration, nil, false}
+	lf3 := &LockFile{lfdir + "/" + invalidFileName, 1, duration, nil, false}
 	if err := lf3.Start(); err == nil {
 		t.Error("Unexpected result while starting lockfile watch:", err)
 		return
 	}
 
-	lf = &LockFile{LFDIR + "/test3.lck", 1, duration, nil, false}
+	lf = &LockFile{lfdir + "/test3.lck", 1, duration, nil, false}
 	if err := lf.Start(); err != nil {
 		t.Error(err)
 		return
@@ -107,7 +107,7 @@ func TestLockFile(t *testing.T) {
 		return
 	}
 
-	lf.filename = LFDIR + "/" + INVALID_FILE_NAME
+	lf.filename = lfdir + "/" + invalidFileName
 
 	for lf.WatcherRunning() {
 		time.Sleep(lf.interval * 2)
@@ -123,7 +123,7 @@ func TestLockFile(t *testing.T) {
 		return
 	}
 
-	file, err := os.OpenFile(LFDIR+"/test4.lck", os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0660)
+	file, err := os.OpenFile(lfdir+"/test4.lck", os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0660)
 	if err != nil {
 		t.Error(err)
 		return
@@ -131,7 +131,7 @@ func TestLockFile(t *testing.T) {
 	file.Write(make([]byte, 3))
 	file.Close()
 
-	lf = &LockFile{LFDIR + "/test4.lck", 1, duration, nil, false}
+	lf = &LockFile{lfdir + "/test4.lck", 1, duration, nil, false}
 	if _, err := lf.checkLockfile(); err == nil || err.Error() != "Unexpected timestamp value found in lockfile:[0 0 0 0 0 0 0 0]" {
 		t.Error("Unexpected checkLockfile result:", err)
 		return

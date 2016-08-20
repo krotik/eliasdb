@@ -9,8 +9,11 @@
  */
 
 /*
-Util class to pack sizes for physical slots and logical buckets. The size info is a 4 byte 
-value which allocates 2 bytes for current size and 2 bytes for available size.
+Package util contains utility functions for slot.
+
+This file contains functions to pack/unpack sizes for physical slots and
+logical buckets. The size info is a 4 byte value which allocates 2 bytes
+for current size and 2 bytes for available size.
 
 CCCC CCCC CCCC CCCC AAAA AAAA AAAA AAAA
 
@@ -29,27 +32,38 @@ import (
 	"devt.de/eliasdb/storage/file"
 )
 
-const OFFSET_CURRENT_SIZE = 0
-const OFFSET_AVAILABLE_SIZE = file.SIZE_UNSIGNED_SHORT
-
-const UNSIGNED_SHORT_MAX = 0xFFFF
+/*
+OffsetCurrentSize is the offset for the size on a slotsize header.
+*/
+const OffsetCurrentSize = 0
 
 /*
-Max size of the difference between available size and current size
+OffetAvailableSize is the offset for the available size on a slotsize header.
 */
-const MAX_AVAILABLE_SIZE_DIFFERENCE = UNSIGNED_SHORT_MAX - 1
+const OffetAvailableSize = file.SizeUnsignedShort
 
 /*
-Size of the size info
+UnsignedShortMax is the maximum value of an unsigned short as used for slotsizes.
 */
-const SIZE_INFO_SIZE = OFFSET_AVAILABLE_SIZE + file.SIZE_UNSIGNED_SHORT
+const UnsignedShortMax = 0xFFFF
+
+/*
+MaxAvailableSizeDifference represents the maximal size of the difference
+between available size and current size
+*/
+const MaxAvailableSizeDifference = UnsignedShortMax - 1
+
+/*
+SizeInfoSize represents the size of the size info
+*/
+const SizeInfoSize = OffetAvailableSize + file.SizeUnsignedShort
 
 /*
 CurrentSize returns the current size of a slot.
 */
 func CurrentSize(record *file.Record, offset int) uint32 {
-	currentSize := record.ReadUInt16(offset + OFFSET_CURRENT_SIZE)
-	if currentSize == UNSIGNED_SHORT_MAX {
+	currentSize := record.ReadUInt16(offset + OffsetCurrentSize)
+	if currentSize == UnsignedShortMax {
 		return 0
 	}
 	return AvailableSize(record, offset) - uint32(currentSize)
@@ -60,28 +74,28 @@ SetCurrentSize sets the current size of a slot.
 */
 func SetCurrentSize(record *file.Record, offset int, value uint32) {
 	if value == 0 {
-		record.WriteUInt16(offset+OFFSET_CURRENT_SIZE, UNSIGNED_SHORT_MAX)
+		record.WriteUInt16(offset+OffsetCurrentSize, UnsignedShortMax)
 		return
 	}
 
 	size := AvailableSize(record, offset)
 
-	if (size > MAX_AVAILABLE_SIZE_DIFFERENCE &&
-		value < size-MAX_AVAILABLE_SIZE_DIFFERENCE) ||
+	if (size > MaxAvailableSizeDifference &&
+		value < size-MaxAvailableSizeDifference) ||
 		value > size {
 
 		panic(fmt.Sprint("Cannot store current size as difference "+
 			"to available size. Value:", value, " Available size:", size))
 	}
 
-	record.WriteUInt16(offset+OFFSET_CURRENT_SIZE, uint16(size-value))
+	record.WriteUInt16(offset+OffsetCurrentSize, uint16(size-value))
 }
 
 /*
 AvailableSize returns the available size of a slot.
 */
 func AvailableSize(record *file.Record, offset int) uint32 {
-	value := record.ReadUInt16(offset + OFFSET_AVAILABLE_SIZE)
+	value := record.ReadUInt16(offset + OffetAvailableSize)
 	return decodeSize(value)
 }
 
@@ -99,7 +113,7 @@ func SetAvailableSize(record *file.Record, offset int, value uint32) {
 		panic("Size value was not normalized")
 	}
 
-	record.WriteUInt16(offset+OFFSET_AVAILABLE_SIZE, size)
+	record.WriteUInt16(offset+OffetAvailableSize, size)
 
 	// Current size needs to be updated since it depends on the available size
 
@@ -107,7 +121,7 @@ func SetAvailableSize(record *file.Record, offset int, value uint32) {
 }
 
 /*
-Normalize a given slot size.
+NormalizeSlotSize normalizes a given slot size.
 */
 func NormalizeSlotSize(value uint32) uint32 {
 	return decodeSize(encodeSize(value))

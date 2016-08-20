@@ -9,6 +9,8 @@
  */
 
 /*
+Package file deals with low level file storage and transaction management.
+
 TransactionManager provides the optional transaction management for StorageFile.
 
 When used each record which is released from use is added to an in memory
@@ -38,28 +40,31 @@ var (
 )
 
 /*
-Suffix for log file
+LogFileSuffix is the file suffix for transaction log files
 */
-const LOG_FILE_SUFFIX = "tlg"
+const LogFileSuffix = "tlg"
 
 /*
-Default number of transactions which should be kept in memory
+DefaultTransInLog is the default number of transactions which should be kept in memory
 (affects how often we sync the log from memory)
 */
-const DEFAULT_TRANS_IN_LOG = 10
+const DefaultTransInLog = 10
 
 /*
-Default records in a single transaction
+DefaultTransSize is the default number of records in a single transaction
 (affects how many record pointers are allocated at first
 per transaction)
 */
-const DEFAULT_TRANS_SIZE = 10
+const DefaultTransSize = 10
 
 /*
-Header magic number to identify transaction log files
+TransactionLogHeader is the magic number to identify transaction log files
 */
-var TRANSACTION_LOG_HEADER = []byte{0x66, 0x42}
+var TransactionLogHeader = []byte{0x66, 0x42}
 
+/*
+LogFile is the abstract interface for an transaction log file.
+*/
 type LogFile interface {
 	io.Writer
 	io.Closer
@@ -96,7 +101,7 @@ func (t *TransactionManager) String() string {
 	for i := 0; i < len(t.transList); i++ {
 		buf.WriteString(fmt.Sprint(i, ": "))
 		for _, record := range t.transList[i] {
-			buf.WriteString(fmt.Sprint(record.Id(), " "))
+			buf.WriteString(fmt.Sprint(record.ID(), " "))
 		}
 		buf.WriteString("\n")
 	}
@@ -110,10 +115,10 @@ func (t *TransactionManager) String() string {
 NewTransactionManager creates a new transaction manager and returns a reference to it.
 */
 func NewTransactionManager(owner *StorageFile, doRecover bool) (*TransactionManager, error) {
-	name := fmt.Sprintf("%s.%s", owner.Name(), LOG_FILE_SUFFIX)
+	name := fmt.Sprintf("%s.%s", owner.Name(), LogFileSuffix)
 
-	ret := &TransactionManager{name, nil, -1, make([][]*Record, DEFAULT_TRANS_IN_LOG),
-		DEFAULT_TRANS_IN_LOG, owner}
+	ret := &TransactionManager{name, nil, -1, make([][]*Record, DefaultTransInLog),
+		DefaultTransInLog, owner}
 
 	if doRecover {
 		err := ret.recover()
@@ -148,8 +153,8 @@ func (t *TransactionManager) recover() error {
 	magic := make([]byte, 2)
 	i, _ := file.Read(magic)
 
-	if i != 2 || magic[0] != TRANSACTION_LOG_HEADER[0] ||
-		magic[1] != TRANSACTION_LOG_HEADER[1] {
+	if i != 2 || magic[0] != TransactionLogHeader[0] ||
+		magic[1] != TransactionLogHeader[1] {
 		return ErrBadMagic.fireError(t.owner, "")
 	}
 
@@ -173,7 +178,7 @@ func (t *TransactionManager) recover() error {
 			// Any duplicated records will only be synced once
 			// using the latest version
 
-			recMap[record.Id()] = record
+			recMap[record.ID()] = record
 		}
 
 		// If something goes wrong here ignore and try to do the rest
@@ -197,7 +202,7 @@ func (t *TransactionManager) open() error {
 	}
 	t.logFile = file
 
-	t.logFile.Write(TRANSACTION_LOG_HEADER)
+	t.logFile.Write(TransactionLogHeader)
 	t.logFile.Sync()
 	t.curTrans = -1
 
@@ -213,7 +218,7 @@ func (t *TransactionManager) start() {
 		t.syncLogFromMemory()
 		t.curTrans = 0
 	}
-	t.transList[t.curTrans] = make([]*Record, 0, DEFAULT_TRANS_SIZE)
+	t.transList[t.curTrans] = make([]*Record, 0, DefaultTransSize)
 }
 
 /*
@@ -293,11 +298,11 @@ func (t *TransactionManager) syncLogFromMemory() error {
 		// if the same record is listed twice.
 
 		for _, record := range transList {
-			_, ok := recMap[record.Id()]
+			_, ok := recMap[record.ID()]
 			if ok {
 				record.DecTransCount()
 			} else {
-				recMap[record.Id()] = record
+				recMap[record.ID()] = record
 			}
 		}
 

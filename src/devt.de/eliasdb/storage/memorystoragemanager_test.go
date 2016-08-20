@@ -75,14 +75,14 @@ func TestMemoryStorageManager(t *testing.T) {
 
 	// Error cases
 
-	msm.AccessMap[loc] = ACCESS_NOT_IN_CACHE
+	msm.AccessMap[loc] = AccessNotInCache
 
 	if _, err := msm.FetchCached(loc); err != ErrNotInCache {
 		t.Error("Unexpected fetchcached result:", err)
 		return
 	}
 
-	msm.AccessMap[loc] = ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR
+	msm.AccessMap[loc] = AccessCacheAndFetchSeriousError
 
 	if _, err := msm.FetchCached(loc); err != file.ErrAlreadyInUse {
 		t.Error("Unexpected fetchcached result:", err)
@@ -94,28 +94,28 @@ func TestMemoryStorageManager(t *testing.T) {
 		return
 	}
 
-	msm.AccessMap[loc] = ACCESS_FETCH_ERROR
+	msm.AccessMap[loc] = AccessFetchError
 
 	if err := msm.Fetch(loc, &ret); err != ErrSlotNotFound {
 		t.Error("Unexpected fetch result:", err)
 		return
 	}
 
-	msm.AccessMap[loc] = ACCESS_UPDATE_ERROR
+	msm.AccessMap[loc] = AccessUpdateError
 
 	if err := msm.Update(loc, ""); err != ErrSlotNotFound {
 		t.Error("Unexpected update result:", err)
 		return
 	}
 
-	msm.AccessMap[loc] = ACCESS_FREE_ERROR
+	msm.AccessMap[loc] = AccessFreeError
 
 	if err := msm.Free(loc); err != ErrSlotNotFound {
 		t.Error("Unexpected free result:", err)
 		return
 	}
 
-	msm.AccessMap[msm.LocCount] = ACCESS_INSERT_ERROR
+	msm.AccessMap[msm.LocCount] = AccessInsertError
 
 	if _, err := msm.Insert(""); err != file.ErrAlreadyInUse {
 		t.Error("Unexpected insert result:", err)

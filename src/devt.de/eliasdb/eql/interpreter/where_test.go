@@ -400,7 +400,6 @@ Data: 1:n:key, 1:n:name, 1:n:ranking
 		t.Error(err)
 	}
 
-
 	if err := runSearch("get mynode where name beginswith Nod", `
 Labels: Mynode Key, Mynode Name, Ranking
 Format: auto, auto, auto
@@ -635,7 +634,7 @@ func (rt *testRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, er
 	return rt.retCondEvalVal, rt.retCondEvalErr
 }
 
-func simpleList() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
+func simpleList() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 
 	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
 	gm := graph.NewGraphManager(mgs)
@@ -664,7 +663,7 @@ func simpleList() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
 	return gm, mgs.(*graphstorage.MemoryGraphStorage)
 }
 
-func regexList() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
+func regexList() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 
 	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
 	gm := graph.NewGraphManager(mgs)

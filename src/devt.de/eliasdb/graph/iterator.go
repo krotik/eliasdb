@@ -9,6 +9,8 @@
  */
 
 /*
+Package graph contains the main API to the graph datastore.
+
 This module contains iterator related code.
 */
 package graph
@@ -22,7 +24,7 @@ import (
 NodeKeyIterator can be used to iterate node keys of a certain node kind.
 */
 type NodeKeyIterator struct {
-	gm        *GraphManager       // GraphManager which created the iterator
+	gm        *Manager            // GraphManager which created the iterator
 	it        *hash.HTreeIterator // Internal HTree iterator
 	LastError error               // Last encountered error
 }
@@ -40,13 +42,13 @@ func (it *NodeKeyIterator) Next() string {
 	k, _ := it.it.Next()
 
 	if it.it.LastError != nil {
-		it.LastError = &util.GraphError{util.ErrReading, it.it.LastError.Error()}
+		it.LastError = &util.GraphError{Type: util.ErrReading, Detail: it.it.LastError.Error()}
 		return ""
 	} else if len(k) == 0 {
 		return ""
 	}
 
-	return string(k[len(PREFIX_NS_ATTRS):])
+	return string(k[len(PrefixNSAttrs):])
 }
 
 /*

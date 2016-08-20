@@ -22,7 +22,7 @@ import (
 )
 
 func TestGraphQuery(t *testing.T) {
-	queryURL := "http://localhost" + TESTPORT + ENDPOINT_GRAPH
+	queryURL := "http://localhost" + TESTPORT + EndpointGraph
 
 	// Test error message
 
@@ -63,7 +63,7 @@ func TestGraphQuery(t *testing.T) {
 
 	st, h, res := sendTestRequest(queryURL+"/main/n/Song", "GET", nil)
 
-	if tc := h.Get(HTTP_HEADER_TOTAL_COUNT); tc != "9" {
+	if tc := h.Get(HTTPHeaderTotalCount); tc != "9" {
 		t.Error("Unexpected total count header:", tc)
 		return
 	}
@@ -191,10 +191,10 @@ func TestGraphQuery(t *testing.T) {
 
 	// Test error cases
 
-	msm := gmMSM.StorageManager("main"+"Song"+graph.STORAGE_SUFFIX_NODES,
+	msm := gmMSM.StorageManager("main"+"Song"+graph.StorageSuffixNodes,
 		true).(*storage.MemoryStorageManager)
 
-	msm.AccessMap[2] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[2] = storage.AccessCacheAndFetchError
 
 	st, _, res = sendTestRequest(queryURL+"/main/n/Song", "GET", nil)
 
@@ -206,7 +206,7 @@ func TestGraphQuery(t *testing.T) {
 
 	delete(msm.AccessMap, 2)
 
-	msm.AccessMap[4] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[4] = storage.AccessCacheAndFetchError
 
 	st, _, res = sendTestRequest(queryURL+"/main/n/Song", "GET", nil)
 
@@ -218,15 +218,15 @@ func TestGraphQuery(t *testing.T) {
 
 	delete(msm.AccessMap, 4)
 
-	msm = gmMSM.StorageManager("main"+"Spam"+graph.STORAGE_SUFFIX_NODES,
+	msm = gmMSM.StorageManager("main"+"Spam"+graph.StorageSuffixNodes,
 		true).(*storage.MemoryStorageManager)
 
-	loc := msm.Root(graph.ROOT_ID_NODE_HTREE)
+	loc := msm.Root(graph.RootIDNodeHTree)
 	htree, _ := hash.LoadHTree(msm, loc)
 
-	_, kloc, _ := htree.GetValueAndLocation([]byte(graph.PREFIX_NS_ATTRS + "00019"))
+	_, kloc, _ := htree.GetValueAndLocation([]byte(graph.PrefixNSAttrs + "00019"))
 
-	msm.AccessMap[kloc] = storage.ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR
+	msm.AccessMap[kloc] = storage.AccessCacheAndFetchSeriousError
 
 	st, _, res = sendTestRequest(queryURL+"/main/n/Spam?offset=19&limit=1", "GET", nil)
 
@@ -248,7 +248,7 @@ func TestGraphQuery(t *testing.T) {
 }
 
 func TestGraphQuerySingleItem(t *testing.T) {
-	queryURL := "http://localhost" + TESTPORT + ENDPOINT_GRAPH
+	queryURL := "http://localhost" + TESTPORT + EndpointGraph
 
 	st, _, res := sendTestRequest(queryURL+"/main/n/Author/123", "GET", nil)
 
@@ -300,10 +300,10 @@ func TestGraphQuerySingleItem(t *testing.T) {
 		return
 	}
 
-	msm := gmMSM.StorageManager("main"+"Spam"+graph.STORAGE_SUFFIX_NODES,
+	msm := gmMSM.StorageManager("main"+"Spam"+graph.StorageSuffixNodes,
 		true).(*storage.MemoryStorageManager)
 
-	msm.AccessMap[2] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[2] = storage.AccessCacheAndFetchError
 
 	st, _, res = sendTestRequest(queryURL+"/main/n/Spam/0005", "GET", nil)
 
@@ -315,10 +315,10 @@ func TestGraphQuerySingleItem(t *testing.T) {
 
 	delete(msm.AccessMap, 2)
 
-	msm = gmMSM.StorageManager("main"+"Wrote"+graph.STORAGE_SUFFIX_EDGES,
+	msm = gmMSM.StorageManager("main"+"Wrote"+graph.StorageSuffixEdges,
 		true).(*storage.MemoryStorageManager)
 
-	msm.AccessMap[1] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[1] = storage.AccessCacheAndFetchError
 
 	st, _, res = sendTestRequest(queryURL+"/main/e/Wrote/LoveSong3", "GET", nil)
 
@@ -332,7 +332,7 @@ func TestGraphQuerySingleItem(t *testing.T) {
 }
 
 func TestGraphQueryTraversal(t *testing.T) {
-	queryURL := "http://localhost" + TESTPORT + ENDPOINT_GRAPH
+	queryURL := "http://localhost" + TESTPORT + EndpointGraph
 
 	_, _, res := sendTestRequest(queryURL+"/main/n/Author/123/:::/aaa", "GET", nil)
 
@@ -458,10 +458,10 @@ func TestGraphQueryTraversal(t *testing.T) {
 		return
 	}
 
-	msm := gmMSM.StorageManager("main"+"Song"+graph.STORAGE_SUFFIX_NODES,
+	msm := gmMSM.StorageManager("main"+"Song"+graph.StorageSuffixNodes,
 		true).(*storage.MemoryStorageManager)
 
-	msm.AccessMap[2] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[2] = storage.AccessCacheAndFetchError
 
 	st, _, res = sendTestRequest(queryURL+"/main/n/Author/123/:::", "GET", nil)
 
@@ -473,10 +473,10 @@ func TestGraphQueryTraversal(t *testing.T) {
 
 	delete(msm.AccessMap, 2)
 
-	msm = gmMSM.StorageManager("main"+"Spam"+graph.STORAGE_SUFFIX_NODES,
+	msm = gmMSM.StorageManager("main"+"Spam"+graph.StorageSuffixNodes,
 		true).(*storage.MemoryStorageManager)
 
-	msm.AccessMap[2] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[2] = storage.AccessCacheAndFetchError
 
 	st, _, res = sendTestRequest(queryURL+"/main/n/Spam/0005/:::", "GET", nil)
 
@@ -490,7 +490,7 @@ func TestGraphQueryTraversal(t *testing.T) {
 }
 
 func TestGraphOperation(t *testing.T) {
-	queryURL := "http://localhost" + TESTPORT + ENDPOINT_GRAPH
+	queryURL := "http://localhost" + TESTPORT + EndpointGraph
 
 	// Test error message
 
@@ -580,14 +580,14 @@ func TestGraphOperation(t *testing.T) {
 	edge.SetAttr("key", "123")
 	edge.SetAttr("kind", "testrel")
 
-	edge.SetAttr(data.EDGE_END1_KIND, node.Kind())
-	edge.SetAttr(data.EDGE_END1_ROLE, "node1")
-	edge.SetAttr(data.EDGE_END1_CASCADING, false)
+	edge.SetAttr(data.EdgeEnd1Kind, node.Kind())
+	edge.SetAttr(data.EdgeEnd1Role, "node1")
+	edge.SetAttr(data.EdgeEnd1Cascading, false)
 
-	edge.SetAttr(data.EDGE_END2_KEY, node2.Key())
-	edge.SetAttr(data.EDGE_END2_KIND, node2.Kind())
-	edge.SetAttr(data.EDGE_END2_ROLE, "node2")
-	edge.SetAttr(data.EDGE_END2_CASCADING, false)
+	edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+	edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+	edge.SetAttr(data.EdgeEnd2Role, "node2")
+	edge.SetAttr(data.EdgeEnd2Cascading, false)
 
 	jsonString, err = json.Marshal([]map[string]interface{}{edge.Data()})
 	if err != nil {
@@ -603,7 +603,7 @@ func TestGraphOperation(t *testing.T) {
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END1_KEY, "foo")
+	edge.SetAttr(data.EdgeEnd1Key, "foo")
 
 	jsonString, err = json.Marshal([]map[string]interface{}{edge.Data()})
 	if err != nil {
@@ -619,7 +619,7 @@ func TestGraphOperation(t *testing.T) {
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END1_KEY, node.Key())
+	edge.SetAttr(data.EdgeEnd1Key, node.Key())
 
 	jsonString, err = json.Marshal([]map[string]interface{}{edge.Data()})
 	if err != nil {

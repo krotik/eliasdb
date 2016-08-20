@@ -9,6 +9,8 @@
  */
 
 /*
+Package graph contains the main API to the graph datastore.
+
 Edge related API of the graph manager.
 */
 package graph
@@ -45,11 +47,11 @@ func init() {
 }
 
 /*
-Return the edge count for a given edge kind.
+EdgeCount returns the edge count for a given edge kind.
 */
-func (gm *GraphManager) EdgeCount(kind string) uint64 {
+func (gm *Manager) EdgeCount(kind string) uint64 {
 
-	if val, ok := gm.gs.MainDB()[MAINDB_EDGE_COUNT+kind]; ok {
+	if val, ok := gm.gs.MainDB()[MainDBEdgeCount+kind]; ok {
 		return binary.LittleEndian.Uint64([]byte(val))
 	}
 
@@ -59,7 +61,7 @@ func (gm *GraphManager) EdgeCount(kind string) uint64 {
 /*
 FetchNodeEdgeSpecs returns all possible edge specs for a certain node.
 */
-func (gm *GraphManager) FetchNodeEdgeSpecs(part string, key string, kind string) ([]string, error) {
+func (gm *Manager) FetchNodeEdgeSpecs(part string, key string, kind string) ([]string, error) {
 
 	_, tree, err := gm.getNodeStorageHTree(part, kind, false)
 	if err != nil || tree == nil {
@@ -71,10 +73,10 @@ func (gm *GraphManager) FetchNodeEdgeSpecs(part string, key string, kind string)
 	gm.mutex.RLock()
 	defer gm.mutex.RUnlock()
 
-	specsNodeKey := PREFIX_NS_SPECS + key
+	specsNodeKey := PrefixNSSpecs + key
 	obj, err := tree.Get([]byte(specsNodeKey))
 	if err != nil {
-		return nil, &util.GraphError{util.ErrReading, err.Error()}	
+		return nil, &util.GraphError{Type: util.ErrReading, Detail: err.Error()}
 	} else if obj == nil {
 		return nil, nil
 	}
@@ -82,7 +84,7 @@ func (gm *GraphManager) FetchNodeEdgeSpecs(part string, key string, kind string)
 	specsNodeMap := obj.(map[string]string)
 	specsNode := make([]string, 0, len(specsNodeMap))
 
-	for spec, _ := range specsNodeMap {
+	for spec := range specsNodeMap {
 		role1 := gm.nm.Decode16(spec[:2])
 		relKind := gm.nm.Decode16(spec[2:4])
 		role2 := gm.nm.Decode16(spec[4:6])
@@ -107,12 +109,12 @@ all relationships. The last parameter allData specifies if all data
 should be retrieved for the connected nodes and edges. If set to false only
 the minimal set of attributes will be populated.
 */
-func (gm *GraphManager) TraverseMulti(part string, key string, kind string,
+func (gm *Manager) TraverseMulti(part string, key string, kind string,
 	spec string, allData bool) ([]data.Node, []data.Edge, error) {
 
 	sspec := strings.Split(spec, ":")
 	if len(sspec) != 4 {
-		return nil, nil, &util.GraphError{util.ErrInvalidData, "Invalid spec: " + spec}
+		return nil, nil, &util.GraphError{Type: util.ErrInvalidData, Detail: "Invalid spec: " + spec}
 	} else if IsFullSpec(spec) {
 		return gm.Traverse(part, key, kind, spec, allData)
 	}
@@ -142,8 +144,8 @@ func (gm *GraphManager) TraverseMulti(part string, key string, kind string,
 
 	// Match specs and collect the results
 
-	nodes := make([]data.Node, 0)
-	edges := make([]data.Edge, 0)
+	var nodes []data.Node
+	var edges []data.Edge
 
 	for _, rspec := range specs {
 		if spec == ":::" || matchSpec(rspec) {
@@ -167,7 +169,7 @@ The last parameter allData specifies if all data should be retrieved for
 the connected nodes and edges. If set to false only the minimal set of
 attributes will be populated.
 */
-func (gm *GraphManager) Traverse(part string, key string, kind string,
+func (gm *Manager) Traverse(part string, key string, kind string,
 	spec string, allData bool) ([]data.Node, []data.Edge, error) {
 
 	_, tree, err := gm.getNodeStorageHTree(part, kind, false)
@@ -182,16 +184,16 @@ func (gm *GraphManager) Traverse(part string, key string, kind string,
 
 	sspec := strings.Split(spec, ":")
 	if len(sspec) != 4 {
-		return nil, nil, &util.GraphError{util.ErrInvalidData, "Invalid spec: " + spec}
+		return nil, nil, &util.GraphError{Type: util.ErrInvalidData, Detail: "Invalid spec: " + spec}
 	} else if !IsFullSpec(spec) {
-		return nil, nil, &util.GraphError{util.ErrInvalidData, "Invalid spec: " + spec +
+		return nil, nil, &util.GraphError{Type: util.ErrInvalidData, Detail: "Invalid spec: " + spec +
 			" - spec needs to be fully specified for direct traversal"}
 	}
 
 	encspec := gm.nm.Encode16(sspec[0], false) + gm.nm.Encode16(sspec[1], false) +
 		gm.nm.Encode16(sspec[2], false) + gm.nm.Encode16(sspec[3], false)
 
-	edgeInfoKey := PREFIX_NS_EDGE + key + encspec
+	edgeInfoKey := PrefixNSEdge + key + encspec
 
 	// Lookup the target map containing edgeTargetInfo objects
 
@@ -214,25 +216,25 @@ func (gm *GraphManager) Traverse(part string, key string, kind string,
 
 			edge := data.NewGraphEdge()
 
-			edge.SetAttr(data.NODE_KEY, k)
-			edge.SetAttr(data.NODE_KIND, sspec[1])
+			edge.SetAttr(data.NodeKey, k)
+			edge.SetAttr(data.NodeKind, sspec[1])
 
-			edge.SetAttr(data.EDGE_END1_KEY, key)
-			edge.SetAttr(data.EDGE_END1_KIND, kind)
-			edge.SetAttr(data.EDGE_END1_ROLE, sspec[0])
-			edge.SetAttr(data.EDGE_END1_CASCADING, v.CascadeToTarget)
+			edge.SetAttr(data.EdgeEnd1Key, key)
+			edge.SetAttr(data.EdgeEnd1Kind, kind)
+			edge.SetAttr(data.EdgeEnd1Role, sspec[0])
+			edge.SetAttr(data.EdgeEnd1Cascading, v.CascadeToTarget)
 
-			edge.SetAttr(data.EDGE_END2_KEY, v.TargetNodeKey)
-			edge.SetAttr(data.EDGE_END2_KIND, v.TargetNodeKind)
-			edge.SetAttr(data.EDGE_END2_ROLE, sspec[2])
-			edge.SetAttr(data.EDGE_END2_CASCADING, v.CascadeFromTarget)
+			edge.SetAttr(data.EdgeEnd2Key, v.TargetNodeKey)
+			edge.SetAttr(data.EdgeEnd2Kind, v.TargetNodeKind)
+			edge.SetAttr(data.EdgeEnd2Role, sspec[2])
+			edge.SetAttr(data.EdgeEnd2Cascading, v.CascadeFromTarget)
 
 			edges = append(edges, edge)
 
 			node := data.NewGraphNode()
 
-			node.SetAttr(data.NODE_KEY, v.TargetNodeKey)
-			node.SetAttr(data.NODE_KIND, v.TargetNodeKind)
+			node.SetAttr(data.NodeKey, v.TargetNodeKey)
+			node.SetAttr(data.NodeKind, v.TargetNodeKind)
 
 			nodes = append(nodes, node)
 		}
@@ -265,10 +267,10 @@ func (gm *GraphManager) Traverse(part string, key string, kind string,
 					edge.SetAttr(attr2, tmp)
 				}
 
-				swap(data.EDGE_END1_KEY, data.EDGE_END2_KEY)
-				swap(data.EDGE_END1_KIND, data.EDGE_END2_KIND)
-				swap(data.EDGE_END1_ROLE, data.EDGE_END2_ROLE)
-				swap(data.EDGE_END1_CASCADING, data.EDGE_END2_CASCADING)
+				swap(data.EdgeEnd1Key, data.EdgeEnd2Key)
+				swap(data.EdgeEnd1Kind, data.EdgeEnd2Kind)
+				swap(data.EdgeEnd1Role, data.EdgeEnd2Role)
+				swap(data.EdgeEnd1Cascading, data.EdgeEnd2Cascading)
 			}
 
 			edges = append(edges, edge)
@@ -295,14 +297,14 @@ func (gm *GraphManager) Traverse(part string, key string, kind string,
 /*
 FetchEdge fetches a single edge from a partition of the graph.
 */
-func (gm *GraphManager) FetchEdge(part string, key string, kind string) (data.Node, error) {
+func (gm *Manager) FetchEdge(part string, key string, kind string) (data.Node, error) {
 	return gm.FetchEdgePart(part, key, kind, nil)
 }
 
 /*
 FetchEdgePart fetches part of a single edge from a partition of the graph.
 */
-func (gm *GraphManager) FetchEdgePart(part string, key string, kind string,
+func (gm *Manager) FetchEdgePart(part string, key string, kind string,
 	attrs []string) (data.Edge, error) {
 
 	// Get the HTrees which stores the edge
@@ -328,7 +330,7 @@ func (gm *GraphManager) FetchEdgePart(part string, key string, kind string,
 StoreEdge stores a single edge in a partition of the graph. This function will
 overwrites any existing edge.
 */
-func (gm *GraphManager) StoreEdge(part string, edge data.Edge) error {
+func (gm *Manager) StoreEdge(part string, edge data.Edge) error {
 
 	// Check if the edge can be stored
 
@@ -356,12 +358,15 @@ func (gm *GraphManager) StoreEdge(part string, edge data.Edge) error {
 	if err != nil {
 		return err
 	} else if end1ht == nil {
-		return &util.GraphError{util.ErrInvalidData,
-			"Can't store edge to non-existend node kind: " + edge.End1Kind()}
-	} else if end1, err := end1nodeht.Get([]byte(PREFIX_NS_ATTRS + edge.End1Key())); err != nil || end1 == nil {
-		return &util.GraphError{util.ErrInvalidData,
-			fmt.Sprintf("Can't find edge endpoint: %s (%s)",
-				edge.End1Key(), edge.End1Kind())}
+		return &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: "Can't store edge to non-existend node kind: " + edge.End1Kind(),
+		}
+	} else if end1, err := end1nodeht.Get([]byte(PrefixNSAttrs + edge.End1Key())); err != nil || end1 == nil {
+		return &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("Can't find edge endpoint: %s (%s)", edge.End1Key(), edge.End1Kind()),
+		}
 	}
 
 	end2nodeht, end2ht, err := gm.getNodeStorageHTree(part, edge.End2Kind(), false)
@@ -369,12 +374,15 @@ func (gm *GraphManager) StoreEdge(part string, edge data.Edge) error {
 	if err != nil {
 		return err
 	} else if end2ht == nil {
-		return &util.GraphError{util.ErrInvalidData,
-			"Can't store edge to non-existend node kind: " + edge.End2Kind()}
-	} else if end2, err := end2nodeht.Get([]byte(PREFIX_NS_ATTRS + edge.End2Key())); err != nil || end2 == nil {
-		return &util.GraphError{util.ErrInvalidData,
-			fmt.Sprintf("Can't find edge endpoint: %s (%s)",
-				edge.End2Key(), edge.End2Kind())}
+		return &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: "Can't store edge to non-existend node kind: " + edge.End2Kind(),
+		}
+	} else if end2, err := end2nodeht.Get([]byte(PrefixNSAttrs + edge.End2Key())); err != nil || end2 == nil {
+		return &util.GraphError{
+			Type:   util.ErrInvalidData,
+			Detail: fmt.Sprintf("Can't find edge endpoint: %s (%s)", edge.End2Key(), edge.End2Kind()),
+		}
 	}
 
 	// Take writer lock
@@ -396,8 +404,8 @@ func (gm *GraphManager) StoreEdge(part string, edge data.Edge) error {
 
 		// Increase edge count
 
-		current_count := gm.EdgeCount(edge.Kind())
-		if err := gm.writeEdgeCount(edge.Kind(), current_count+1, true); err != nil {
+		currentCount := gm.EdgeCount(edge.Kind())
+		if err := gm.writeEdgeCount(edge.Kind(), currentCount+1, true); err != nil {
 			return err
 		}
 
@@ -435,9 +443,9 @@ func (gm *GraphManager) StoreEdge(part string, edge data.Edge) error {
 
 	var event int
 	if oldedge == nil {
-		event = EVENT_EDGE_CREATED
+		event = EventEdgeCreated
 	} else {
-		event = EVENT_EDGE_UPDATED
+		event = EventEdgeUpdated
 	}
 
 	if err := gm.gr.graphEvent(trans, event, part, edge, oldedge); err != nil {
@@ -466,7 +474,7 @@ returns, the changes are flushed to the storage. The caller has also to ensure
 that the endpoints of the edge do exist. Returns the old edge if an
 update occurred.
 */
-func (gm *GraphManager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
+func (gm *Manager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 	end1Tree *hash.HTree, end2Tree *hash.HTree) (data.Edge, error) {
 
 	// Create lookup keys
@@ -477,11 +485,11 @@ func (gm *GraphManager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 	spec2 := gm.nm.Encode16(edge.End2Role(), true) + gm.nm.Encode16(edge.Kind(), true) +
 		gm.nm.Encode16(edge.End1Role(), true) + gm.nm.Encode16(edge.End1Kind(), true)
 
-	specsNode1Key := PREFIX_NS_SPECS + edge.End1Key()
-	edgeInfo1Key := PREFIX_NS_EDGE + edge.End1Key() + spec1
+	specsNode1Key := PrefixNSSpecs + edge.End1Key()
+	edgeInfo1Key := PrefixNSEdge + edge.End1Key() + spec1
 
-	specsNode2Key := PREFIX_NS_SPECS + edge.End2Key()
-	edgeInfo2Key := PREFIX_NS_EDGE + edge.End2Key() + spec2
+	specsNode2Key := PrefixNSSpecs + edge.End2Key()
+	edgeInfo2Key := PrefixNSEdge + edge.End2Key() + spec2
 
 	// Function to insert a new spec into a specs map
 
@@ -549,17 +557,19 @@ func (gm *GraphManager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 
 		// Do a sanity check that the endpoints were not updated.
 
-		if !data.NodeCompare(oldedge, edge, []string{data.EDGE_END1_KEY,
-			data.EDGE_END1_KIND, data.EDGE_END1_ROLE, data.EDGE_END2_KEY,
-			data.EDGE_END2_KIND, data.EDGE_END2_ROLE}) {
+		if !data.NodeCompare(oldedge, edge, []string{data.EdgeEnd1Key,
+			data.EdgeEnd1Kind, data.EdgeEnd1Role, data.EdgeEnd2Key,
+			data.EdgeEnd2Kind, data.EdgeEnd2Role}) {
 
 			// If the check fails then write back the old data and return
 			// no error checking when writing back
 
 			gm.writeNode(oldedge, false, edgeTree, edgeTree, edgeAttributeFilter)
 
-			return nil, &util.GraphError{util.ErrInvalidData, "Cannot update " +
-				"endpoints or spec of existing edge: " + edge.Key()}
+			return nil, &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: "Cannot update endpoints or spec of existing edge: " + edge.Key(),
+			}
 		}
 
 		return oldedge, nil
@@ -590,9 +600,9 @@ func (gm *GraphManager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 }
 
 /*
-RemoveNode removes a single node from a partition of the graph.
+RemoveEdge removes a single edge from a partition of the graph.
 */
-func (gm *GraphManager) RemoveEdge(part string, key string, kind string) (data.Edge, error) {
+func (gm *Manager) RemoveEdge(part string, key string, kind string) (data.Edge, error) {
 
 	// Get the HTrees which stores the edges and the edge index
 
@@ -648,8 +658,8 @@ func (gm *GraphManager) RemoveEdge(part string, key string, kind string) (data.E
 
 		// Decrease edge count
 
-		current_count := gm.EdgeCount(edge.Kind())
-		if err := gm.writeEdgeCount(edge.Kind(), current_count-1, true); err != nil {
+		currentCount := gm.EdgeCount(edge.Kind())
+		if err := gm.writeEdgeCount(edge.Kind(), currentCount-1, true); err != nil {
 			return edge, err
 		}
 
@@ -658,7 +668,7 @@ func (gm *GraphManager) RemoveEdge(part string, key string, kind string) (data.E
 		trans := NewGraphTrans(gm)
 		trans.subtrans = true
 
-		if err := gm.gr.graphEvent(trans, EVENT_EDGE_DELETED, part, edge); err != nil {
+		if err := gm.gr.graphEvent(trans, EventEdgeDeleted, part, edge); err != nil {
 			return edge, err
 		} else if err := trans.Commit(); err != nil {
 			return edge, err
@@ -683,7 +693,7 @@ func (gm *GraphManager) RemoveEdge(part string, key string, kind string) (data.E
 /*
 Delete edge information from a given node storage
 */
-func (gm *GraphManager) deleteEdge(edge data.Edge, end1Tree *hash.HTree, end2Tree *hash.HTree) error {
+func (gm *Manager) deleteEdge(edge data.Edge, end1Tree *hash.HTree, end2Tree *hash.HTree) error {
 
 	// Create lookup keys
 
@@ -693,11 +703,11 @@ func (gm *GraphManager) deleteEdge(edge data.Edge, end1Tree *hash.HTree, end2Tre
 	spec2 := gm.nm.Encode16(edge.End2Role(), true) + gm.nm.Encode16(edge.Kind(), true) +
 		gm.nm.Encode16(edge.End1Role(), true) + gm.nm.Encode16(edge.End1Kind(), true)
 
-	specsNode1Key := PREFIX_NS_SPECS + edge.End1Key()
-	edgeInfo1Key := PREFIX_NS_EDGE + edge.End1Key() + spec1
+	specsNode1Key := PrefixNSSpecs + edge.End1Key()
+	edgeInfo1Key := PrefixNSEdge + edge.End1Key() + spec1
 
-	specsNode2Key := PREFIX_NS_SPECS + edge.End2Key()
-	edgeInfo2Key := PREFIX_NS_EDGE + edge.End2Key() + spec2
+	specsNode2Key := PrefixNSSpecs + edge.End2Key()
+	edgeInfo2Key := PrefixNSEdge + edge.End2Key() + spec2
 
 	// Function to delete a spec from a specs map
 
@@ -707,10 +717,12 @@ func (gm *GraphManager) deleteEdge(edge data.Edge, end1Tree *hash.HTree, end2Tre
 		obj, err := tree.Get([]byte(key))
 
 		if err != nil {
-			return &util.GraphError{util.ErrReading, err.Error()}
+			return &util.GraphError{Type: util.ErrReading, Detail: err.Error()}
 		} else if obj == nil {
-			return &util.GraphError{util.ErrInvalidData,
-				fmt.Sprintf("Expected spec entry is missing: %v", key)}
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: fmt.Sprintf("Expected spec entry is missing: %v", key),
+			}
 		} else {
 			specsNode = obj.(map[string]string)
 		}
@@ -739,10 +751,12 @@ func (gm *GraphManager) deleteEdge(edge data.Edge, end1Tree *hash.HTree, end2Tre
 		obj, err := tree.Get([]byte(key))
 
 		if err != nil {
-			return false, &util.GraphError{util.ErrReading, err.Error()}
+			return false, &util.GraphError{Type: util.ErrReading, Detail: err.Error()}
 		} else if obj == nil {
-			return false, &util.GraphError{util.ErrInvalidData,
-				fmt.Sprintf("Expected edgeTargetInfo entry is missing: %v", key)}
+			return false, &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: fmt.Sprintf("Expected edgeTargetInfo entry is missing: %v", key),
+			}
 		} else {
 			targetMap = obj.(map[string]*edgeTargetInfo)
 		}
@@ -797,5 +811,5 @@ func (gm *GraphManager) deleteEdge(edge data.Edge, end1Tree *hash.HTree, end2Tre
 Default filter function to filter out system edge attributes.
 */
 func edgeAttributeFilter(attr string) bool {
-	return attr == data.NODE_KEY || attr == data.NODE_KIND
+	return attr == data.NodeKey || attr == data.NodeKind
 }

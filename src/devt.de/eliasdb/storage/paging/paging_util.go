@@ -9,12 +9,14 @@
  */
 
 /*
+Package paging contains functions and constants necessary for paging of records.
+
 Utility functions for a PagedStorageFile.
 */
 package paging
 
 /*
-Count the number of pages of a certain type of a given PagedStorageFile.
+CountPages counts the number of pages of a certain type of a given PagedStorageFile.
 */
 func CountPages(pager *PagedStorageFile, pagetype int16) (int, error) {
 
@@ -26,7 +28,7 @@ func CountPages(pager *PagedStorageFile, pagetype int16) (int, error) {
 	counter := 0
 
 	for page != 0 {
-		counter += 1
+		counter++
 
 		page, err = cursor.Next()
 		if err != nil {

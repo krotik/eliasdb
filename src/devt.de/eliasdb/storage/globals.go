@@ -9,6 +9,8 @@
  */
 
 /*
+Package storage contains API classes for data storage in slots.
+
 Global variables for StorageManagers.
 */
 package storage
@@ -19,6 +21,9 @@ import (
 	"devt.de/common/pools"
 )
 
+/*
+BufferPool is a pool of byte buffers.
+*/
 var BufferPool = pools.NewByteBufferPool()
 
 /*
@@ -51,7 +56,7 @@ type storagemanagerError struct {
 /*
 fireError returns the error instance from a specific StorageManager instance.
 */
-func (e *storagemanagerError) fireError(s StorageManager, info string) error {
+func (e *storagemanagerError) fireError(s Manager, info string) error {
 	e.filename = s.Name()
 	e.info = info
 	return e

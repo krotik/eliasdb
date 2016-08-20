@@ -9,6 +9,8 @@
  */
 
 /*
+Package interpreter contains the EQL interpreter.
+
 Helper runtime components.
 */
 package interpreter
@@ -99,7 +101,7 @@ func (rt *valueRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, e
 
 	// Check known constants
 
-	if rt.node.Token.Id == parser.T_AT {
+	if rt.node.Token.ID == parser.TokenAT {
 
 		// Try to lookup a function
 
@@ -115,20 +117,20 @@ func (rt *valueRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, e
 
 		return funcInst(rt.node, rt.rtp, node, edge)
 
-	} else if rt.node.Token.Id == parser.T_TRUE {
+	} else if rt.node.Token.ID == parser.TokenTRUE {
 		return true, nil
 
-	} else if rt.node.Token.Id == parser.T_FALSE {
+	} else if rt.node.Token.ID == parser.TokenFALSE {
 		return false, nil
 
-	} else if rt.node.Token.Id == parser.T_NULL {
+	} else if rt.node.Token.ID == parser.TokenNULL {
 		return nil, nil
 
-	} else if rt.node.Name == parser.N_LIST {
+	} else if rt.node.Name == parser.NodeLIST {
 
 		// Collect items of a list
 
-		list := make([]interface{}, 0)
+		var list []interface{}
 
 		for _, item := range rt.node.Children {
 			val, _ := item.Runtime.(CondRuntime).CondEval(node, edge)

@@ -50,7 +50,7 @@ func TestNamesManager(t *testing.T) {
 
 	if res := nm.decode("b123b", "123"); res != "" {
 		t.Error("Unexpected result:", res)
-		return 
+		return
 	}
 
 	if nm.Decode16(nm.Encode16("mykind", true)) != "mykind" {

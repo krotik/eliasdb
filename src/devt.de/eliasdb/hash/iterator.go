@@ -9,6 +9,9 @@
  */
 
 /*
+Package hash provides a HTree implementation to provide key-value storage functionality
+for a StorageManager.
+
 Iterator object to iterate HTree keys and values. The HTree may change behind
 the iterator's back. The iterator will try to cope with best efforts and
 only report an error as a last resort.
@@ -22,6 +25,10 @@ import (
 	"devt.de/eliasdb/storage"
 )
 
+/*
+ErrNoMoreItems is assigned to LastError when Next() is called and there are no
+more items to iterate.
+*/
 var ErrNoMoreItems = errors.New("No more items to iterate")
 
 /*
@@ -190,7 +197,7 @@ func (it *HTreeIterator) nextItem() error {
 searchNextChild searches for the index of the next available page child from a given index.
 */
 func (it *HTreeIterator) searchNextChild(page *htreePage, current int) int {
-	for i := current + 1; i < MAX_PAGE_CHILDREN; i++ {
+	for i := current + 1; i < MaxPageChildren; i++ {
 		child := page.Children[i]
 
 		if child != 0 {

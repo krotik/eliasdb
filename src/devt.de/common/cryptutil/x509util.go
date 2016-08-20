@@ -7,6 +7,9 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/*
+Package cryptutil contains cryptographic utility functions.
+*/
 package cryptutil
 
 import (
@@ -72,21 +75,21 @@ func ReadX509Certs(certs []byte) ([]*x509.Certificate, error) {
 }
 
 /*
-Compute sha1 fingerprint for a certificate.
+Sha1CertFingerprint computes a sha1 fingerprint for a certificate.
 */
 func Sha1CertFingerprint(cert *x509.Certificate) string {
 	return formatFingerprint(fmt.Sprintf("%x", sha1.Sum(cert.Raw)))
 }
 
 /*
-Compute sha256 fingerprint for a certificate.
+Sha256CertFingerprint computes a sha256 fingerprint for a certificate.
 */
 func Sha256CertFingerprint(cert *x509.Certificate) string {
 	return formatFingerprint(fmt.Sprintf("%x", sha256.Sum256(cert.Raw)))
 }
 
 /*
-Compute md5 fingerprint for a certificate.
+Md5CertFingerprint computes a md5 fingerprint for a certificate.
 */
 func Md5CertFingerprint(cert *x509.Certificate) string {
 	return formatFingerprint(fmt.Sprintf("%x", md5.Sum(cert.Raw)))

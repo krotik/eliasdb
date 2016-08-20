@@ -9,6 +9,8 @@
  */
 
 /*
+Package slotting contains managers which deal with slots on pages.
+
 PhysicalSlotManager is a list manager for physical slots.
 */
 package slotting
@@ -24,10 +26,11 @@ import (
 )
 
 /*
-If an allocation would leave less than ALLOCATION_ROUND_UP_THRESHOLD + 1 left on
-the page then the allocation size is rounded up to fit the page
+AllocationRoundUpThreshold is used to decide if a slot size should be rounded up. If an
+allocation would leave less than AllocationRoundUpThreshold + 1 left on the page then
+the allocation size is rounded up to fit the page
 */
-const ALLOCATION_ROUND_UP_THRESHOLD = 16
+const AllocationRoundUpThreshold = 16
 
 /*
 PhysicalSlotManager data structure
@@ -54,7 +57,7 @@ func NewPhysicalSlotManager(psf *paging.PagedStorageFile,
 	recordSize := sf.RecordSize()
 
 	return &PhysicalSlotManager{sf, psf, freeManager,
-		recordSize, recordSize - pageview.OFFSET_DATA}
+		recordSize, recordSize - pageview.OffsetData}
 }
 
 /*
@@ -102,7 +105,7 @@ func (psm *PhysicalSlotManager) Update(location uint64, data []byte, start uint3
 
 	psm.storagefile.ReleaseInUse(record)
 
-	if length > availableSize || availableSize-length > util.MAX_AVAILABLE_SIZE_DIFFERENCE {
+	if length > availableSize || availableSize-length > util.MaxAvailableSizeDifference {
 
 		// Reallocate if the new data is too big for the old slot or if the
 		// data is much smaller than the available space in the slot (i.e.
@@ -132,7 +135,7 @@ Fetch fetches data from a specified location.
 */
 func (psm *PhysicalSlotManager) Fetch(location uint64, writer io.Writer) error {
 
-	cursor := paging.NewPageCursor(psm.pager, view.TYPE_DATA_PAGE, util.LocationRecord(location))
+	cursor := paging.NewPageCursor(psm.pager, view.TypeDataPage, util.LocationRecord(location))
 
 	record, err := psm.storagefile.Get(cursor.Current())
 	if err != nil {
@@ -144,14 +147,14 @@ func (psm *PhysicalSlotManager) Fetch(location uint64, writer io.Writer) error {
 
 		// Return at this point if there is nothing to read
 
-		psm.storagefile.ReleaseInUseId(cursor.Current(), false)
+		psm.storagefile.ReleaseInUseID(cursor.Current(), false)
 		return nil
 	}
 
 	// Read now the bytes
 
 	restSize := length
-	recordOffset := uint32(util.LocationOffset(location) + util.SIZE_INFO_SIZE)
+	recordOffset := uint32(util.LocationOffset(location) + util.SizeInfoSize)
 
 	for restSize > 0 {
 
@@ -175,7 +178,7 @@ func (psm *PhysicalSlotManager) Fetch(location uint64, writer io.Writer) error {
 
 		restSize -= toCopy
 
-		psm.storagefile.ReleaseInUseId(cursor.Current(), false)
+		psm.storagefile.ReleaseInUseID(cursor.Current(), false)
 
 		// Go to the next record
 
@@ -190,7 +193,7 @@ func (psm *PhysicalSlotManager) Fetch(location uint64, writer io.Writer) error {
 				return err
 			}
 
-			recordOffset = pageview.OFFSET_DATA
+			recordOffset = pageview.OffsetData
 		}
 	}
 
@@ -211,7 +214,7 @@ func (psm *PhysicalSlotManager) Free(location uint64) error {
 
 	util.SetCurrentSize(record, slotOffset, 0)
 
-	psm.storagefile.ReleaseInUseId(slotRecord, true)
+	psm.storagefile.ReleaseInUseID(slotRecord, true)
 
 	psm.freeManager.Add(location, util.AvailableSize(record, slotOffset))
 
@@ -231,7 +234,7 @@ is not cleaned up.
 */
 func (psm *PhysicalSlotManager) write(location uint64, data []byte, start uint32, length uint32) error {
 
-	cursor := paging.NewPageCursor(psm.pager, view.TYPE_DATA_PAGE, util.LocationRecord(location))
+	cursor := paging.NewPageCursor(psm.pager, view.TypeDataPage, util.LocationRecord(location))
 
 	record, err := psm.storagefile.Get(cursor.Current())
 	if err != nil {
@@ -243,7 +246,7 @@ func (psm *PhysicalSlotManager) write(location uint64, data []byte, start uint32
 
 		// Return at this point if there is nothing to write
 
-		psm.storagefile.ReleaseInUseId(cursor.Current(), true)
+		psm.storagefile.ReleaseInUseID(cursor.Current(), true)
 		return nil
 	}
 
@@ -251,7 +254,7 @@ func (psm *PhysicalSlotManager) write(location uint64, data []byte, start uint32
 
 	restSize := length
 	dataOffset := start
-	recordOffset := uint32(util.LocationOffset(location) + util.SIZE_INFO_SIZE)
+	recordOffset := uint32(util.LocationOffset(location) + util.SizeInfoSize)
 
 	for restSize > 0 {
 
@@ -279,7 +282,7 @@ func (psm *PhysicalSlotManager) write(location uint64, data []byte, start uint32
 		restSize -= toCopy
 		dataOffset += toCopy
 
-		psm.storagefile.ReleaseInUseId(cursor.Current(), true)
+		psm.storagefile.ReleaseInUseID(cursor.Current(), true)
 
 		// Go to the next record
 
@@ -294,7 +297,7 @@ func (psm *PhysicalSlotManager) write(location uint64, data []byte, start uint32
 				return err
 			}
 
-			recordOffset = pageview.OFFSET_DATA
+			recordOffset = pageview.OffsetData
 		}
 	}
 
@@ -322,7 +325,7 @@ func (psm *PhysicalSlotManager) allocate(size uint32) (uint64, error) {
 	// something new
 
 	if loc == 0 {
-		lastpage := psm.pager.Last(view.TYPE_DATA_PAGE)
+		lastpage := psm.pager.Last(view.TypeDataPage)
 
 		loc, err = psm.allocateNew(normalizedSize, lastpage)
 		if err != nil {
@@ -348,7 +351,7 @@ func (psm *PhysicalSlotManager) allocate(size uint32) (uint64, error) {
 
 		util.SetCurrentSize(record, slotOffset, 0)
 
-		psm.storagefile.ReleaseInUseId(slotRecord, true)
+		psm.storagefile.ReleaseInUseID(slotRecord, true)
 	}
 
 	return loc, nil
@@ -371,7 +374,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 
 		// Create a new page if there is no start page
 
-		startPage, err = psm.pager.AllocatePage(view.TYPE_DATA_PAGE)
+		startPage, err = psm.pager.AllocatePage(view.TypeDataPage)
 		if err != nil {
 			return 0, err
 		}
@@ -382,10 +385,10 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 		record, _ = psm.storagefile.Get(startPage)
 
 		pv = pageview.NewDataPage(record)
-		pv.SetOffsetFirst(pageview.OFFSET_DATA)
+		pv.SetOffsetFirst(pageview.OffsetData)
 
-		util.SetCurrentSize(record, pageview.OFFSET_DATA, 0)
-		util.SetAvailableSize(record, pageview.OFFSET_DATA, 0)
+		util.SetCurrentSize(record, pageview.OffsetData, 0)
+		util.SetAvailableSize(record, pageview.OffsetData, 0)
 
 	} else {
 
@@ -413,7 +416,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 
 	header = int(offset)
 
-	if offset == psm.recordSize || offset > psm.recordSize-util.SIZE_INFO_SIZE {
+	if offset == psm.recordSize || offset > psm.recordSize-util.SizeInfoSize {
 
 		// Go to next page
 
@@ -428,9 +431,9 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 
 	for slotsize != 0 && offset < psm.recordSize {
 
-		offset += slotsize + util.SIZE_INFO_SIZE
+		offset += slotsize + util.SizeInfoSize
 
-		if offset == psm.recordSize || offset > psm.recordSize-util.SIZE_INFO_SIZE {
+		if offset == psm.recordSize || offset > psm.recordSize-util.SizeInfoSize {
 
 			// Go to next page
 
@@ -449,7 +452,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 
 	// Calculate the remaining free space for the current page
 
-	rspace := psm.recordSize - offset - util.SIZE_INFO_SIZE
+	rspace := psm.recordSize - offset - util.SizeInfoSize
 
 	if rspace < size {
 
@@ -462,7 +465,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 		freeSpaceLastRecord := (size - rspace) % psm.availableRecordSize
 
 		if (psm.availableRecordSize - freeSpaceLastRecord) <=
-			(ALLOCATION_ROUND_UP_THRESHOLD + util.SIZE_INFO_SIZE) {
+			(AllocationRoundUpThreshold + util.SizeInfoSize) {
 
 			newsize := size
 			newsize += (psm.availableRecordSize - freeSpaceLastRecord)
@@ -478,7 +481,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 		// Write row header
 
 		util.SetAvailableSize(record, header, size)
-		psm.storagefile.ReleaseInUseId(startPage, true)
+		psm.storagefile.ReleaseInUseID(startPage, true)
 
 		// Calculate the rest size which needs to be allocated
 
@@ -488,7 +491,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 
 		for allocSize >= psm.availableRecordSize {
 
-			startPage, err = psm.pager.AllocatePage(view.TYPE_DATA_PAGE)
+			startPage, err = psm.pager.AllocatePage(view.TypeDataPage)
 			if err != nil {
 				return 0, err
 			}
@@ -504,7 +507,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 
 			pv.SetOffsetFirst(0)
 
-			psm.storagefile.ReleaseInUseId(startPage, true)
+			psm.storagefile.ReleaseInUseID(startPage, true)
 			allocSize -= psm.availableRecordSize
 		}
 
@@ -513,7 +516,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 
 		if allocSize > 0 {
 
-			startPage, err = psm.pager.AllocatePage(view.TYPE_DATA_PAGE)
+			startPage, err = psm.pager.AllocatePage(view.TypeDataPage)
 			if err != nil {
 				return 0, err
 			}
@@ -523,9 +526,9 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 			record, _ = psm.storagefile.Get(startPage)
 
 			pv = pageview.NewDataPage(record)
-			pv.SetOffsetFirst(uint16(pageview.OFFSET_DATA + allocSize))
+			pv.SetOffsetFirst(uint16(pageview.OffsetData + allocSize))
 
-			psm.storagefile.ReleaseInUseId(startPage, true)
+			psm.storagefile.ReleaseInUseID(startPage, true)
 		}
 
 	} else {
@@ -536,7 +539,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 		// ALLOCATION_ROUND_UP_THRESHOLD bytes would remain
 		// on the record
 
-		if (rspace - size) <= (ALLOCATION_ROUND_UP_THRESHOLD + util.SIZE_INFO_SIZE) {
+		if (rspace - size) <= (AllocationRoundUpThreshold + util.SizeInfoSize) {
 
 			newsize := rspace
 			nnewsize := util.NormalizeSlotSize(newsize)
@@ -551,7 +554,7 @@ func (psm *PhysicalSlotManager) allocateNew(size uint32, startPage uint64) (uint
 		// Write row header
 
 		util.SetAvailableSize(record, header, size)
-		psm.storagefile.ReleaseInUseId(startPage, true)
+		psm.storagefile.ReleaseInUseID(startPage, true)
 	}
 
 	return loc, nil

@@ -9,12 +9,7 @@
  */
 
 /*
-Main API for EQL.
-
-Query types:
-
-GET query
-Lookup query
+Package eql contains the main API for EQL.
 */
 package eql
 
@@ -26,20 +21,23 @@ import (
 	"devt.de/eliasdb/graph"
 )
 
-const GROUP_NODE_KIND = interpreter.GROUP_NODE_KIND
+/*
+GroupNodeKind is a special node kind representing groups
+*/
+const GroupNodeKind = interpreter.GroupNodeKind
 
 /*
-Run a search query against a given graph database.
+RunQuery runs a search query against a given graph database.
 */
-func RunQuery(name string, part string, query string, gm *graph.GraphManager) (SearchResult, error) {
+func RunQuery(name string, part string, query string, gm *graph.Manager) (SearchResult, error) {
 	return RunQueryWithNodeInfo(name, part, query, gm, interpreter.NewDefaultNodeInfo(gm))
 }
 
 /*
-Run a search query against a given graph database. Use a given
-NodeInfo object to retrieve rendering information.
+RunQueryWithNodeInfo runs a search query against a given graph database. Using
+a given NodeInfo object to retrieve rendering information.
 */
-func RunQueryWithNodeInfo(name string, part string, query string, gm *graph.GraphManager, ni interpreter.NodeInfo) (SearchResult, error) {
+func RunQueryWithNodeInfo(name string, part string, query string, gm *graph.Manager, ni interpreter.NodeInfo) (SearchResult, error) {
 	var rtp parser.RuntimeProvider
 
 	word := strings.ToLower(parser.FirstWord(query))
@@ -49,7 +47,14 @@ func RunQueryWithNodeInfo(name string, part string, query string, gm *graph.Grap
 	} else if word == "lookup" {
 		rtp = interpreter.NewLookupRuntimeProvider(name, part, gm, ni)
 	} else {
-		return nil, &interpreter.RuntimeError{name, interpreter.ErrInvalidConstruct, "Unknown query type: " + word, nil, 1, 1}
+		return nil, &interpreter.RuntimeError{
+			Source: name,
+			Type:   interpreter.ErrInvalidConstruct,
+			Detail: "Unknown query type: " + word,
+			Node:   nil,
+			Line:   1,
+			Pos:    1,
+		}
 	}
 
 	ast, err := parser.ParseWithRuntime(name, query, rtp)
@@ -66,7 +71,7 @@ func RunQueryWithNodeInfo(name string, part string, query string, gm *graph.Grap
 }
 
 /*
-Parse a search query and return its Abstract Syntax Tree.
+ParseQuery parses a search query and return its Abstract Syntax Tree.
 */
 func ParseQuery(name string, query string) (*parser.ASTNode, error) {
 	ast, err := parser.Parse(name, query)

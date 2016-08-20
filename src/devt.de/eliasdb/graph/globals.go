@@ -8,101 +8,106 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/*
+Package graph contains the main API to the graph datastore.
+
+This file contains constants.
+*/
 package graph
 
 /*
-GraphManager Version
+VERSION of the GraphManager
 */
 const VERSION = 1
 
 /*
-Prefix for entries stored in the main database
+MainDBEntryPrefix is the prefix for entries stored in the main database
 */
-const MAINDB_ENTRY_PREFIX = string(0x2)
+const MainDBEntryPrefix = string(0x2)
 
 // MainDB entries
 // ==============
 
 /*
-MainDB entry key for version information
+MainDBVersion is the MainDB entry key for version information
 */
-const MAINDB_VERSION = MAINDB_ENTRY_PREFIX + "ver"
+const MainDBVersion = MainDBEntryPrefix + "ver"
 
 /*
-MainDB entry key for node kind information
+MainDBNodeKinds is the MainDB entry key for node kind information
 */
-const MAINDB_NODE_KINDS = MAINDB_ENTRY_PREFIX + "nodekind"
+const MainDBNodeKinds = MainDBEntryPrefix + "nodekind"
 
 /*
-MainDB entry key for edge kind information
+MainDBEdgeKinds is the MainDB entry key for edge kind information
 */
-const MAINDB_EDGE_KINDS = MAINDB_ENTRY_PREFIX + "edgekind"
+const MainDBEdgeKinds = MainDBEntryPrefix + "edgekind"
 
 /*
-MainDB entry key for partition information
+MainDBParts is the MainDB entry key for partition information
 */
-const MAINDB_PARTS = MAINDB_ENTRY_PREFIX + "part"
+const MainDBParts = MainDBEntryPrefix + "part"
 
 /*
-MainDB entry key for a list of node attributes
+MainDBNodeAttrs is the MainDB entry key for a list of node attributes
 */
-const MAINDB_NODE_ATTRS = MAINDB_ENTRY_PREFIX + "natt"
+const MainDBNodeAttrs = MainDBEntryPrefix + "natt"
 
 /*
-MainDB entry key for a list of node relationships
+MainDBNodeEdges is the MainDB entry key for a list of node relationships
 */
-const MAINDB_NODE_EDGES = MAINDB_ENTRY_PREFIX + "nrel"
+const MainDBNodeEdges = MainDBEntryPrefix + "nrel"
 
 /*
-MainDB entry key for a node count
+MainDBNodeCount is the MainDB entry key for a node count
 */
-const MAINDB_NODE_COUNT = MAINDB_ENTRY_PREFIX + "ncnt"
+const MainDBNodeCount = MainDBEntryPrefix + "ncnt"
 
 /*
-MainDB entry key for a list of edge attributes
+MainDBEdgeAttrs is the MainDB entry key for a list of edge attributes
 */
-const MAINDB_EDGE_ATTRS = MAINDB_ENTRY_PREFIX + "eatt"
+const MainDBEdgeAttrs = MainDBEntryPrefix + "eatt"
 
 /*
-MainDB entry key for an edge count
+MainDBEdgeCount is the MainDB entry key for an edge count
 */
-const MAINDB_EDGE_COUNT = MAINDB_ENTRY_PREFIX + "ecnt"
+const MainDBEdgeCount = MainDBEntryPrefix + "ecnt"
 
 // Root IDs for StorageManagers
 // ============================
 
 /*
-Root id for HTree slot
+RootIDNodeHTree is the root ID for the HTree holding primary information
 */
-const ROOT_ID_NODE_HTREE = 2
+const RootIDNodeHTree = 2
 
 /*
-Root id for second HTree slot
+RootIDNodeHTreeSecond is the root ID for the HTree holding secondary information
 */
-const ROOT_ID_NODE_HTREE_SECOND = 3
+const RootIDNodeHTreeSecond = 3
 
 // Suffixes for StorageManagers
 // ============================
 
 /*
-Suffix for a node storage
+StorageSuffixNodes is the suffix for a node storage
 */
-const STORAGE_SUFFIX_NODES = ".nodes"
+const StorageSuffixNodes = ".nodes"
 
 /*
-Suffix for a node index
+StorageSuffixNodesIndex is the suffix for a node index
 */
-const STORAGE_SUFFIX_NODES_INDEX = ".nodeidx"
+const StorageSuffixNodesIndex = ".nodeidx"
 
 /*
-Suffix for an edge storage
+StorageSuffixEdges is the suffix for an edge storage
 */
-const STORAGE_SUFFIX_EDGES = ".edges"
+const StorageSuffixEdges = ".edges"
 
 /*
-Suffix for an edge index
+StorageSuffixEdgesIndex is the suffix for an edge index
 */
-const STORAGE_SUFFIX_EDGES_INDEX = ".edgeidx"
+const StorageSuffixEdgesIndex = ".edgeidx"
 
 // PREFIXES for Node storage
 // =========================
@@ -112,66 +117,66 @@ const STORAGE_SUFFIX_EDGES_INDEX = ".edgeidx"
 //
 
 /*
-Prefix for storing attributes of a node
+PrefixNSAttrs is the prefix for storing attributes of a node
 */
-const PREFIX_NS_ATTRS = string(0x01)
+const PrefixNSAttrs = string(0x01)
 
 /*
-Prefix for storing the value of a node attribute
+PrefixNSAttr is the prefix for storing the value of a node attribute
 */
-const PREFIX_NS_ATTR = string(0x02)
+const PrefixNSAttr = string(0x02)
 
 /*
-Prefix for storing specs of edges related to a node
+PrefixNSSpecs is the prefix for storing specs of edges related to a node
 */
-const PREFIX_NS_SPECS = string(0x03)
+const PrefixNSSpecs = string(0x03)
 
 /*
-Prefix for storing link from a node (and a spec) to an edge
+PrefixNSEdge is the prefix for storing a link from a node (and a spec) to an edge
 */
-const PREFIX_NS_EDGE = string(0x04)
+const PrefixNSEdge = string(0x04)
 
 // Graph events
 //=============
 
 /*
-Thrown when a node gets created.
+EventNodeCreated is thrown when a node gets created.
 
 Parameters: partition of created node, created node
 */
-const EVENT_NODE_CREATED = 0x01
+const EventNodeCreated = 0x01
 
 /*
-Thrown when a node gets updated.
+EventNodeUpdated is thrown when a node gets updated.
 
 Parameters: partition of updated node, updated node, old node
 */
-const EVENT_NODE_UPDATED = 0x02
+const EventNodeUpdated = 0x02
 
 /*
-Thrown when a node gets deleted.
+EventNodeDeleted is thrown when a node gets deleted.
 
 Parameters: partition of deleted node, deleted node
 */
-const EVENT_NODE_DELETED = 0x03
+const EventNodeDeleted = 0x03
 
 /*
-Thrown when an edge gets created.
+EventEdgeCreated is thrown when an edge gets created.
 
 Parameters: partition of created edge, created edge
 */
-const EVENT_EDGE_CREATED = 0x04
+const EventEdgeCreated = 0x04
 
 /*
-Thrown when an edge gets updated.
+EventEdgeUpdated is thrown when an edge gets updated.
 
 Parameters: partition of updated edge, updated edge, old edge
 */
-const EVENT_EDGE_UPDATED = 0x05
+const EventEdgeUpdated = 0x05
 
 /*
-Thrown when an edge gets deleted.
+EventEdgeDeleted is thrown when an edge gets deleted.
 
 Parameters: partition of deleted edge, deleted edge
 */
-const EVENT_EDGE_DELETED = 0x06
+const EventEdgeDeleted = 0x06

@@ -10,7 +10,10 @@
 
 package main
 
-const TERM_SRC = `
+/*
+TermSRC is the terminal HTML as a text blob.
+*/
+const TermSRC = `
 <!doctype html>
 <html>
   <head>

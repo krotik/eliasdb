@@ -21,19 +21,19 @@ import (
 	"devt.de/common/fileutil"
 )
 
-const CERTDIR = "certs"
+const certDir = "certs"
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const invalidFileName = "**" + string(0x0)
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
 	// Setup
-	if res, _ := fileutil.PathExists(CERTDIR); res {
-		os.RemoveAll(CERTDIR)
+	if res, _ := fileutil.PathExists(certDir); res {
+		os.RemoveAll(certDir)
 	}
 
-	err := os.Mkdir(CERTDIR, 0770)
+	err := os.Mkdir(certDir, 0770)
 	if err != nil {
 		fmt.Print("Could not create test directory:", err.Error())
 		os.Exit(1)
@@ -43,7 +43,7 @@ func TestMain(m *testing.M) {
 	res := m.Run()
 
 	// Teardown
-	err = os.RemoveAll(CERTDIR)
+	err = os.RemoveAll(certDir)
 	if err != nil {
 		fmt.Print("Could not remove test directory:", err.Error())
 	}
@@ -57,22 +57,22 @@ func TestGenCert(t *testing.T) {
 
 		// Generate a certificate and private key
 
-		err := GenCert(CERTDIR, "cert.pem", "key.pem", "localhost,127.0.0.1", "", 365*24*time.Hour, true, 2048, ecdsaCurve)
+		err := GenCert(certDir, "cert.pem", "key.pem", "localhost,127.0.0.1", "", 365*24*time.Hour, true, 2048, ecdsaCurve)
 		if err != nil {
 			return err
 		}
 
 		// Check that the files were generated
 
-		if ok, _ := fileutil.PathExists(CERTDIR + "/key.pem"); !ok {
+		if ok, _ := fileutil.PathExists(certDir + "/key.pem"); !ok {
 			return errors.New("Private key was not generated")
 		}
 
-		if ok, _ := fileutil.PathExists(CERTDIR + "/cert.pem"); !ok {
+		if ok, _ := fileutil.PathExists(certDir + "/cert.pem"); !ok {
 			return errors.New("Certificate was not generated")
 		}
 
-		_, err = ReadX509CertsFromFile(CERTDIR + "/cert.pem")
+		_, err = ReadX509CertsFromFile(certDir + "/cert.pem")
 		if err != nil {
 			return err
 		}
@@ -107,31 +107,31 @@ func TestGenCert(t *testing.T) {
 
 	// Test error cases
 
-	err := GenCert(CERTDIR, "cert.pem", "key.pem", "", "", 365*24*time.Hour, true, 2048, "")
+	err := GenCert(certDir, "cert.pem", "key.pem", "", "", 365*24*time.Hour, true, 2048, "")
 	if err.Error() != "Host required for certificate generation" {
 		t.Error(err)
 		return
 	}
 
-	err = GenCert(CERTDIR, "cert.pem", "key.pem", "localhost", "", 365*24*time.Hour, true, 2048, "xxx")
+	err = GenCert(certDir, "cert.pem", "key.pem", "localhost", "", 365*24*time.Hour, true, 2048, "xxx")
 	if err.Error() != `Failed to generate private key: Unrecognized elliptic curve: "xxx"` {
 		t.Error(err)
 		return
 	}
 
-	err = GenCert(CERTDIR, "cert.pem", "key.pem", "localhost", "xxx", 365*24*time.Hour, true, 2048, "")
+	err = GenCert(certDir, "cert.pem", "key.pem", "localhost", "xxx", 365*24*time.Hour, true, 2048, "")
 	if err.Error() != `Failed to parse creation date: parsing time "xxx" as "Jan 2 15:04:05 2006": cannot parse "xxx" as "Jan"` {
 		t.Error(err)
 		return
 	}
 
-	err = GenCert(CERTDIR, "cert.pem", INVALID_FILE_NAME, "localhost", "", 365*24*time.Hour, true, 2048, "")
+	err = GenCert(certDir, "cert.pem", invalidFileName, "localhost", "", 365*24*time.Hour, true, 2048, "")
 	if !strings.HasPrefix(err.Error(), "Failed to open") {
 		t.Error(err)
 		return
 	}
 
-	err = GenCert(CERTDIR, INVALID_FILE_NAME, "key.pem", "localhost", "", 365*24*time.Hour, true, 2048, "")
+	err = GenCert(certDir, invalidFileName, "key.pem", "localhost", "", 365*24*time.Hour, true, 2048, "")
 	if !strings.HasPrefix(err.Error(), "Failed to open") {
 		t.Error(err)
 		return

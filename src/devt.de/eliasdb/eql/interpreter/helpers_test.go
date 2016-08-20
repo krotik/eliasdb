@@ -37,16 +37,16 @@ func TestHelperRuntime(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	
+
 	// Test not implemented runtime
-	
+
 	irt := invalidRuntimeInst(rt.eqlRuntimeProvider, ast.Children[0])
-	
+
 	if err := irt.Validate(); err.Error() != "EQL error in test: Invalid construct (value) (Line:1 Pos:5)" {
 		t.Error("Unexpected validate result:", err)
 		return
 	}
-	
+
 	if _, err := irt.Eval(); err.Error() != "EQL error in test: Invalid construct (value) (Line:1 Pos:5)" {
 		t.Error("Unexpected validate result:", err)
 		return

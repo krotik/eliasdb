@@ -9,7 +9,9 @@
  */
 
 /*
-FreeLogicalSlotManager  is a list manager for free logical slots.
+Package slotting contains managers which deal with slots on pages.
+
+FreeLogicalSlotManager is a list manager for free logical slots.
 */
 package slotting
 
@@ -52,7 +54,7 @@ func (flsm *FreeLogicalSlotManager) Get() (uint64, error) {
 		return freeSlot, nil
 	}
 
-	cursor := paging.NewPageCursor(flsm.pager, view.TYPE_FREE_LOGICAL_SLOT_PAGE, 0)
+	cursor := paging.NewPageCursor(flsm.pager, view.TypeFreeLogicalSlotPage, 0)
 
 	// No need for error checking on cursor next since all pages will be opened
 	// via Get calls in the loop.
@@ -84,21 +86,19 @@ func (flsm *FreeLogicalSlotManager) Get() (uint64, error) {
 
 				// Free the page if no free row id slot is left
 
-				flsm.storagefile.ReleaseInUseId(page, false)
+				flsm.storagefile.ReleaseInUseID(page, false)
 
 				flsm.pager.FreePage(page)
 
 			} else {
 
-				flsm.storagefile.ReleaseInUseId(page, true)
+				flsm.storagefile.ReleaseInUseID(page, true)
 			}
 
 			return loc, nil
-
-		} else {
-
-			flsm.storagefile.ReleaseInUseId(page, false)
 		}
+
+		flsm.storagefile.ReleaseInUseID(page, false)
 
 		page, _ = cursor.Next()
 	}
@@ -124,7 +124,7 @@ func (flsm *FreeLogicalSlotManager) Add(loc uint64) {
 Flush writes all added slotinfos to FreeLogicalSlotPages.
 */
 func (flsm *FreeLogicalSlotManager) Flush() error {
-	cursor := paging.NewPageCursor(flsm.pager, view.TYPE_FREE_LOGICAL_SLOT_PAGE, 0)
+	cursor := paging.NewPageCursor(flsm.pager, view.TypeFreeLogicalSlotPage, 0)
 	index := 0
 
 	// Go through all free logical slot pages
@@ -158,7 +158,7 @@ func (flsm *FreeLogicalSlotManager) Flush() error {
 
 	for index < len(flsm.slots) {
 
-		allocPage, err := flsm.pager.AllocatePage(view.TYPE_FREE_LOGICAL_SLOT_PAGE)
+		allocPage, err := flsm.pager.AllocatePage(view.TypeFreeLogicalSlotPage)
 		if err != nil {
 			return err
 		}
@@ -210,7 +210,7 @@ func (flsm *FreeLogicalSlotManager) doFlush(page uint64, index int) (int, error)
 		slot = flsp.FirstFreeSlotInfo()
 	}
 
-	flsm.storagefile.ReleaseInUseId(page, true)
+	flsm.storagefile.ReleaseInUseID(page, true)
 
 	return index, nil
 }

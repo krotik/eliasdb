@@ -8,7 +8,7 @@
  */
 
 /*
-LockFile models a file based lock which can be used to lock file resources
+Package lockutil contains a file based lock which can be used to lock file resources
 across different processes.
 */
 package lockutil
@@ -32,7 +32,7 @@ type LockFile struct {
 }
 
 /*
-Create a new LockFile which and watch it in given intervals.
+NewLockFile creates a new LockFile which and watch it in given intervals.
 */
 func NewLockFile(filename string, interval time.Duration) *LockFile {
 	return &LockFile{filename, time.Now().UnixNano(), interval, nil, false}
@@ -183,7 +183,7 @@ func (lf *LockFile) Start() error {
 }
 
 /*
-Return if the watcher goroutine is running.
+WatcherRunning returns if the watcher goroutine is running.
 */
 func (lf *LockFile) WatcherRunning() bool {
 	return lf.running

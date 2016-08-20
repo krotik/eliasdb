@@ -13,8 +13,9 @@ import (
 	"testing"
 )
 
-var test_data []byte = []byte("Now is the time for all good men to come to the aid of their country")
-var result_array1 []uint32 = []uint32{
+var testData = []byte("Now is the time for all good men to come to the aid of their country")
+
+var resultArray1 = []uint32{
 	0x249cb285, 0xcae32c45, 0x49cc6fdd, 0x3c89b814, 0xdc9778bb, 0x6db6607a,
 	0x736df8ad, 0xd367e257, 0x59b32232, 0x2496a9b4, 0x01d69f33, 0x08454378,
 	0x4ad4f630, 0x0ae1ca05, 0x042bdb5b, 0xbf3592e8, 0x0ed8b048, 0xb86958db,
@@ -65,10 +66,10 @@ func TestMurMurHashData(t *testing.T) {
 		return res
 	}
 
-	for i := 0; i < len(result_array1); i++ {
+	for i := 0; i < len(resultArray1); i++ {
 		res := doTest(0, i)
-		if res != result_array1[i] {
-			t.Errorf("Unexpected result; Expected: 0x%x; Got: 0x%x", result_array1[i], res)
+		if res != resultArray1[i] {
+			t.Errorf("Unexpected result; Expected: 0x%x; Got: 0x%x", resultArray1[i], res)
 		}
 	}
 }

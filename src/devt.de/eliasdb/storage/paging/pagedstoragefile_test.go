@@ -23,7 +23,7 @@ import (
 
 const DBDIR = "pagingtest"
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const InvalidFileName = "**" + string(0x0)
 
 // Main function for all tests in this package
 
@@ -115,7 +115,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	if _, err := psf.AllocatePage(view.TYPE_FREE_PAGE); err != ErrFreePage {
+	if _, err := psf.AllocatePage(view.TypeFreePage); err != ErrFreePage {
 		t.Error("It should not be possible to allocate a free page")
 		return
 	}
@@ -123,7 +123,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 	plist := make([]uint64, 0, 5)
 
 	for i := 0; i < 5; i++ {
-		p, err := psf.AllocatePage(view.TYPE_DATA_PAGE)
+		p, err := psf.AllocatePage(view.TypeDataPage)
 		if err != nil {
 			t.Error(err)
 		}
@@ -141,16 +141,16 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 	}
 	sf.ReleaseInUse(record)
 
-	if psf.First(view.TYPE_DATA_PAGE) != plist[0] {
+	if psf.First(view.TypeDataPage) != plist[0] {
 		t.Error("Unexpected first page")
 		return
 	}
-	if psf.Last(view.TYPE_DATA_PAGE) != plist[len(plist)-1] {
+	if psf.Last(view.TypeDataPage) != plist[len(plist)-1] {
 		t.Error("Unexpected last page")
 		return
 	}
 
-	if psf.First(view.TYPE_FREE_PAGE) != 0 {
+	if psf.First(view.TypeFreePage) != 0 {
 		t.Error("Unexpected first free page - no free pages should be available")
 		return
 	}
@@ -176,7 +176,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	if psf.First(view.TYPE_FREE_PAGE) != 3 {
+	if psf.First(view.TypeFreePage) != 3 {
 		t.Error("Unexpected first free page after freeing a page")
 		return
 	}
@@ -205,7 +205,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 	checkPrevAndNext(t, psf, 2, 1, 4)
 	checkPrevAndNext(t, psf, 4, 2, 0)
 
-	ptr, err := psf.AllocatePage(view.TYPE_TRANSLATION_PAGE)
+	ptr, err := psf.AllocatePage(view.TypeTranslationPage)
 
 	if err != nil {
 		t.Error(err)
@@ -260,7 +260,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	ptr, err = psf.AllocatePage(view.TYPE_TRANSLATION_PAGE)
+	ptr, err = psf.AllocatePage(view.TypeTranslationPage)
 	if err != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
@@ -274,7 +274,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	ptr, err = psf.AllocatePage(view.TYPE_TRANSLATION_PAGE)
+	ptr, err = psf.AllocatePage(view.TypeTranslationPage)
 	if err != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
@@ -282,7 +282,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 
 	sf.ReleaseInUse(record)
 
-	ptr, err = psf.AllocatePage(view.TYPE_TRANSLATION_PAGE)
+	ptr, err = psf.AllocatePage(view.TypeTranslationPage)
 	if err != nil {
 		t.Error(err)
 		return
@@ -294,7 +294,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	_, err = psf.AllocatePage(view.TYPE_TRANSLATION_PAGE)
+	_, err = psf.AllocatePage(view.TypeTranslationPage)
 	if err != file.ErrAlreadyInUse {
 		t.Error(err)
 	}
@@ -389,7 +389,7 @@ func TestPagedStorageFileTransactionPageManagement(t *testing.T) {
 	plist := make([]uint64, 0, 5)
 
 	for i := 0; i < 5; i++ {
-		p, err := psf.AllocatePage(view.TYPE_DATA_PAGE)
+		p, err := psf.AllocatePage(view.TypeDataPage)
 		if err != nil {
 			t.Error(err)
 		}
@@ -479,7 +479,7 @@ func TestPagedStorageFileTransactionPageManagement(t *testing.T) {
 		return
 	}
 
-	sf.ReleaseInUseId(0, false)
+	sf.ReleaseInUseID(0, false)
 
 	record, err = sf.Get(4)
 
@@ -492,7 +492,7 @@ func TestPagedStorageFileTransactionPageManagement(t *testing.T) {
 
 	psf.header.record = nil
 
-	sf.ReleaseInUseId(0, false)
+	sf.ReleaseInUseID(0, false)
 
 	if err := psf.Close(); err != nil {
 		t.Error(err)

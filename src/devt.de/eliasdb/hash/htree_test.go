@@ -79,7 +79,7 @@ func TestHTreeSerialization(t *testing.T) {
 func TestHTree(t *testing.T) {
 	sm := storage.NewMemoryStorageManager("testsm")
 
-	sm.AccessMap[1] = storage.ACCESS_INSERT_ERROR
+	sm.AccessMap[1] = storage.AccessInsertError
 
 	if _, err := NewHTree(sm); err != file.ErrAlreadyInUse {
 		t.Error("Unexpected new tree result:", err)
@@ -119,7 +119,7 @@ func TestHTree(t *testing.T) {
 
 	htreeCached, _ := LoadHTree(sm, page.Location())
 
-	sm.AccessMap[1] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	sm.AccessMap[1] = storage.AccessCacheAndFetchError
 
 	if _, err := LoadHTree(sm, page.Location()); err != storage.ErrSlotNotFound {
 		t.Error("Unexpected tree load result:", err)
@@ -128,8 +128,7 @@ func TestHTree(t *testing.T) {
 
 	delete(sm.AccessMap, 1)
 
-	sm.AccessMap[1] = storage.ACCESS_NOT_IN_CACHE
-
+	sm.AccessMap[1] = storage.AccessNotInCache
 	htreeFetched, _ := LoadHTree(sm, page.Location())
 
 	delete(sm.AccessMap, 1)
@@ -139,7 +138,7 @@ func TestHTree(t *testing.T) {
 		return
 	}
 
-	sm.AccessMap[8] = storage.ACCESS_NOT_IN_CACHE
+	sm.AccessMap[8] = storage.AccessNotInCache
 
 	if res, err := htree.Get([]byte("testkey5")); res != "test5" || err != nil {
 		t.Error("Unexpected get result:", res, err)
@@ -149,8 +148,8 @@ func TestHTree(t *testing.T) {
 	if res, loc, err := htree.GetValueAndLocation([]byte("testkey5")); res != "test5" || loc == 0 || err != nil {
 		t.Error("Unexpected get result:", res, loc, err)
 		return
-	}	
-	
+	}
+
 	if res, loc, err := htree.GetValueAndLocation([]byte("testkey99")); res != nil || loc != 0 || err != nil {
 		t.Error("Unexpected get result:", res, loc, err)
 		return

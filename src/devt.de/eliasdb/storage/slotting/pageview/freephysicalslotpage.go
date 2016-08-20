@@ -9,6 +9,8 @@
  */
 
 /*
+Package pageview contains object wrappers for different page types.
+
 FreePhysicalSlotPage is a page which holds information about free physical slots.
 The page stores the slot location and its size in a slotinfo data structure.
 */
@@ -21,25 +23,26 @@ import (
 )
 
 /*
-Number of free slots which are stored on this page
+OffsetCount is the number of free slots which are stored on this page
 */
-const OFFSET_COUNT = view.OFFSET_DATA
+const OffsetCount = view.OffsetData
 
 /*
-Offset for slot information
+OffsetData is the offset for slot information
 */
-const OFFSET_DATA = OFFSET_COUNT + file.SIZE_SHORT
+const OffsetData = OffsetCount + file.SizeShort
 
 /*
-Size of a single free slot info
+SlotInfoSize is the size of a single free slot info
 */
-const SLOT_INFO_SIZE = util.LOCATION_SIZE + util.SIZE_INFO_SIZE
+const SlotInfoSize = util.LocationSize + util.SizeInfoSize
 
 /*
-When searching a slot on this page we should strife to find a slot which doesn't
-waste more than OPTIMAL_WASTE_MARGIN bytes
+OptimalWasteMargin is the max amount of allowed allocation waste. When searching a slot
+on this page we should strife to find a slot which doesn't waste more than
+OptimalWasteMargin bytes
 */
-const OPTIMAL_WASTE_MARGIN = 128
+const OptimalWasteMargin = 128
 
 /*
 FreePhysicalSlotPage data structure
@@ -57,7 +60,7 @@ NewFreePhysicalSlotPage creates a new page which can manage free slots.
 func NewFreePhysicalSlotPage(record *file.Record) *FreePhysicalSlotPage {
 	checkFreePhysicalSlotPageMagic(record)
 
-	maxSlots := (len(record.Data()) - OFFSET_DATA) / SLOT_INFO_SIZE
+	maxSlots := (len(record.Data()) - OffsetData) / SlotInfoSize
 	maxAcceptableWaste := len(record.Data()) / 4
 
 	return &FreePhysicalSlotPage{NewSlotInfoPage(record), uint16(maxSlots),
@@ -71,7 +74,7 @@ the wrapped record is valid.
 func checkFreePhysicalSlotPageMagic(record *file.Record) bool {
 	magic := record.ReadInt16(0)
 
-	if magic == view.VIEW_PAGE_HEADER+view.TYPE_FREE_PHYSICAL_SLOT_PAGE {
+	if magic == view.ViewPageHeader+view.TypeFreePhysicalSlotPage {
 		return true
 	}
 	panic("Unexpected header found in FreePhysicalSlotPage")
@@ -88,7 +91,7 @@ func (fpsp *FreePhysicalSlotPage) MaxSlots() uint16 {
 FreeSlotCount returns the number of free slots on this page.
 */
 func (fpsp *FreePhysicalSlotPage) FreeSlotCount() uint16 {
-	return fpsp.Record.ReadUInt16(OFFSET_COUNT)
+	return fpsp.Record.ReadUInt16(OffsetCount)
 }
 
 /*
@@ -106,7 +109,7 @@ FreeSlotSize returns the size of a free slot. Lookup is via offset.
 func (fpsp *FreePhysicalSlotPage) FreeSlotSize(offset uint16) uint32 {
 	slotinfo := fpsp.offsetToSlotinfo(offset)
 	if fpsp.sizeCache[slotinfo] == 0 {
-		fpsp.sizeCache[slotinfo] = fpsp.Record.ReadUInt32(int(offset + util.LOCATION_SIZE))
+		fpsp.sizeCache[slotinfo] = fpsp.Record.ReadUInt32(int(offset + util.LocationSize))
 	}
 	return fpsp.sizeCache[slotinfo]
 }
@@ -117,7 +120,7 @@ SetFreeSlotSize sets the size of a free slot. Lookup is via offset.
 func (fpsp *FreePhysicalSlotPage) SetFreeSlotSize(offset uint16, size uint32) {
 	slotinfo := fpsp.offsetToSlotinfo(offset)
 	fpsp.sizeCache[slotinfo] = size
-	fpsp.Record.WriteUInt32(int(offset+util.LOCATION_SIZE), size)
+	fpsp.Record.WriteUInt32(int(offset+util.LocationSize), size)
 }
 
 /*
@@ -133,7 +136,7 @@ func (fpsp *FreePhysicalSlotPage) AllocateSlotInfo(slotinfo uint16) uint16 {
 
 	// Increase counter for allocated slotinfos
 
-	fpsp.Record.WriteUInt16(OFFSET_COUNT, fpsp.FreeSlotCount()+1)
+	fpsp.Record.WriteUInt16(OffsetCount, fpsp.FreeSlotCount()+1)
 
 	return offset
 }
@@ -151,7 +154,7 @@ func (fpsp *FreePhysicalSlotPage) ReleaseSlotInfo(slotinfo uint16) uint16 {
 
 	// Decrease counter for allocated slotinfos
 
-	fpsp.Record.WriteUInt16(OFFSET_COUNT, fpsp.FreeSlotCount()-1)
+	fpsp.Record.WriteUInt16(OffsetCount, fpsp.FreeSlotCount()-1)
 
 	return offset
 }
@@ -171,7 +174,7 @@ func (fpsp *FreePhysicalSlotPage) FirstFreeSlotInfo() int {
 }
 
 /*
-Find a slot which is suitable for a given amount of data but which is also not
+FindSlot finds a slot which is suitable for a given amount of data but which is also not
 too big to avoid wasting space.
 */
 func (fpsp *FreePhysicalSlotPage) FindSlot(minSize uint32) int {
@@ -181,7 +184,7 @@ func (fpsp *FreePhysicalSlotPage) FindSlot(minSize uint32) int {
 	bestSlot := -1
 	bestSlotWaste := fpsp.maxAcceptableWaste + 1
 
-	var maxSize uint32 = 0
+	var maxSize uint32
 
 	for i = 0; i < fpsp.maxSlots; i++ {
 
@@ -201,7 +204,7 @@ func (fpsp *FreePhysicalSlotPage) FindSlot(minSize uint32) int {
 
 		if waste >= 0 {
 
-			if waste < OPTIMAL_WASTE_MARGIN {
+			if waste < OptimalWasteMargin {
 
 				// In the ideal case we can minimise the produced waste
 
@@ -228,7 +231,7 @@ func (fpsp *FreePhysicalSlotPage) FindSlot(minSize uint32) int {
 		// This difference must fit in an unsigned short.
 
 		if bestSlotWaste < fpsp.maxAcceptableWaste &&
-			bestSlotWaste < util.MAX_AVAILABLE_SIZE_DIFFERENCE {
+			bestSlotWaste < util.MaxAvailableSizeDifference {
 
 			return bestSlot
 		}
@@ -249,12 +252,12 @@ func (fpsp *FreePhysicalSlotPage) isAllocatedSlot(slotinfo uint16) bool {
 slotinfoToOffset converts a slotinfo number into an offset on the record.
 */
 func (fpsp *FreePhysicalSlotPage) slotinfoToOffset(slotinfo uint16) uint16 {
-	return OFFSET_DATA + slotinfo*SLOT_INFO_SIZE
+	return OffsetData + slotinfo*SlotInfoSize
 }
 
 /*
 offsetToSlotinfo converts an offset into a slotinfo number.
 */
 func (fpsp *FreePhysicalSlotPage) offsetToSlotinfo(offset uint16) uint16 {
-	return (offset - OFFSET_DATA) / SLOT_INFO_SIZE
+	return (offset - OffsetData) / SlotInfoSize
 }

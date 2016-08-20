@@ -52,12 +52,17 @@ func TestMain(m *testing.M) {
 	os.Exit(res)
 }
 
+var enableConcurrencyTest = false
+
 func TestStorageManagerConcurrency(t *testing.T) {
 
 	// Disabled for normal testing
-	return
 
-	retChans := make([]chan error, 0)
+	if !enableConcurrencyTest {
+		return
+	}
+
+	var retChans []chan error
 
 	threads := 50
 	ops := 1000
@@ -97,10 +102,15 @@ func TestStorageManagerConcurrency(t *testing.T) {
 	sm.Close()
 }
 
+var enablePerformanceTest = false
+
 func TestStorageManagerPerformance(t *testing.T) {
 
 	// Disabled for normal testing
-	return
+
+	if !enablePerformanceTest {
+		return
+	}
 
 	// Test multiple read/write operations in concurrent threads
 
@@ -120,7 +130,7 @@ func TestStorageManagerPerformance(t *testing.T) {
 	fmt.Println("Total time:", elapsed)
 }
 
-func runConcurrencyTest(id string, sm StorageManager, ops int, retChan chan error) {
+func runConcurrencyTest(id string, sm Manager, ops int, retChan chan error) {
 
 	errorChan := make(chan error)
 
@@ -161,7 +171,7 @@ func runConcurrencyTest(id string, sm StorageManager, ops int, retChan chan erro
 	retChan <- nil
 }
 
-func runPerformanceTest(id string, sm StorageManager, ops int) {
+func runPerformanceTest(id string, sm Manager, ops int) {
 
 	var elapsed1, elapsed2, elapsed3, elapsed4, elapsed5, elapsed6, elapsed7 int64
 
@@ -271,7 +281,7 @@ type testclient struct {
 /*
 clientInsert inserts some test data.
 */
-func (tc *testclient) clientInsert(id string, sm StorageManager, ops int, errorChan chan error) {
+func (tc *testclient) clientInsert(id string, sm Manager, ops int, errorChan chan error) {
 
 	// Write stull
 
@@ -300,7 +310,7 @@ func (tc *testclient) clientInsert(id string, sm StorageManager, ops int, errorC
 /*
 clientFetch reads back test data.
 */
-func (tc *testclient) clientFetch(id string, teststring string, sm StorageManager, ops int, errorChan chan error) {
+func (tc *testclient) clientFetch(id string, teststring string, sm Manager, ops int, errorChan chan error) {
 	var obj interface{}
 	var res string
 	var err error
@@ -332,7 +342,7 @@ func (tc *testclient) clientFetch(id string, teststring string, sm StorageManage
 /*
 clientUpdate updates test data without requiring relocation.
 */
-func (tc *testclient) clientUpdate(id string, teststring string, sm StorageManager, ops int, errorChan chan error) {
+func (tc *testclient) clientUpdate(id string, teststring string, sm Manager, ops int, errorChan chan error) {
 
 	// Write stull
 

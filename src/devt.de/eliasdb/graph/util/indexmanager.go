@@ -9,6 +9,8 @@
  */
 
 /*
+Package util contains utility classes for the graph storage.
+
 Index manager managing the full text search index. This index supports simple
 word searches as well as phrase searches.
 
@@ -43,17 +45,24 @@ import (
 )
 
 /*
-Max number of keys for a single word lookup.
+MaxKeysetSize is the maximum number of keys for a single word lookup.
 */
-const MAX_KEYSET_SIZE = 1000
+const MaxKeysetSize = 1000
 
 /*
-Flag to indicate if the index should be case sensitive.
+CaseSensitiveWordIndex is a flag to indicate if the index should be case sensitive.
 */
-var CASE_SENSITIVE_WORD_INDEX = false
+var CaseSensitiveWordIndex = false
 
-const PREFIX_ATTR_WORD = string(0x01)
-const PREFIX_ATTR_HASH = string(0x02)
+/*
+PrefixAttrWord is the prefix used for word index entries
+*/
+const PrefixAttrWord = string(0x01)
+
+/*
+PrefixAttrHash is the prefix used for hashes of attribute values
+*/
+const PrefixAttrHash = string(0x02)
 
 /*
 IndexManager data structure
@@ -142,7 +151,7 @@ func (im *IndexManager) LookupPhrase(attr, phrase string) ([]string, error) {
 
 	path := make([]uint64, 0, len(phraseWords))
 
-	for key, _ := range results[0] {
+	for key := range results[0] {
 
 		path = path[:0]
 
@@ -209,28 +218,27 @@ func (im *IndexManager) findPhrasePath(key string, index int, path []uint64,
 
 			return index + 1
 
-		} else {
+		}
 
-			// Try every position as start position in the first iteration
+		// Try every position as start position in the first iteration
 
-			for _, pos := range posArr {
+		for _, pos := range posArr {
 
-				path = path[:0]
-				path = append(path, pos)
+			path = path[:0]
+			path = append(path, pos)
 
-				// Test if the phrase only contained one word
+			// Test if the phrase only contained one word
 
-				if len(phraseWords) == 1 {
-					return 1
-				}
+			if len(phraseWords) == 1 {
+				return 1
+			}
 
-				// Find the rest
+			// Find the rest
 
-				ret := im.findPhrasePath(key, 1, path, phraseWords, results)
+			ret := im.findPhrasePath(key, 1, path, phraseWords, results)
 
-				if ret == len(phraseWords) {
-					return ret
-				}
+			if ret == len(phraseWords) {
+				return ret
 			}
 		}
 	}
@@ -245,13 +253,13 @@ a map which maps node key to a list of word positions.
 func (im *IndexManager) LookupWord(attr, word string) (map[string][]uint64, error) {
 	var s string
 
-	if CASE_SENSITIVE_WORD_INDEX {
+	if CaseSensitiveWordIndex {
 		s = word
 	} else {
 		s = strings.ToLower(word)
 	}
 
-	entry, err := im.htree.Get([]byte(PREFIX_ATTR_WORD + attr + s))
+	entry, err := im.htree.Get([]byte(PrefixAttrWord + attr + s))
 
 	if err != nil {
 		return nil, &GraphError{ErrIndexError, err.Error()}
@@ -276,13 +284,13 @@ func (im *IndexManager) LookupValue(attr, value string) ([]string, error) {
 	var entry *indexEntry
 	var sum [16]byte
 
-	if CASE_SENSITIVE_WORD_INDEX {
+	if CaseSensitiveWordIndex {
 		sum = md5.Sum([]byte(value))
 	} else {
 		sum = md5.Sum([]byte(strings.ToLower(value)))
 	}
 
-	indexkey := []byte(PREFIX_ATTR_HASH + attr + string(sum[:16]))
+	indexkey := []byte(PrefixAttrHash + attr + string(sum[:16]))
 
 	// Retrieve index entry
 
@@ -294,13 +302,13 @@ func (im *IndexManager) LookupValue(attr, value string) ([]string, error) {
 
 	if obj == nil {
 		return nil, nil
-	} else {
-		entry = obj.(*indexEntry)
 	}
+
+	entry = obj.(*indexEntry)
 
 	ret := make([]string, 0, len(entry.WordPos))
 
-	for key, _ := range entry.WordPos {
+	for key := range entry.WordPos {
 		ret = append(ret, key)
 	}
 
@@ -315,13 +323,13 @@ Count returns the number of found nodes for a given word in a given attribute.
 func (im *IndexManager) Count(attr, word string) (int, error) {
 	var s string
 
-	if CASE_SENSITIVE_WORD_INDEX {
+	if CaseSensitiveWordIndex {
 		s = word
 	} else {
 		s = strings.ToLower(word)
 	}
 
-	entry, err := im.htree.Get([]byte(PREFIX_ATTR_WORD + attr + s))
+	entry, err := im.htree.Get([]byte(PrefixAttrWord + attr + s))
 
 	if err != nil {
 		return 0, &GraphError{ErrIndexError, err.Error()}
@@ -347,7 +355,7 @@ func (im *IndexManager) updateIndex(key string, newObj map[string]string,
 
 		// Insert case
 
-		for attr, _ := range newObj {
+		for attr := range newObj {
 			attrMap[attr] = nil
 		}
 
@@ -355,7 +363,7 @@ func (im *IndexManager) updateIndex(key string, newObj map[string]string,
 
 		// Remove case
 
-		for attr, _ := range oldObj {
+		for attr := range oldObj {
 			attrMap[attr] = nil
 		}
 
@@ -363,17 +371,17 @@ func (im *IndexManager) updateIndex(key string, newObj map[string]string,
 
 		// Update case
 
-		for attr, _ := range newObj {
+		for attr := range newObj {
 			attrMap[attr] = nil
 		}
-		for attr, _ := range oldObj {
+		for attr := range oldObj {
 			attrMap[attr] = nil
 		}
 	}
 
 	emptyws := newWordSet(1)
 
-	for attr, _ := range attrMap {
+	for attr := range attrMap {
 		var newwords, toadd, oldwords, toremove *wordSet
 
 		newval, newok := newObj[attr]
@@ -469,13 +477,13 @@ func (im *IndexManager) addIndexHashEntry(key string, attr string, value string)
 	var entry *indexEntry
 	var sum [16]byte
 
-	if CASE_SENSITIVE_WORD_INDEX {
+	if CaseSensitiveWordIndex {
 		sum = md5.Sum([]byte(value))
 	} else {
 		sum = md5.Sum([]byte(strings.ToLower(value)))
 	}
 
-	indexkey := []byte(PREFIX_ATTR_HASH + attr + string(sum[:16]))
+	indexkey := []byte(PrefixAttrHash + attr + string(sum[:16]))
 
 	// Retrieve index entry
 
@@ -505,13 +513,13 @@ func (im *IndexManager) removeIndexHashEntry(key string, attr string, value stri
 	var entry *indexEntry
 	var sum [16]byte
 
-	if CASE_SENSITIVE_WORD_INDEX {
+	if CaseSensitiveWordIndex {
 		sum = md5.Sum([]byte(value))
 	} else {
 		sum = md5.Sum([]byte(strings.ToLower(value)))
 	}
 
-	indexkey := []byte(PREFIX_ATTR_HASH + attr + string(sum[:16]))
+	indexkey := []byte(PrefixAttrHash + attr + string(sum[:16]))
 
 	// Retrieve index entry
 
@@ -523,9 +531,9 @@ func (im *IndexManager) removeIndexHashEntry(key string, attr string, value stri
 
 	if obj == nil {
 		return nil
-	} else {
-		entry = obj.(*indexEntry)
 	}
+
+	entry = obj.(*indexEntry)
 
 	delete(entry.WordPos, key)
 
@@ -544,7 +552,7 @@ removeIndexEntry removes an entry from the index.
 func (im *IndexManager) removeIndexEntry(key string, attr string, word string, pos []uint64) error {
 	var entry *indexEntry
 
-	indexkey := []byte(PREFIX_ATTR_WORD + attr + word)
+	indexkey := []byte(PrefixAttrWord + attr + word)
 
 	// Retrieve index entry
 
@@ -555,9 +563,9 @@ func (im *IndexManager) removeIndexEntry(key string, attr string, word string, p
 
 	if obj == nil {
 		return nil
-	} else {
-		entry = obj.(*indexEntry)
 	}
+
+	entry = obj.(*indexEntry)
 
 	// Remove given pos from existing pos information
 
@@ -599,7 +607,7 @@ addIndexEntry adds an entry to the index.
 func (im *IndexManager) addIndexEntry(key string, attr string, word string, pos []uint64) error {
 	var entry *indexEntry
 
-	indexkey := []byte(PREFIX_ATTR_WORD + attr + word)
+	indexkey := []byte(PrefixAttrWord + attr + word)
 
 	// Retrieve or create index entry
 
@@ -698,7 +706,7 @@ func extractWords(s string) *wordSet {
 
 	var text string
 
-	if CASE_SENSITIVE_WORD_INDEX {
+	if CaseSensitiveWordIndex {
 		text = s
 	} else {
 		text = strings.ToLower(s)
@@ -903,7 +911,7 @@ func (ws *wordSet) String() string {
 	var buf bytes.Buffer
 	c := make([]string, 0, len(ws.set))
 
-	for s, _ := range ws.set {
+	for s := range ws.set {
 		c = append(c, s)
 	}
 

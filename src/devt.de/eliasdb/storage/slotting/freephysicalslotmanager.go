@@ -9,6 +9,8 @@
  */
 
 /*
+Package slotting contains managers which deal with slots on pages.
+
 FreePhysicalSlotManager is a list manager for free physical slots. This manager
 object is used by the PhysicalSlotManager.
 */
@@ -61,7 +63,7 @@ func (fpsm *FreePhysicalSlotManager) Get(size uint32) (uint64, error) {
 		return 0, nil
 	}
 
-	cursor := paging.NewPageCursor(fpsm.pager, view.TYPE_FREE_PHYSICAL_SLOT_PAGE, 0)
+	cursor := paging.NewPageCursor(fpsm.pager, view.TypeFreePhysicalSlotPage, 0)
 
 	// No need for error checking on cursor next since all pages will be opened
 	// via Get calls in the loop.
@@ -102,24 +104,22 @@ func (fpsm *FreePhysicalSlotManager) Get(size uint32) (uint64, error) {
 
 				// Free the page if no free slot is stored
 
-				fpsm.storagefile.ReleaseInUseId(page, false)
+				fpsm.storagefile.ReleaseInUseID(page, false)
 				fpsm.pager.FreePage(page)
 
 			} else {
 
-				fpsm.storagefile.ReleaseInUseId(page, false)
+				fpsm.storagefile.ReleaseInUseID(page, false)
 			}
 
 			return loc, nil
-
-		} else {
-
-			if fpsm.lastMaxSlotSize < -slot {
-				fpsm.lastMaxSlotSize = -slot
-			}
-
-			fpsm.storagefile.ReleaseInUseId(page, false)
 		}
+
+		if fpsm.lastMaxSlotSize < -slot {
+			fpsm.lastMaxSlotSize = -slot
+		}
+
+		fpsm.storagefile.ReleaseInUseID(page, false)
 
 		page, _ = cursor.Next()
 	}
@@ -142,7 +142,7 @@ Flush writes all added slotinfos to FreePhysicalSlotPages.
 */
 func (fpsm *FreePhysicalSlotManager) Flush() error {
 
-	cursor := paging.NewPageCursor(fpsm.pager, view.TYPE_FREE_PHYSICAL_SLOT_PAGE, 0)
+	cursor := paging.NewPageCursor(fpsm.pager, view.TypeFreePhysicalSlotPage, 0)
 	index := 0
 
 	// Go through all free physical row ID pages
@@ -175,7 +175,7 @@ func (fpsm *FreePhysicalSlotManager) Flush() error {
 
 	for index < len(fpsm.slots) {
 
-		allocPage, err := fpsm.pager.AllocatePage(view.TYPE_FREE_PHYSICAL_SLOT_PAGE)
+		allocPage, err := fpsm.pager.AllocatePage(view.TypeFreePhysicalSlotPage)
 		if err != nil {
 			return err
 		}
@@ -231,7 +231,7 @@ func (fpsm *FreePhysicalSlotManager) doFlush(page uint64, index int) (int, error
 		}
 	}
 
-	fpsm.storagefile.ReleaseInUseId(page, true)
+	fpsm.storagefile.ReleaseInUseID(page, true)
 
 	return index, nil
 }

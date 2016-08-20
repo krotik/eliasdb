@@ -9,6 +9,8 @@
  */
 
 /*
+Package graph contains the main API to the graph datastore.
+
 Node related API of the graph manager.
 */
 package graph
@@ -22,11 +24,11 @@ import (
 )
 
 /*
-Return the node count for a given node kind.
+NodeCount returns the node count for a given node kind.
 */
-func (gm *GraphManager) NodeCount(kind string) uint64 {
+func (gm *Manager) NodeCount(kind string) uint64 {
 
-	if val, ok := gm.gs.MainDB()[MAINDB_NODE_COUNT+kind]; ok {
+	if val, ok := gm.gs.MainDB()[MainDBNodeCount+kind]; ok {
 		return binary.LittleEndian.Uint64([]byte(val))
 	}
 
@@ -36,7 +38,7 @@ func (gm *GraphManager) NodeCount(kind string) uint64 {
 /*
 NodeKeyIterator iterates node keys of a certain kind.
 */
-func (gm *GraphManager) NodeKeyIterator(part string, kind string) (*NodeKeyIterator, error) {
+func (gm *Manager) NodeKeyIterator(part string, kind string) (*NodeKeyIterator, error) {
 	// Get the HTrees which stores the node
 
 	tree, _, err := gm.getNodeStorageHTree(part, kind, false)
@@ -46,7 +48,10 @@ func (gm *GraphManager) NodeKeyIterator(part string, kind string) (*NodeKeyItera
 
 	it := hash.NewHTreeIterator(tree)
 	if it.LastError != nil {
-		return nil, &util.GraphError{util.ErrReading, it.LastError.Error()}
+		return nil, &util.GraphError{
+			Type:   util.ErrReading,
+			Detail: it.LastError.Error(),
+		}
 	}
 
 	return &NodeKeyIterator{gm, it, nil}, nil
@@ -55,14 +60,14 @@ func (gm *GraphManager) NodeKeyIterator(part string, kind string) (*NodeKeyItera
 /*
 FetchNode fetches a single node from a partition of the graph.
 */
-func (gm *GraphManager) FetchNode(part string, key string, kind string) (data.Node, error) {
+func (gm *Manager) FetchNode(part string, key string, kind string) (data.Node, error) {
 	return gm.FetchNodePart(part, key, kind, nil)
 }
 
 /*
 FetchNodePart fetches part of a single node from a partition of the graph.
 */
-func (gm *GraphManager) FetchNodePart(part string, key string, kind string,
+func (gm *Manager) FetchNodePart(part string, key string, kind string,
 	attrs []string) (data.Node, error) {
 
 	// Get the HTrees which stores the node
@@ -85,17 +90,17 @@ func (gm *GraphManager) FetchNodePart(part string, key string, kind string,
 /*
 readNode reads a given node from the datastore.
 */
-func (gm *GraphManager) readNode(key string, kind string, attrs []string,
+func (gm *Manager) readNode(key string, kind string, attrs []string,
 	attrTree *hash.HTree, valTree *hash.HTree) (data.Node, error) {
 
-	keyAttrs := PREFIX_NS_ATTRS + key
-	keyAttrPrefix := PREFIX_NS_ATTR + key
+	keyAttrs := PrefixNSAttrs + key
+	keyAttrPrefix := PrefixNSAttr + key
 
 	// Check if the node exists
 
 	attrList, err := attrTree.Get([]byte(keyAttrs))
 	if err != nil {
-		return nil, &util.GraphError{util.ErrReading, err.Error()}
+		return nil, &util.GraphError{Type: util.ErrReading, Detail: err.Error()}
 	} else if attrList == nil {
 		return nil, nil
 	}
@@ -108,7 +113,7 @@ func (gm *GraphManager) readNode(key string, kind string, attrs []string,
 
 		val, err := valTree.Get([]byte(keyAttrPrefix + encattr))
 		if err != nil {
-			return &util.GraphError{util.ErrReading, err.Error()}
+			return &util.GraphError{Type: util.ErrReading, Detail: err.Error()}
 		}
 
 		if val != nil {
@@ -143,7 +148,7 @@ func (gm *GraphManager) readNode(key string, kind string, attrs []string,
 
 		for _, attr := range attrs {
 
-			if (attr == data.NODE_KEY || attr == data.NODE_KIND) && node == nil {
+			if (attr == data.NodeKey || attr == data.NodeKind) && node == nil {
 
 				// Create node - we might only query for node key or node kind
 
@@ -164,8 +169,8 @@ func (gm *GraphManager) readNode(key string, kind string, attrs []string,
 	// Set key and kind attributes
 
 	if node != nil {
-		node.SetAttr(data.NODE_KEY, key)
-		node.SetAttr(data.NODE_KIND, kind)
+		node.SetAttr(data.NodeKey, key)
+		node.SetAttr(data.NodeKind, kind)
 	}
 
 	return node, nil
@@ -175,7 +180,7 @@ func (gm *GraphManager) readNode(key string, kind string, attrs []string,
 StoreNode stores a single node in a partition of the graph. This function will
 overwrites any existing node.
 */
-func (gm *GraphManager) StoreNode(part string, node data.Node) error {
+func (gm *Manager) StoreNode(part string, node data.Node) error {
 	return gm.storeOrUpdateNode(part, node, false)
 }
 
@@ -183,14 +188,14 @@ func (gm *GraphManager) StoreNode(part string, node data.Node) error {
 UpdateNode updates a single node in a partition of the graph. This function will
 only update the given values of the node.
 */
-func (gm *GraphManager) UpdateNode(part string, node data.Node) error {
+func (gm *Manager) UpdateNode(part string, node data.Node) error {
 	return gm.storeOrUpdateNode(part, node, true)
 }
 
 /*
 storeOrUpdateNode stores or updates a single node in a partition of the graph.
 */
-func (gm *GraphManager) storeOrUpdateNode(part string, node data.Node, onlyUpdate bool) error {
+func (gm *Manager) storeOrUpdateNode(part string, node data.Node, onlyUpdate bool) error {
 
 	// Check if the node can be stored
 
@@ -226,8 +231,8 @@ func (gm *GraphManager) storeOrUpdateNode(part string, node data.Node, onlyUpdat
 	// to the index.
 
 	if oldnode == nil {
-		current_count := gm.NodeCount(node.Kind())
-		if err := gm.writeNodeCount(node.Kind(), current_count+1, true); err != nil {
+		currentCount := gm.NodeCount(node.Kind())
+		if err := gm.writeNodeCount(node.Kind(), currentCount+1, true); err != nil {
 			return err
 		}
 
@@ -263,9 +268,9 @@ func (gm *GraphManager) storeOrUpdateNode(part string, node data.Node, onlyUpdat
 
 	var event int
 	if oldnode == nil {
-		event = EVENT_NODE_CREATED
+		event = EventNodeCreated
 	} else {
-		event = EVENT_NODE_UPDATED
+		event = EventNodeUpdated
 	}
 
 	if err := gm.gr.graphEvent(trans, event, part, node, oldnode); err != nil {
@@ -290,11 +295,11 @@ after the function returns, the changes are flushed to the storage. Returns
 the old node if an update occurred. An attribute filter can be speified to skip
 specific attributes.
 */
-func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *hash.HTree,
+func (gm *Manager) writeNode(node data.Node, onlyUpdate bool, attrTree *hash.HTree,
 	valTree *hash.HTree, attFilter func(attr string) bool) (data.Node, error) {
 
-	keyAttrs := PREFIX_NS_ATTRS + node.Key()
-	keyAttrPrefix := PREFIX_NS_ATTR + node.Key()
+	keyAttrs := PrefixNSAttrs + node.Key()
+	keyAttrPrefix := PrefixNSAttr + node.Key()
 
 	var oldnode data.Node
 	var attrListOld interface{}
@@ -327,7 +332,7 @@ func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *has
 
 		oldval, err := valTree.Put([]byte(keyAttrPrefix+encattr), val)
 		if err != nil {
-			return nil, &util.GraphError{util.ErrWriting, err.Error()}
+			return nil, &util.GraphError{Type: util.ErrWriting, Detail: err.Error()}
 		}
 
 		// Build up old node
@@ -347,7 +352,7 @@ func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *has
 
 		attrListOld, err = attrTree.Get([]byte(keyAttrs))
 		if err != nil {
-			return nil, &util.GraphError{util.ErrReading, err.Error()}
+			return nil, &util.GraphError{Type: util.ErrReading, Detail: err.Error()}
 		}
 
 		if attrListOld != nil {
@@ -365,7 +370,7 @@ func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *has
 				// Store the new node attributes
 
 				attrList = make([]string, 0, len(attrMap))
-				for encattr, _ := range attrMap {
+				for encattr := range attrMap {
 					attrList = append(attrList, encattr)
 				}
 
@@ -391,7 +396,7 @@ func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *has
 		// Do not try cleanup in case we updated a node - we would do more
 		// harm than good.
 
-		return nil, &util.GraphError{util.ErrWriting, err.Error()}
+		return nil, &util.GraphError{Type: util.ErrWriting, Detail: err.Error()}
 	}
 
 	// Remove deleted keys
@@ -404,8 +409,8 @@ func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *has
 			oldnode = data.NewGraphNode()
 		}
 
-		oldnode.SetAttr(data.NODE_KEY, node.Key())
-		oldnode.SetAttr(data.NODE_KIND, node.Kind())
+		oldnode.SetAttr(data.NodeKey, node.Key())
+		oldnode.SetAttr(data.NodeKind, node.Kind())
 
 		for _, encattrold := range attrListOld.([]string) {
 
@@ -413,7 +418,7 @@ func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *has
 
 				oldval, err := valTree.Remove([]byte(keyAttrPrefix + encattrold))
 				if err != nil {
-					return nil, &util.GraphError{util.ErrWriting, err.Error()}
+					return nil, &util.GraphError{Type: util.ErrWriting, Detail: err.Error()}
 				}
 
 				oldnode.SetAttr(gm.nm.Decode32(encattrold), oldval)
@@ -429,7 +434,7 @@ func (gm *GraphManager) writeNode(node data.Node, onlyUpdate bool, attrTree *has
 /*
 RemoveNode removes a single node from a partition of the graph.
 */
-func (gm *GraphManager) RemoveNode(part string, key string, kind string) (data.Node, error) {
+func (gm *Manager) RemoveNode(part string, key string, kind string) (data.Node, error) {
 
 	// Get the HTree which stores the node index and node kind
 
@@ -468,8 +473,8 @@ func (gm *GraphManager) RemoveNode(part string, key string, kind string) (data.N
 
 		// Decrease the node count
 
-		current_count := gm.NodeCount(kind)
-		if err := gm.writeNodeCount(kind, current_count-1, true); err != nil {
+		currentCount := gm.NodeCount(kind)
+		if err := gm.writeNodeCount(kind, currentCount-1, true); err != nil {
 			return node, err
 		}
 
@@ -478,7 +483,7 @@ func (gm *GraphManager) RemoveNode(part string, key string, kind string) (data.N
 		trans := NewGraphTrans(gm)
 		trans.subtrans = true
 
-		if err := gm.gr.graphEvent(trans, EVENT_NODE_DELETED, part, node); err != nil {
+		if err := gm.gr.graphEvent(trans, EventNodeDeleted, part, node); err != nil {
 			return node, err
 		} else if err := trans.Commit(); err != nil {
 			return node, err
@@ -501,17 +506,17 @@ deleteNode deletes a given node from the datastore. It is assumed that the calle
 holds the writer lock before calling the functions and that, after the function
 returns, the changes are flushed to the storage. Returns the deleted node.
 */
-func (gm *GraphManager) deleteNode(key string, kind string, attrTree *hash.HTree,
+func (gm *Manager) deleteNode(key string, kind string, attrTree *hash.HTree,
 	valTree *hash.HTree) (data.Node, error) {
 
-	keyAttrs := PREFIX_NS_ATTRS + key
-	keyAttrPrefix := PREFIX_NS_ATTR + key
+	keyAttrs := PrefixNSAttrs + key
+	keyAttrPrefix := PrefixNSAttr + key
 
 	// Remove the attribute list entry
 
 	attrList, err := attrTree.Remove([]byte(keyAttrs))
 	if err != nil {
-		return nil, &util.GraphError{util.ErrWriting, err.Error()}
+		return nil, &util.GraphError{Type: util.ErrWriting, Detail: err.Error()}
 	} else if attrList == nil {
 		return nil, nil
 	}
@@ -520,8 +525,8 @@ func (gm *GraphManager) deleteNode(key string, kind string, attrTree *hash.HTree
 
 	node := data.NewGraphNode()
 
-	node.SetAttr(data.NODE_KEY, key)
-	node.SetAttr(data.NODE_KIND, kind)
+	node.SetAttr(data.NodeKey, key)
+	node.SetAttr(data.NodeKind, kind)
 
 	// Remove node attributes
 
@@ -532,7 +537,7 @@ func (gm *GraphManager) deleteNode(key string, kind string, attrTree *hash.HTree
 
 		val, err := valTree.Remove([]byte(keyAttrPrefix + encattr))
 		if err != nil {
-			return node, &util.GraphError{util.ErrWriting, err.Error()}
+			return node, &util.GraphError{Type: util.ErrWriting, Detail: err.Error()}
 		}
 
 		node.SetAttr(attr, val)
@@ -545,5 +550,5 @@ func (gm *GraphManager) deleteNode(key string, kind string, attrTree *hash.HTree
 Default filter function to filter out system node attributes.
 */
 func nodeAttributeFilter(attr string) bool {
-	return attr == data.NODE_KEY || attr == data.NODE_KIND
+	return attr == data.NodeKey || attr == data.NodeKind
 }

@@ -17,9 +17,9 @@ import (
 )
 
 func TestSlotSize(t *testing.T) {
-	var i, MAX_SLOT_SIZE uint32
+	var i, mxSlotSize uint32
 
-	MAX_SLOT_SIZE = decodeSize(UNSIGNED_SHORT_MAX)
+	mxSlotSize = decodeSize(UnsignedShortMax)
 
 	r := file.NewRecord(123, make([]byte, 20))
 
@@ -33,7 +33,7 @@ func TestSlotSize(t *testing.T) {
 		return
 	}
 
-	for i = 0; i < MAX_SLOT_SIZE; i = i + 1000 {
+	for i = 0; i < mxSlotSize; i = i + 1000 {
 		round := NormalizeSlotSize(i)
 
 		if uint32(round) < i {
@@ -72,11 +72,11 @@ func TestSlotSize(t *testing.T) {
 
 		SetAvailableSize(r, 2, round)
 
-		if r.ReadByte(1) != 0 {
+		if r.ReadSingleByte(1) != 0 {
 			t.Error("Unexpected record data on byte 1:", r)
 			return
 		}
-		if r.ReadByte(6) != 0 {
+		if r.ReadSingleByte(6) != 0 {
 			t.Error("Unexpected record data on byte 6:", r)
 			return
 		}
@@ -87,11 +87,11 @@ func TestSlotSize(t *testing.T) {
 		return
 	}
 
-	testNormalizationPanic(t, r, MAX_SLOT_SIZE+1)
+	testNormalizationPanic(t, r, mxSlotSize+1)
 
-	SetCurrentSize(r, 2, MAX_SLOT_SIZE-MAX_AVAILABLE_SIZE_DIFFERENCE)
+	SetCurrentSize(r, 2, mxSlotSize-MaxAvailableSizeDifference)
 
-	if CurrentSize(r, 2) != MAX_SLOT_SIZE-MAX_AVAILABLE_SIZE_DIFFERENCE {
+	if CurrentSize(r, 2) != mxSlotSize-MaxAvailableSizeDifference {
 		t.Error("Unexpected current size on extreme values")
 	}
 

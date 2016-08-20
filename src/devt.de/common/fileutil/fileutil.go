@@ -7,6 +7,9 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/*
+Package fileutil contains file based utilities and helper functions.
+*/
 package fileutil
 
 import "os"

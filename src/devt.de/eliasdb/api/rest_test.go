@@ -58,7 +58,7 @@ func TestEndpointHandling(t *testing.T) {
 	queryURL := "http://localhost" + TESTPORT
 
 	RegisterRestEndpoints(testEndpointMap)
-	RegisterRestEndpoints(AboutEndpointMap)
+	RegisterRestEndpoints(GeneralEndpointMap)
 
 	lastRes = nil
 

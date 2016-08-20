@@ -29,23 +29,23 @@ import (
 	"devt.de/common/fileutil"
 )
 
-const CERTDIR = "certs"
+const certdir = "certs"
 
-const TESTPORT_HTTP = ":9090"
-const TESTPORT_HTTPS = ":9091"
+const testporthttp = ":9090"
+const testporthttps = ":9091"
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const invalidFileName = "**" + string(0x0)
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
 	// Setup
 
-	if res, _ := fileutil.PathExists(CERTDIR); res {
-		os.RemoveAll(CERTDIR)
+	if res, _ := fileutil.PathExists(certdir); res {
+		os.RemoveAll(certdir)
 	}
 
-	err := os.Mkdir(CERTDIR, 0770)
+	err := os.Mkdir(certdir, 0770)
 	if err != nil {
 		fmt.Print("Could not create test directory:", err.Error())
 		os.Exit(1)
@@ -57,7 +57,7 @@ func TestMain(m *testing.M) {
 
 	// Teardown
 
-	err = os.RemoveAll(CERTDIR)
+	err = os.RemoveAll(certdir)
 	if err != nil {
 		fmt.Print("Could not remove test directory:", err.Error())
 	}
@@ -69,7 +69,7 @@ func TestHTTPSServer(t *testing.T) {
 
 	// Generate a certificate and private key
 
-	err := cryptutil.GenCert(CERTDIR, "cert.pem", "key.pem", "localhost", "", 365*24*time.Hour, true, 2048, "")
+	err := cryptutil.GenCert(certdir, "cert.pem", "key.pem", "localhost", "", 365*24*time.Hour, true, 2048, "")
 	if err != nil {
 		t.Error(err)
 		return
@@ -86,7 +86,7 @@ func TestHTTPSServer(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go hs.RunHTTPSServer(CERTDIR, "cert.pem", "key.pem", TESTPORT_HTTPS, &wg)
+	go hs.RunHTTPSServer(certdir, "cert.pem", "key.pem", testporthttps, &wg)
 
 	wg.Wait()
 
@@ -96,56 +96,54 @@ func TestHTTPSServer(t *testing.T) {
 		t.Error(hs.LastError)
 		return
 
-	} else {
+	}
+	// Check we can't start two servers
 
-		// Check we can't start two servers
+	var wg2 sync.WaitGroup
+	hs2 := &HTTPServer{}
 
-		var wg2 sync.WaitGroup
-		hs2 := &HTTPServer{}
+	wg2.Add(1)
 
-		wg2.Add(1)
-
-		err := hs2.RunHTTPSServer(CERTDIR, "c.pem", "k.pem", TESTPORT_HTTPS, &wg2)
-		if hs2.LastError == nil ||
-			(hs2.LastError.Error() != "open certs/c.pem: no such file or directory" &&
+	err = hs2.RunHTTPSServer(certdir, "c.pem", "k.pem", testporthttps, &wg2)
+	if hs2.LastError == nil ||
+		(hs2.LastError.Error() != "open certs/c.pem: no such file or directory" &&
 			hs2.LastError.Error() != "open certs/c.pem: The system cannot find the file specified.") ||
-			err != hs2.LastError {
-			t.Error("Unexpected error return:", hs2.LastError)
-			return
-		}
+		err != hs2.LastError {
+		t.Error("Unexpected error return:", hs2.LastError)
+		return
+	}
 
-		// Add again to wait group so we can try again
+	// Add again to wait group so we can try again
 
-		wg2.Add(1)
+	wg2.Add(1)
 
-		err = hs2.RunHTTPSServer(CERTDIR, "cert.pem", "key.pem", TESTPORT_HTTPS, &wg2)
-		if hs2.LastError == nil || (hs2.LastError.Error() != "listen tcp "+TESTPORT_HTTPS+
-			": bind: address already in use" && hs2.LastError.Error() != "listen tcp "+TESTPORT_HTTPS+
-			": bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.") ||
-			err != hs2.LastError {
-			t.Error("Unexpected error return:", hs2.LastError)
-		}
+	err = hs2.RunHTTPSServer(certdir, "cert.pem", "key.pem", testporthttps, &wg2)
+	if hs2.LastError == nil || (hs2.LastError.Error() != "listen tcp "+testporthttps+
+		": bind: address already in use" && hs2.LastError.Error() != "listen tcp "+testporthttps+
+		": bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.") ||
+		err != hs2.LastError {
+		t.Error("Unexpected error return:", hs2.LastError)
+	}
 
-		// Add to the wait group so we can wait for the shutdown
+	// Add to the wait group so we can wait for the shutdown
 
-		wg.Add(1)
+	wg.Add(1)
 
-		// Send something to the server
+	// Send something to the server
 
-		if res := sendTestHTTPSRequest(CERTDIR + "/cert.pem"); res != `Hello over HTTPS, "/httpsserver_test"` {
-			t.Error("Unexpected request response:", res)
-			return
-		}
+	if res := sendTestHTTPSRequest(certdir + "/cert.pem"); res != `Hello over HTTPS, "/httpsserver_test"` {
+		t.Error("Unexpected request response:", res)
+		return
+	}
 
-		// Server is shut down
+	// Server is shut down
 
-		hs.Shutdown()
+	hs.Shutdown()
 
-		if hs.Running == true {
-			wg.Wait()
-		} else {
-			t.Error("Server was not running as expected")
-		}
+	if hs.Running == true {
+		wg.Wait()
+	} else {
+		t.Error("Server was not running as expected")
 	}
 }
 
@@ -162,7 +160,7 @@ func TestSignalling(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	go hs.RunHTTPServer(TESTPORT_HTTP, &wg)
+	go hs.RunHTTPServer(testporthttp, &wg)
 
 	wg.Wait()
 
@@ -172,56 +170,55 @@ func TestSignalling(t *testing.T) {
 		t.Error(hs.LastError)
 		return
 
+	}
+
+	// Check we can't start two servers
+
+	var wg2 sync.WaitGroup
+	wg2.Add(1)
+	hs2 := &HTTPServer{}
+	err := hs2.RunHTTPServer(":9090", &wg2)
+	if hs2.LastError == nil || (hs2.LastError.Error() != "listen tcp "+testporthttp+
+		": bind: address already in use" && hs2.LastError.Error() != "listen tcp "+testporthttp+
+		": bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.") ||
+		err != hs2.LastError {
+		t.Error("Unexpected error return:", hs2.LastError)
+	}
+
+	// Add to the wait group so we can wait for the shutdown
+
+	wg.Add(1)
+
+	// Send something to the server
+
+	if res := sendTestRequest(); res != `Hello, "/httpserver_test"` {
+		t.Error("Unexpected request response:", res)
+		return
+	}
+
+	// Check we can send other signals
+
+	hs.signalling <- syscall.SIGHUP
+
+	time.Sleep(time.Duration(50) * time.Millisecond)
+	if hs.Running != true {
+		t.Error("Server should still be running after sending wrong shutdown signal")
+		return
+	}
+
+	// Server is shut down
+
+	hs.Shutdown()
+
+	if hs.Running == true {
+		wg.Wait()
 	} else {
-
-		// Check we can't start two servers
-
-		var wg2 sync.WaitGroup
-		wg2.Add(1)
-		hs2 := &HTTPServer{}
-		err := hs2.RunHTTPServer(":9090", &wg2)
-		if hs2.LastError == nil || (hs2.LastError.Error() != "listen tcp "+TESTPORT_HTTP+
-			": bind: address already in use" && hs2.LastError.Error() != "listen tcp "+TESTPORT_HTTP+
-			": bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.") ||
-			err != hs2.LastError {
-			t.Error("Unexpected error return:", hs2.LastError)
-		}
-
-		// Add to the wait group so we can wait for the shutdown
-
-		wg.Add(1)
-
-		// Send something to the server
-
-		if res := sendTestRequest(); res != `Hello, "/httpserver_test"` {
-			t.Error("Unexpected request response:", res)
-			return
-		}
-
-		// Check we can send other signals
-
-		hs.signalling <- syscall.SIGHUP
-
-		time.Sleep(time.Duration(50) * time.Millisecond)
-		if hs.Running != true {
-			t.Error("Server should still be running after sending wrong shutdown signal")
-			return
-		}
-
-		// Server is shut down
-
-		hs.Shutdown()
-
-		if hs.Running == true {
-			wg.Wait()
-		} else {
-			t.Error("Server was not running as expected")
-		}
+		t.Error("Server was not running as expected")
 	}
 
 	// Test listener panic
 
-	originalListener, _ := net.Listen("tcp", TESTPORT_HTTP)
+	originalListener, _ := net.Listen("tcp", testporthttp)
 	sl := newSignalTCPListener(originalListener, originalListener.(*net.TCPListener), nil)
 
 	go testUnknownSignalPanic(t, sl)
@@ -238,7 +235,7 @@ func testUnknownSignalPanic(t *testing.T, sl *signalTCPListener) {
 }
 
 func sendTestRequest() string {
-	url := "http://localhost" + TESTPORT_HTTP + "/httpserver_test"
+	url := "http://localhost" + testporthttp + "/httpserver_test"
 
 	var jsonStr = []byte(`{"msg":"Hello!"}`)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
@@ -257,23 +254,23 @@ func sendTestRequest() string {
 	return string(body)
 }
 
-func sendTestHTTPSRequest(ca_cert string) string {
+func sendTestHTTPSRequest(caCert string) string {
 
 	// Build ca cert pool
 
-	ca_pool := x509.NewCertPool()
-	serverCert, err := ioutil.ReadFile(ca_cert)
+	caPool := x509.NewCertPool()
+	serverCert, err := ioutil.ReadFile(caCert)
 	if err != nil {
 		panic(err)
 	}
-	ca_pool.AppendCertsFromPEM(serverCert)
+	caPool.AppendCertsFromPEM(serverCert)
 
 	tr := &http.Transport{
-		TLSClientConfig:    &tls.Config{RootCAs: ca_pool},
+		TLSClientConfig:    &tls.Config{RootCAs: caPool},
 		DisableCompression: true,
 	}
 
-	url := "https://localhost" + TESTPORT_HTTPS + "/httpsserver_test"
+	url := "https://localhost" + testporthttps + "/httpsserver_test"
 
 	var jsonStr = []byte(`{"msg":"Hello!"}`)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))

@@ -8,7 +8,8 @@
  */
 
 /*
-HTTP Server which can be stopped via signals or via a file lock.
+Package httputil contains a HTTP/HTTPS Server which can be stopped via signals
+or via a file lock.
 */
 package httputil
 
@@ -206,13 +207,15 @@ type signalTCPListener struct {
 	wgStatus     *sync.WaitGroup  // Optional Waitgroup to be notified after start
 }
 
-// Signals
+/*
+SigShutdown is used to signal a request for shutdown
+*/
+const SigShutdown = 1
 
-const SIG_SHUTDOWN = 1
-
-// Errors indicating a signal was received
-
-var SigShutdown = errors.New("Server was shut down")
+/*
+ErrSigShutdown indicates that a signal was received
+*/
+var ErrSigShutdown = errors.New("Server was shut down")
 
 /*
 newSignalTCPListener wraps a given TCPListener.
@@ -247,11 +250,11 @@ func (sl *signalTCPListener) Accept() (net.Conn, error) {
 
 			// Check which signal was received
 
-			if sig == SIG_SHUTDOWN {
-				return nil, SigShutdown
-			} else {
-				panic(fmt.Sprintf("Unknown signal received: %v", sig))
+			if sig == SigShutdown {
+				return nil, ErrSigShutdown
 			}
+
+			panic(fmt.Sprintf("Unknown signal received: %v", sig))
 
 		default:
 
@@ -270,6 +273,6 @@ func (sl *signalTCPListener) Accept() (net.Conn, error) {
 Shutdown sends a shutdown signal.
 */
 func (sl *signalTCPListener) Shutdown() {
-	sl.Signals <- SIG_SHUTDOWN
+	sl.Signals <- SigShutdown
 	close(sl.Signals)
 }

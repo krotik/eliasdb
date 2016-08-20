@@ -195,7 +195,7 @@ func TestIterator(t *testing.T) {
 		return
 	}
 
-	sm.AccessMap[3] = storage.ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR
+	sm.AccessMap[3] = storage.AccessCacheAndFetchSeriousError
 
 	if k, v := it.Next(); string(k) != "abba1" || v != "song1" {
 		t.Error("Unexpected next result:", k, v)

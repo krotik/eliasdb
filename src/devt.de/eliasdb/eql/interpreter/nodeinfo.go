@@ -9,6 +9,8 @@
  */
 
 /*
+Package interpreter contains the EQL interpreter.
+
 NodeInfo objects are used by the EQL interpreter to format search results.
 */
 package interpreter
@@ -46,14 +48,14 @@ type NodeInfo interface {
 defaultNodeInfo data structure
 */
 type defaultNodeInfo struct {
-	gm *graph.GraphManager
+	gm *graph.Manager
 }
 
 /*
-Create a new default NodeInfo instance.The default NodeInfo provides the
-most generic rendering information to the interpreter.
+NewDefaultNodeInfo creates a new default NodeInfo instance. The default NodeInfo
+provides the most generic rendering information to the interpreter.
 */
-func NewDefaultNodeInfo(gm *graph.GraphManager) NodeInfo {
+func NewDefaultNodeInfo(gm *graph.Manager) NodeInfo {
 	return &defaultNodeInfo{gm}
 }
 
@@ -64,7 +66,7 @@ in a list view for a given node kind.
 func (ni *defaultNodeInfo) SummaryAttributes(kind string) []string {
 
 	if kind == "" {
-		return []string{data.NODE_KEY, data.NODE_KIND, data.NODE_NAME}
+		return []string{data.NodeKey, data.NodeKind, data.NodeName}
 	}
 
 	attrs := ni.gm.NodeAttrs(kind)
@@ -72,7 +74,7 @@ func (ni *defaultNodeInfo) SummaryAttributes(kind string) []string {
 	ret := make([]string, 0, len(attrs))
 	for _, attr := range attrs {
 
-		if attr == data.NODE_KEY || attr == data.NODE_KIND {
+		if attr == data.NodeKey || attr == data.NodeKind {
 			continue
 		}
 
@@ -83,7 +85,7 @@ func (ni *defaultNodeInfo) SummaryAttributes(kind string) []string {
 
 	// Prepend the key attribute
 
-	ret = append([]string{data.NODE_KEY}, ret...)
+	ret = append([]string{data.NodeKey}, ret...)
 
 	return ret
 }
@@ -92,7 +94,7 @@ func (ni *defaultNodeInfo) SummaryAttributes(kind string) []string {
 Return the display string for a given attribute.
 */
 func (ni *defaultNodeInfo) AttributeDisplayString(kind string, attr string) string {
-	if (attr == data.NODE_KEY || attr == data.NODE_KIND || attr == data.NODE_NAME) && kind != "" {
+	if (attr == data.NodeKey || attr == data.NodeKind || attr == data.NodeName) && kind != "" {
 		return stringutil.CreateDisplayString(kind) + " " +
 			stringutil.CreateDisplayString(attr)
 	}

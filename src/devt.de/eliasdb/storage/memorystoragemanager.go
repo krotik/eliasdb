@@ -9,6 +9,8 @@
  */
 
 /*
+Package storage contains API classes for data storage in slots.
+
 A storage manager which keeps all its data in memory and provides several
 error simulation facilities.
 */
@@ -24,45 +26,47 @@ import (
 )
 
 /*
-The address will not be accessible via FetchCached
+Special flags which cause the manager to return errors on specific function calls
 */
-const ACCESS_NOT_IN_CACHE = 1
+const (
+	AccessNotInCache                = 1 // The address will not be accessible via FetchCached
+	AccessFetchError                = 2 // The address will not be accessible via Fetch
+	AccessUpdateError               = 3 // The address will not be accessible via Update
+	AccessFreeError                 = 4 // The address will not be accessible via Free
+	AccessInsertError               = 5 // The address will not be accessible via Insert
+	AccessCacheAndFetchError        = 6 // The address will not be accessible via FetchCached nor Fetch
+	AccessCacheAndFetchSeriousError = 7 // The address will not be accessible via FetchCached nor Fetch
+)
 
 /*
-The address will not be accessible via Fetch
+MsmRetClose nil or the error which should be returned by a Close call
 */
-const ACCESS_FETCH_ERROR = 2
+var MsmRetClose error
 
 /*
-The address will not be accessible via Update
+MsmCallNumClose counter how often Close is called
 */
-const ACCESS_UPDATE_ERROR = 3
+var MsmCallNumClose int
 
 /*
-The address will not be accessible via Free
+MsmRetFlush nil or the error which should be returned by a Flush call
 */
-const ACCESS_FREE_ERROR = 4
+var MsmRetFlush error
 
 /*
-The address will not be accessible via Insert
+MsmCallNumFlush counter how often Flush is called
 */
-const ACCESS_INSERT_ERROR = 5
+var MsmCallNumFlush int
 
 /*
-The address will not be accessible via FetchCached nor Fetch
+MsmRetRollback nil or the error which should be returned by a Rollback call
 */
-const ACCESS_CACHE_AND_FETCH_ERROR = 6
+var MsmRetRollback error
 
 /*
-The address will not be accessible via FetchCached nor Fetch
+MsmCallNumRollback counter how often Rollback is called
 */
-const ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR = 7
-
-/*
-Return values for Close, Flush and Rollback calls
-*/
-var MsmRetClose, MsmRetFlush, MsmRetRollback error
-var MsmCallNumClose, MsmCallNumFlush, MsmCallNumRollback int
+var MsmCallNumRollback int
 
 /*
 MemoryStorageManager data structure
@@ -77,6 +81,9 @@ type MemoryStorageManager struct {
 	AccessMap map[uint64]int // Special map to simulate access issues
 }
 
+/*
+NewMemoryStorageManager creates a new MemoryStorageManager
+*/
 func NewMemoryStorageManager(name string) *MemoryStorageManager {
 	return &MemoryStorageManager{name, make(map[int]uint64),
 		make(map[uint64]interface{}), &sync.Mutex{}, 1, make(map[uint64]int)}
@@ -116,7 +123,7 @@ func (msm *MemoryStorageManager) Insert(o interface{}) (uint64, error) {
 	msm.mutex.Lock()
 	defer msm.mutex.Unlock()
 
-	if msm.AccessMap[msm.LocCount] == ACCESS_INSERT_ERROR {
+	if msm.AccessMap[msm.LocCount] == AccessInsertError {
 		return 0, file.ErrAlreadyInUse
 	}
 	loc := msm.LocCount
@@ -132,7 +139,7 @@ func (msm *MemoryStorageManager) Update(loc uint64, o interface{}) error {
 	msm.mutex.Lock()
 	defer msm.mutex.Unlock()
 
-	if msm.AccessMap[loc] == ACCESS_UPDATE_ERROR {
+	if msm.AccessMap[loc] == AccessUpdateError {
 		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
 	}
 	msm.data[loc] = o
@@ -146,7 +153,7 @@ func (msm *MemoryStorageManager) Free(loc uint64) error {
 	msm.mutex.Lock()
 	defer msm.mutex.Unlock()
 
-	if msm.AccessMap[loc] == ACCESS_FREE_ERROR {
+	if msm.AccessMap[loc] == AccessFreeError {
 		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
 	}
 	delete(msm.data, loc)
@@ -161,9 +168,9 @@ func (msm *MemoryStorageManager) Fetch(loc uint64, o interface{}) error {
 	msm.mutex.Lock()
 	defer msm.mutex.Unlock()
 
-	if msm.AccessMap[loc] == ACCESS_FETCH_ERROR || msm.AccessMap[loc] == ACCESS_CACHE_AND_FETCH_ERROR {
+	if msm.AccessMap[loc] == AccessFetchError || msm.AccessMap[loc] == AccessCacheAndFetchError {
 		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
-	} else if msm.AccessMap[loc] == ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR {
+	} else if msm.AccessMap[loc] == AccessCacheAndFetchSeriousError {
 		return file.ErrAlreadyInUse
 	}
 
@@ -183,9 +190,9 @@ func (msm *MemoryStorageManager) FetchCached(loc uint64) (interface{}, error) {
 	msm.mutex.Lock()
 	defer msm.mutex.Unlock()
 
-	if msm.AccessMap[loc] == ACCESS_NOT_IN_CACHE || msm.AccessMap[loc] == ACCESS_CACHE_AND_FETCH_ERROR {
+	if msm.AccessMap[loc] == AccessNotInCache || msm.AccessMap[loc] == AccessCacheAndFetchError {
 		return nil, ErrNotInCache
-	} else if msm.AccessMap[loc] == ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR {
+	} else if msm.AccessMap[loc] == AccessCacheAndFetchSeriousError {
 		return nil, file.ErrAlreadyInUse
 	}
 

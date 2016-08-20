@@ -16,13 +16,13 @@ func TestLocation(t *testing.T) {
 	var i uint16
 	var j uint64
 
-	for i = 0; i < MAX_OFFSET_VALUE; i++ {
+	for i = 0; i < MaxOffsetValue; i++ {
 
 		location := PackLocation(1, uint16(i))
-		recId := LocationRecord(location)
+		recID := LocationRecord(location)
 
-		if recId != 1 {
-			t.Error("Unexpected record for location", location, " i:", i, " recId:", recId)
+		if recID != 1 {
+			t.Error("Unexpected record for location", location, " i:", i, " recId:", recID)
 			return
 		}
 
@@ -36,13 +36,13 @@ func TestLocation(t *testing.T) {
 
 	testPackLocationPanic(t)
 
-	for j = 0; j < MAX_RECORD_VALUE; j++ {
+	for j = 0; j < MaxRecordValue; j++ {
 
 		location := PackLocation(j, 1)
-		recId := LocationRecord(location)
+		recID := LocationRecord(location)
 
-		if recId != j {
-			t.Error("Unexpected record for location", location, " i:", i, " recId:", recId)
+		if recID != j {
+			t.Error("Unexpected record for location", location, " i:", i, " recId:", recID)
 			return
 		}
 
@@ -54,7 +54,7 @@ func TestLocation(t *testing.T) {
 		}
 	}
 
-	if PackLocation(0xFFFFFF,0xFFFF) != 0xFFFFFFFF {
+	if PackLocation(0xFFFFFF, 0xFFFF) != 0xFFFFFFFF {
 		t.Error("Unexpected max location")
 	}
 }
@@ -66,5 +66,5 @@ func testPackLocationPanic(t *testing.T) {
 		}
 	}()
 
-	PackLocation(MAX_RECORD_VALUE+1, 0)
+	PackLocation(MaxRecordValue+1, 0)
 }

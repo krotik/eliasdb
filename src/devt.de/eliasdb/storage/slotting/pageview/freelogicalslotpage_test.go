@@ -25,7 +25,7 @@ func TestFreeLogicalSlotPage(t *testing.T) {
 
 	// Make sure the record has a correct magic
 
-	view.NewPageView(r, view.TYPE_FREE_LOGICAL_SLOT_PAGE)
+	view.NewPageView(r, view.TypeFreeLogicalSlotPage)
 
 	flsp := NewFreeLogicalSlotPage(r)
 
@@ -36,10 +36,10 @@ func TestFreeLogicalSlotPage(t *testing.T) {
 		return
 	}
 
-	slotinfoId := flsp.FirstFreeSlotInfo()
+	slotinfoID := flsp.FirstFreeSlotInfo()
 
-	if slotinfoId != 0 {
-		t.Error("Unexpected first free slot:", slotinfoId)
+	if slotinfoID != 0 {
+		t.Error("Unexpected first free slot:", slotinfoID)
 		return
 	}
 
@@ -138,14 +138,14 @@ func TestFreeLogicalSlotPage(t *testing.T) {
 	}
 
 	if flsp.prevFoundAllocatedSlot != 1 {
-		t.Error("Unexpected to previous found allocated slot:", 
+		t.Error("Unexpected to previous found allocated slot:",
 			flsp.prevFoundAllocatedSlot)
 	}
 
 	flsp.AllocateSlotInfo(0)
 
 	if flsp.prevFoundAllocatedSlot != 0 {
-		t.Error("Unexpected to previous found allocated slot:", 
+		t.Error("Unexpected to previous found allocated slot:",
 			flsp.prevFoundAllocatedSlot)
 	}
 

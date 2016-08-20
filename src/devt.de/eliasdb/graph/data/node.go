@@ -9,6 +9,8 @@
  */
 
 /*
+Package data contains classes and functions to handle graph data.
+
 Nodes are items stored in the graph. The graphNode object is the minimal
 implementation of the Node interface and represents a simple node. Nodes
 have attributes which may or may not be presentable as a string. Setting a
@@ -23,6 +25,9 @@ import (
 	"strconv"
 )
 
+/*
+Node models nodes in the graph
+*/
 type Node interface {
 
 	/*
@@ -69,19 +74,19 @@ type Node interface {
 }
 
 /*
-Key attribute for node
+NodeKey is the key attribute for a node
 */
-const NODE_KEY = "key"
+const NodeKey = "key"
 
 /*
-Name attribute for node
+NodeName is the name attribute for a node
 */
-const NODE_NAME = "name"
+const NodeName = "name"
 
 /*
-Kind attribute for node
+NodeKind is the kind attribute for a node
 */
-const NODE_KIND = "kind"
+const NodeKind = "kind"
 
 /*
 graphNode data structure.
@@ -108,14 +113,14 @@ func NewGraphNodeFromMap(data map[string]interface{}) Node {
 Key returns a potentially non human-readable unique key for this node.
 */
 func (gn *graphNode) Key() string {
-	return gn.stringAttr(NODE_KEY)
+	return gn.stringAttr(NodeKey)
 }
 
 /*
 Kind returns a human-readable kind for this node.
 */
 func (gn *graphNode) Kind() string {
-	return gn.stringAttr(NODE_KIND)
+	return gn.stringAttr(NodeKind)
 }
 
 /*
@@ -129,7 +134,7 @@ func (gn *graphNode) Data() map[string]interface{} {
 Name returns a human-readable name for this node.
 */
 func (gn *graphNode) Name() string {
-	return gn.stringAttr(NODE_NAME)
+	return gn.stringAttr(NodeName)
 }
 
 /*
@@ -174,7 +179,7 @@ can be used to provide a full-text search.
 */
 func (gn *graphNode) IndexMap() map[string]string {
 	return createIndexMap(gn, func(attr string) bool {
-		return attr == NODE_KEY || attr == NODE_KIND
+		return attr == NodeKey || attr == NodeKind
 	})
 }
 
@@ -227,7 +232,7 @@ func dataToString(dataType string, gn *graphNode) string {
 	attrlist := make([]string, 0, len(gn.data))
 	maxlen := 0
 
-	for attr, _ := range gn.data {
+	for attr := range gn.data {
 		attrlist = append(attrlist, attr)
 		if alen := len(attr); alen > maxlen {
 			maxlen = alen
@@ -244,7 +249,7 @@ func dataToString(dataType string, gn *graphNode) string {
 		strconv.Itoa(maxlen)+"v : %v\n", "kind", gn.Kind()))
 
 	for _, attr := range attrlist {
-		if attr == NODE_KEY || attr == NODE_KIND {
+		if attr == NodeKey || attr == NodeKind {
 			continue
 		}
 		buf.WriteString(fmt.Sprintf("    %"+

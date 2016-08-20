@@ -9,6 +9,8 @@
  */
 
 /*
+Package graphstorage contains classes which model storage objects for graph data.
+
 Graph storage which stores its data in memory only.
 */
 package graphstorage
@@ -16,17 +18,27 @@ package graphstorage
 import "devt.de/eliasdb/storage"
 
 /*
-Return values for Close and FlushMain calls
+MgsRetClose is the return value on successful close
 */
-var MgsRetClose, MgsRetFlushMain, MgsRetRollbackMain error
+var MgsRetClose error
 
 /*
-MemoryStorageManager data structure
+MgsRetFlushMain is the return value on successful flush
+*/
+var MgsRetFlushMain error
+
+/*
+MgsRetRollbackMain is the return value on successful rollback
+*/
+var MgsRetRollbackMain error
+
+/*
+MemoryGraphStorage data structure
 */
 type MemoryGraphStorage struct {
-	name            string                            // Name of the graph storage
-	mainDB          map[string]string                 // Database storing names
-	storagemanagers map[string]storage.StorageManager // Map of StorageManagers
+	name            string                     // Name of the graph storage
+	mainDB          map[string]string          // Database storing names
+	storagemanagers map[string]storage.Manager // Map of StorageManagers
 }
 
 /*
@@ -34,7 +46,7 @@ NewMemoryGraphStorage creates a new MemoryGraphStorage instance.
 */
 func NewMemoryGraphStorage(name string) GraphStorage {
 	return &MemoryGraphStorage{name, make(map[string]string),
-		make(map[string]storage.StorageManager)}
+		make(map[string]storage.Manager)}
 }
 
 /*
@@ -52,7 +64,7 @@ func (mgs *MemoryGraphStorage) MainDB() map[string]string {
 }
 
 /*
- RollbackMain rollback the main database.
+RollbackMain rollback th/e main database.
 */
 func (mgs *MemoryGraphStorage) RollbackMain() error {
 	return MgsRetRollbackMain
@@ -69,7 +81,7 @@ func (mgs *MemoryGraphStorage) FlushMain() error {
 StorageManager gets a storage manager with a certain name. A non-existing
 StorageManager is not created automatically if the create flag is set to false.
 */
-func (mgs *MemoryGraphStorage) StorageManager(smname string, create bool) storage.StorageManager {
+func (mgs *MemoryGraphStorage) StorageManager(smname string, create bool) storage.Manager {
 
 	sm, ok := mgs.storagemanagers[smname]
 

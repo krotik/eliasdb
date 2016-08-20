@@ -9,6 +9,8 @@
  */
 
 /*
+Package pageview contains object wrappers for different page types.
+
 TransPage is a page which holds data to translate between physical and logical
 slots.
 */
@@ -20,9 +22,9 @@ import (
 )
 
 /*
-Data offset for translation page
+OffsetTransData is the data offset for translation pages
 */
-const OFFSET_TRANS_DATA = view.OFFSET_DATA
+const OffsetTransData = view.OffsetData
 
 /*
 TransPage data structure
@@ -47,7 +49,7 @@ the wrapped record is valid.
 func checkTransPageMagic(record *file.Record) bool {
 	magic := record.ReadInt16(0)
 
-	if magic == view.VIEW_PAGE_HEADER+view.TYPE_TRANSLATION_PAGE {
+	if magic == view.ViewPageHeader+view.TypeTranslationPage {
 		return true
 	}
 	panic("Unexpected header found in TransPage")

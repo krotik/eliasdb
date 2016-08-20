@@ -9,6 +9,8 @@
  */
 
 /*
+Package interpreter contains the EQL interpreter.
+
 Where runtime components.
 */
 package interpreter
@@ -139,9 +141,9 @@ func (rt *whereItemRuntime) numOp(node data.Node, edge data.Edge, op func(float6
 	errDetail := func(tokenVal string, opVal string) string {
 		if tokenVal == opVal {
 			return opVal
-		} else {
-			return tokenVal + "=" + opVal
 		}
+
+		return tokenVal + "=" + opVal
 	}
 
 	// Parse the values to numbers
@@ -179,9 +181,9 @@ func (rt *whereItemRuntime) listOp(node data.Node, edge data.Edge, op func(inter
 	errDetail := func(tokenVal string, opVal string) string {
 		if tokenVal == opVal {
 			return opVal
-		} else {
-			return tokenVal + "=" + opVal
 		}
+
+		return tokenVal + "=" + opVal
 	}
 
 	// Parse right value to a list
@@ -305,7 +307,7 @@ func (rt *whereRuntime) Validate() error {
 
 		// Determine which values should be interpreted as node attributes
 
-		if astNode.Name == parser.N_VALUE {
+		if astNode.Name == parser.NodeVALUE {
 			val := astNode.Token.Val
 			lcval := strings.ToLower(val)
 
@@ -802,9 +804,9 @@ func (rt *likeRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, er
 
 	if rt.compiledRegex == nil {
 		return rt.regexOp(node, edge, func(res1 string, res2 *regexp.Regexp) interface{} { return res2.MatchString(res1) })
-	} else {
-		return rt.stringOp(node, edge, func(res1 string, res2 string) interface{} { return rt.compiledRegex.MatchString(res1) })
 	}
+
+	return rt.stringOp(node, edge, func(res1 string, res2 string) interface{} { return rt.compiledRegex.MatchString(res1) })
 }
 
 /*

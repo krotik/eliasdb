@@ -8,7 +8,9 @@
  */
 
 /*
-A persistent map storing binary values.
+Package datautil contains general data handling objects and helper methods.
+
+A persistent map storing string values.
 */
 package datautil
 
@@ -18,7 +20,7 @@ import (
 )
 
 /*
-Persistent map datastructure.
+PersistentMap datastructure.
 */
 type PersistentMap struct {
 	filename string            // File of the persistent map
@@ -26,7 +28,7 @@ type PersistentMap struct {
 }
 
 /*
-Create a new persistent map.
+NewPersistentMap creates a new persistent map.
 */
 func NewPersistentMap(filename string) (*PersistentMap, error) {
 	pm := &PersistentMap{filename, make(map[string]string)}
@@ -34,7 +36,7 @@ func NewPersistentMap(filename string) (*PersistentMap, error) {
 }
 
 /*
-Load persistent map from a file.
+LoadPersistentMap loads a persistent map from a file.
 */
 func LoadPersistentMap(filename string) (*PersistentMap, error) {
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0660)
@@ -51,7 +53,7 @@ func LoadPersistentMap(filename string) (*PersistentMap, error) {
 }
 
 /*
-Write contents of the persistent map to disk.
+Flush writes contents of the persistent map to the disk.
 */
 func (pm *PersistentMap) Flush() error {
 	file, err := os.OpenFile(pm.filename, os.O_CREATE|os.O_RDWR, 0660)

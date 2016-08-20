@@ -35,7 +35,7 @@ func TestRecordInitialisation(t *testing.T) {
 	rdata := []byte("This is a test")
 	r = NewRecord(123, rdata)
 
-	id := r.Id()
+	id := r.ID()
 	if id != 123 {
 		t.Error("Unexpected id:", id)
 	}
@@ -73,13 +73,13 @@ func TestTransactionCounter(t *testing.T) {
 		t.Error("Record should be in transaction after the transaction count was increased.")
 	}
 
-	if r.SetId(567) == nil {
+	if r.SetID(567) == nil {
 		t.Error("It should not be possible to change the record id while in a transaction.")
 	}
 
 	r.DecTransCount()
 
-	if r.SetId(789); r.Id() != 789 {
+	if r.SetID(789); r.ID() != 789 {
 		t.Error("It should be possible to change the record id outside of a transaction.")
 	}
 
@@ -103,7 +103,7 @@ func testTransactionCountPanic(t *testing.T, r *Record) {
 func TestReadAndWrite(t *testing.T) {
 	r := NewRecord(123, make([]byte, 20))
 
-	r.WriteByte(3, 0x42)
+	r.WriteSingleByte(3, 0x42)
 
 	if r.data[3] != 0x42 {
 		t.Error("Unexpected value in read/write test", r.data[3], "expected: 0x42")
@@ -119,10 +119,10 @@ func TestReadAndWrite(t *testing.T) {
 		t.Error("Record should not be marked as dirty after clearing flag.")
 	}
 
-	r.WriteByte(0, 0xff)
-	showRWTestResult(t, r.ReadByte(0) == byte(0xff), "a byte")
-	r.WriteByte(0, 0x01)
-	showRWTestResult(t, r.ReadByte(0) == byte(0x01), "a byte")
+	r.WriteSingleByte(0, 0xff)
+	showRWTestResult(t, r.ReadSingleByte(0) == byte(0xff), "a byte")
+	r.WriteSingleByte(0, 0x01)
+	showRWTestResult(t, r.ReadSingleByte(0) == byte(0x01), "a byte")
 
 	r.WriteUInt16(0, 0x1234)
 	showRWTestResult(t, r.ReadUInt16(0) == uint16(0x1234), "an uint16")
@@ -169,9 +169,9 @@ func showRWTestResult(t *testing.T, res bool, operation string) {
 func TestMarshalBinary(t *testing.T) {
 	r := NewRecord(123, make([]byte, 20))
 
-	r.WriteByte(0, 0x41)
-	r.WriteByte(3, 0x42)
-	r.WriteByte(19, 0x43)
+	r.WriteSingleByte(0, 0x41)
+	r.WriteSingleByte(3, 0x42)
+	r.WriteSingleByte(19, 0x43)
 
 	r.transCount = 19
 

@@ -9,6 +9,8 @@
  */
 
 /*
+Package graph contains the main API to the graph datastore.
+
 A graph manager handles the graph storage and provides the API for
 the graph database.
 
@@ -64,9 +66,9 @@ import (
 )
 
 /*
-GraphManager data structure
+Manager data structure
 */
-type GraphManager struct {
+type Manager struct {
 	gs       graphstorage.GraphStorage    // Graph storage of this graph manager
 	gr       *graphRulesManager           // Manager for graph rules
 	nm       *util.NamesManager           // Manager object which manages name encodings
@@ -77,7 +79,7 @@ type GraphManager struct {
 /*
 NewGraphManager returns a new GraphManager instance.
 */
-func NewGraphManager(gs graphstorage.GraphStorage) *GraphManager {
+func NewGraphManager(gs graphstorage.GraphStorage) *Manager {
 	gm := createGraphManager(gs)
 
 	gm.SetGraphRule(&SystemRuleDeleteNodeEdges{})
@@ -89,15 +91,15 @@ func NewGraphManager(gs graphstorage.GraphStorage) *GraphManager {
 /*
 createGraphManager creates a new GraphManager instance.
 */
-func createGraphManager(gs graphstorage.GraphStorage) *GraphManager {
+func createGraphManager(gs graphstorage.GraphStorage) *Manager {
 
 	mdb := gs.MainDB()
 
 	// Check version
 
-	if version, ok := mdb[MAINDB_VERSION]; !ok {
+	if version, ok := mdb[MainDBVersion]; !ok {
 
-		mdb[MAINDB_VERSION] = strconv.Itoa(VERSION)
+		mdb[MainDBVersion] = strconv.Itoa(VERSION)
 		gs.FlushMain()
 
 	} else {
@@ -111,13 +113,13 @@ func createGraphManager(gs graphstorage.GraphStorage) *GraphManager {
 
 			// Update the version if it is older
 
-			mdb[MAINDB_VERSION] = strconv.Itoa(VERSION)
+			mdb[MainDBVersion] = strconv.Itoa(VERSION)
 			gs.FlushMain()
 		}
 	}
 
-	gm := &GraphManager{gs, &graphRulesManager{nil, make(map[string]GraphRule),
-		make(map[int]map[string]GraphRule)}, util.NewNamesManager(mdb),
+	gm := &Manager{gs, &graphRulesManager{nil, make(map[string]Rule),
+		make(map[int]map[string]Rule)}, util.NewNamesManager(mdb),
 		make(map[string]map[string]string), &sync.RWMutex{}}
 
 	gm.gr.gm = gm
@@ -128,28 +130,28 @@ func createGraphManager(gs graphstorage.GraphStorage) *GraphManager {
 /*
 Name returns the name of this graph manager.
 */
-func (gm *GraphManager) Name() string {
+func (gm *Manager) Name() string {
 	return fmt.Sprint("Graph ", gm.gs.Name())
 }
 
 /*
 SetGraphRule sets a GraphRule.
 */
-func (gm *GraphManager) SetGraphRule(rule GraphRule) {
+func (gm *Manager) SetGraphRule(rule Rule) {
 	gm.gr.SetGraphRule(rule)
 }
 
 /*
 GraphRules returns a list of all available graph rules.
 */
-func (gm *GraphManager) GraphRules() []string {
+func (gm *Manager) GraphRules() []string {
 	return gm.gr.GraphRules()
 }
 
 /*
 NodeIndexQuery returns an object to query the full text search index for nodes.
 */
-func (gm *GraphManager) NodeIndexQuery(part string, kind string) (IndexQuery, error) {
+func (gm *Manager) NodeIndexQuery(part string, kind string) (IndexQuery, error) {
 	iht, err := gm.getNodeIndexHTree(part, kind, false)
 	if err != nil || iht == nil {
 		return nil, err
@@ -161,7 +163,7 @@ func (gm *GraphManager) NodeIndexQuery(part string, kind string) (IndexQuery, er
 /*
 EdgeIndexQuery returns an object to query the full text search index for edges.
 */
-func (gm *GraphManager) EdgeIndexQuery(part string, kind string) (IndexQuery, error) {
+func (gm *Manager) EdgeIndexQuery(part string, kind string) (IndexQuery, error) {
 	iht, err := gm.getEdgeIndexHTree(part, kind, false)
 	if err != nil || iht == nil {
 		return nil, err
@@ -173,55 +175,55 @@ func (gm *GraphManager) EdgeIndexQuery(part string, kind string) (IndexQuery, er
 /*
 Partitions returns all existing partitions.
 */
-func (gm *GraphManager) Partitions() []string {
-	return gm.mainStringList(MAINDB_PARTS)
+func (gm *Manager) Partitions() []string {
+	return gm.mainStringList(MainDBParts)
 }
 
 /*
 NodeKinds returns all possible node kinds.
 */
-func (gm *GraphManager) NodeKinds() []string {
-	return gm.mainStringList(MAINDB_NODE_KINDS)
+func (gm *Manager) NodeKinds() []string {
+	return gm.mainStringList(MainDBNodeKinds)
 }
 
 /*
 EdgeKinds returns all possible node kinds.
 */
-func (gm *GraphManager) EdgeKinds() []string {
-	return gm.mainStringList(MAINDB_EDGE_KINDS)
+func (gm *Manager) EdgeKinds() []string {
+	return gm.mainStringList(MainDBEdgeKinds)
 }
 
 /*
 NodeAttrs returns all possible node attributes for a given node kind.
 */
-func (gm *GraphManager) NodeAttrs(kind string) []string {
-	return gm.mainStringList(MAINDB_NODE_ATTRS + kind)
+func (gm *Manager) NodeAttrs(kind string) []string {
+	return gm.mainStringList(MainDBNodeAttrs + kind)
 }
 
 /*
 NodeEdges returns all possible node edge specs for a given node kind.
 */
-func (gm *GraphManager) NodeEdges(kind string) []string {
-	return gm.mainStringList(MAINDB_NODE_EDGES + kind)
+func (gm *Manager) NodeEdges(kind string) []string {
+	return gm.mainStringList(MainDBNodeEdges + kind)
 }
 
 /*
 EdgeAttrs returns all possible edge attributes for a given edge kind.
 */
-func (gm *GraphManager) EdgeAttrs(kind string) []string {
-	return gm.mainStringList(MAINDB_EDGE_ATTRS + kind)
+func (gm *Manager) EdgeAttrs(kind string) []string {
+	return gm.mainStringList(MainDBEdgeAttrs + kind)
 }
 
 /*
 mainStringList return a list in the MainDB.
 */
-func (gm *GraphManager) mainStringList(name string) []string {
+func (gm *Manager) mainStringList(name string) []string {
 	items := gm.getMainDBMap(name)
 
-	ret := make([]string, 0)
+	var ret []string
 
 	if items != nil {
-		for item, _ := range items {
+		for item := range items {
 			ret = append(ret, item)
 		}
 	}
@@ -232,13 +234,13 @@ func (gm *GraphManager) mainStringList(name string) []string {
 }
 
 /*
-Check if a given string can be a valid node attribute.
+IsValidAttr checks if a given string can be a valid node attribute.t
 */
-func (gm *GraphManager) IsValidAttr(attr string) bool {
+func (gm *Manager) IsValidAttr(attr string) bool {
 	return gm.nm.Encode32(attr, false) != "" ||
-		attr == data.NODE_KEY || attr == data.NODE_KIND ||
-		attr == data.EDGE_END1_KEY || attr == data.EDGE_END1_KIND ||
-		attr == data.EDGE_END1_ROLE || attr == data.EDGE_END1_CASCADING ||
-		attr == data.EDGE_END2_KEY || attr == data.EDGE_END2_KIND ||
-		attr == data.EDGE_END2_ROLE || attr == data.EDGE_END2_CASCADING
+		attr == data.NodeKey || attr == data.NodeKind ||
+		attr == data.EdgeEnd1Key || attr == data.EdgeEnd1Kind ||
+		attr == data.EdgeEnd1Role || attr == data.EdgeEnd1Cascading ||
+		attr == data.EdgeEnd2Key || attr == data.EdgeEnd2Kind ||
+		attr == data.EdgeEnd2Role || attr == data.EdgeEnd2Cascading
 }

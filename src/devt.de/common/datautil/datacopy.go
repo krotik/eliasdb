@@ -8,6 +8,8 @@
  */
 
 /*
+Package datautil contains general data handling objects and helper methods.
+
 Common functions for copying data.
 */
 package datautil
@@ -19,13 +21,16 @@ import (
 	"devt.de/common/pools"
 )
 
-var BufferPool = pools.NewByteBufferPool()
+/*
+bufferPool holds buffers which are used to copy objects.
+*/
+var bufferPool = pools.NewByteBufferPool()
 
 /*
 CopyObject copies contents of a given object reference to another given object reference.
 */
 func CopyObject(src interface{}, dest interface{}) error {
-	bb := BufferPool.Get().(*bytes.Buffer)
+	bb := bufferPool.Get().(*bytes.Buffer)
 
 	err := gob.NewEncoder(bb).Encode(src)
 
@@ -40,7 +45,7 @@ func CopyObject(src interface{}, dest interface{}) error {
 	}
 
 	bb.Reset()
-	BufferPool.Put(bb)
+	bufferPool.Put(bb)
 
 	return nil
 }

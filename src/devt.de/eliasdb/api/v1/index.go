@@ -9,6 +9,8 @@
  */
 
 /*
+Package v1 contains EliasDB REST API Version 1.
+
 REST endpoint to handle index queries.
 
 /index
@@ -60,9 +62,9 @@ import (
 )
 
 /*
-Query endpoint definition (rooted). Handles everything under index/...
+EndpointIndexQuery is the index endpoint URL (rooted). Handles everything under index/...
 */
-const ENDPOINT_INDEX_QUERY = api.API_ROOT + API_VERSION_V1 + "/index/"
+const EndpointIndexQuery = api.APIRoot + APIv1 + "/index/"
 
 /*
 IndexEndpointInst creates a new endpoint handler.
@@ -81,7 +83,7 @@ type indexEndpoint struct {
 /*
 HandleGET handles a search query REST call.
 */
-func (eq *indexEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
+func (ie *indexEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
 
 	var err error
 
@@ -169,7 +171,7 @@ func (eq *indexEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resou
 /*
 SwaggerDefs is used to describe the endpoint in swagger.
 */
-func (ge *indexEndpoint) SwaggerDefs(s map[string]interface{}) {
+func (ie *indexEndpoint) SwaggerDefs(s map[string]interface{}) {
 
 	s["paths"].(map[string]interface{})["/v1/index/{partition}/{entity_type}/{kind}"] = map[string]interface{}{
 		"get": map[string]interface{}{

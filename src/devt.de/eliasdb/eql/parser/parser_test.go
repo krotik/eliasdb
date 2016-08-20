@@ -71,7 +71,7 @@ func TestSimpleExpressionParsing(t *testing.T) {
 	// Test prefix operator
 
 	input = ` + a - -5`
-	expected_output := `
+	expectedOutput := `
 minus
   plus
     value: "a"
@@ -79,15 +79,15 @@ minus
     value: "5"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
 	// Test simple arithmetics
 
 	input = "a + b * 5 /2"
-	expected_output = `
+	expectedOutput = `
 plus
   value: "a"
   div
@@ -97,15 +97,15 @@ plus
     value: "2"
 `[1:]
 
-	if res, err := ParseWithRuntime("mytest", input, &TestRuntimeProvider{}); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := ParseWithRuntime("mytest", input, &TestRuntimeProvider{}); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
 	// Test brackets
 
 	input = "a + 1 * (5 + 6)"
-	expected_output = `
+	expectedOutput = `
 plus
   value: "a"
   times
@@ -115,13 +115,13 @@ plus
       value: "6"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
 	input = "(a + 1) * 5 / (6 - 2)"
-	expected_output = `
+	expectedOutput = `
 div
   times
     plus
@@ -133,13 +133,13 @@ div
     value: "2"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
 	input = "a + 1 * [1,2,[1,2],3]"
-	expected_output = `
+	expectedOutput = `
 plus
   value: "a"
   times
@@ -153,15 +153,15 @@ plus
       value: "3"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
 	// Test logical operators
 
 	input = "not (a + 1) * 5 and tRue or not 1 - 5 != !test"
-	expected_output = `
+	expectedOutput = `
 or
   and
     not
@@ -179,8 +179,8 @@ or
       value: "!test"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 }
@@ -191,7 +191,7 @@ func TestQueryParsing(t *testing.T) {
 
 	input := `
 GeT Song FROM group test`
-	expected_output := `
+	expectedOutput := `
 get
   value: "Song"
   from
@@ -199,8 +199,8 @@ get
       value: "test"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
@@ -209,7 +209,7 @@ get
 	input = `
 lOOkup Song "a","b","c", "blaД"
 FROM group test`
-	expected_output = `
+	expectedOutput = `
 lookup
   value: "Song"
   value: "a"
@@ -221,8 +221,8 @@ lookup
       value: "test"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
@@ -230,7 +230,7 @@ lookup
 
 	input = `
 GeT bla FROM group test where x = 1 AND b = -1 where True`
-	expected_output = `
+	expectedOutput = `
 get
   value: "bla"
   from
@@ -249,8 +249,8 @@ get
     true
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
@@ -258,7 +258,7 @@ get
 
 	input = `
 GeT bla TraverSE :::bla where true or false TraverSE test:::xxx where false TraverSE :::ttt where true END END END where 1 = 1`
-	expected_output = `
+	expectedOutput = `
 get
   value: "bla"
   traverse
@@ -281,8 +281,8 @@ get
       value: "1"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
@@ -290,7 +290,7 @@ get
 
 	input = `
 GeT Song where @a() or @count("File:File:StoredData:Data") > 1 and @boolfunc1(123,"test", aaa)`
-	expected_output = `
+	expectedOutput = `
 get
   value: "Song"
   where
@@ -310,8 +310,8 @@ get
           value: "aaa"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 }
@@ -322,7 +322,7 @@ func TestShowParsing(t *testing.T) {
 
 	input := `
 get song where true primary 1:song show name, state`
-	expected_output := `
+	expectedOutput := `
 get
   value: "song"
   where
@@ -334,14 +334,14 @@ get
     showterm: "state"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
 	input = `
 get song where true primary 1:song show name, state, @test(12, r"34") AS Bla FORMAT x, key`
-	expected_output = `
+	expectedOutput = `
 get
   value: "song"
   where
@@ -363,15 +363,14 @@ get
     showterm: "key"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
-
 	input = `
 get song where true primary 1:song show @test(12, r"34") format x`
-	expected_output = `
+	expectedOutput = `
 get
   value: "song"
   where
@@ -388,8 +387,8 @@ get
         value: "x"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
@@ -398,7 +397,7 @@ get song where true primary 1:song show
 Song:title AS r'Title (mytitle)',
 r'Song!2:t title' AS "Title test" FORMAT text:bla_bla_blub:dudududu,
 x:kind`
-	expected_output = `
+	expectedOutput = `
 get
   value: "song"
   where
@@ -417,14 +416,14 @@ get
     showterm: "x:kind"
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 
 	input = `
 get song where true // 'div' show bla wIth orderinG(ASCending aa,Descending bb), FILTERING(ISNOTNULL test2,UNIQUE test3, uniquecount test3), nulltraversal(true)`
-	expected_output = `
+	expectedOutput = `
 get
   value: "song"
   where
@@ -450,8 +449,8 @@ get
       true
 `[1:]
 
-	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expected_output {
-		t.Error("Unexpected parser output:\n", res, "expected was:\n", expected_output, "Error:", err)
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
 		return
 	}
 }
@@ -491,9 +490,9 @@ func TestParserErrorCases(t *testing.T) {
 	// Test "Get" parsing with invalid lexer output
 
 	res, err := testParserRun([]LexToken{
-		LexToken{T_GET, 1, "", 1, 1},
-		LexToken{T_GET, 1, "", 1, 1},
-		LexToken{T_EOF, 1, "", 1, 1},
+		LexToken{TokenGET, 1, "", 1, 1},
+		LexToken{TokenGET, 1, "", 1, 1},
+		LexToken{TokenEOF, 1, "", 1, 1},
 	})
 	if err.Error() != "Parse error in special test: Unexpected term (Line:1 Pos:1)" {
 		t.Error("Unexpected result", res, err)
@@ -501,9 +500,9 @@ func TestParserErrorCases(t *testing.T) {
 	}
 
 	res, err = testParserRun([]LexToken{
-		LexToken{T_LOOKUP, 1, "", 1, 1},
-		LexToken{T_GET, 1, "", 1, 1},
-		LexToken{T_EOF, 1, "", 1, 1},
+		LexToken{TokenLOOKUP, 1, "", 1, 1},
+		LexToken{TokenGET, 1, "", 1, 1},
+		LexToken{TokenEOF, 1, "", 1, 1},
 	})
 	if err.Error() != "Parse error in special test: Unexpected term (Line:1 Pos:1)" {
 		t.Error("Unexpected result", res, err)
@@ -606,11 +605,11 @@ func TestParserErrorCases(t *testing.T) {
 		return
 	}
 
-	var T_Unknown LexTokenId = -5
+	var TokenUnknown LexTokenID = -5
 
 	res, err = testParserRun([]LexToken{
-		LexToken{T_Unknown, 1, "", 1, 1},
-		LexToken{T_EOF, 1, "", 1, 1},
+		LexToken{TokenUnknown, 1, "", 1, 1},
+		LexToken{TokenEOF, 1, "", 1, 1},
 	})
 	if err.Error() != "Parse error in special test: Unknown term (id:-5 (\"\")) (Line:1 Pos:1)" {
 		t.Error("Unexpected result", res, err)
@@ -618,10 +617,10 @@ func TestParserErrorCases(t *testing.T) {
 	}
 
 	res, err = testParserRun([]LexToken{
-		LexToken{T_VALUE, 1, "", 1, 1},
-		LexToken{T_MINUS, 1, "", 1, 1},
-		LexToken{T_Unknown, 1, "", 1, 1},
-		LexToken{T_EOF, 1, "", 1, 1},
+		LexToken{TokenVALUE, 1, "", 1, 1},
+		LexToken{TokenMINUS, 1, "", 1, 1},
+		LexToken{TokenUnknown, 1, "", 1, 1},
+		LexToken{TokenEOF, 1, "", 1, 1},
 	})
 	if err.Error() != "Parse error in special test: Unknown term (id:-5 (\"\")) (Line:1 Pos:1)" {
 		t.Error("Unexpected result", res, err)
@@ -648,11 +647,13 @@ func testParserRun(tokens []LexToken) (*ASTNode, error) {
 
 	p := &parser{"special test", nil, tokenChan, nil}
 
-	if node, err := p.next(); err != nil {
+	node, err := p.next()
+
+	if err != nil {
 		return nil, err
-	} else {
-		p.node = node
 	}
+
+	p.node = node
 
 	return p.run(0)
 }

@@ -150,12 +150,12 @@ func TestErrors(t *testing.T) {
 
 	// Test simple eval error
 
-	generalProviderMap[parser.N_GET] = invalidRuntimeInst
+	generalProviderMap[parser.NodeGET] = invalidRuntimeInst
 
 	if err := runSearch("get mynode", "", rt); err.Error() !=
 		"EQL error in test: Invalid construct (get) (Line:1 Pos:1)" {
 		t.Error(err)
-		delete(generalProviderMap, parser.N_GET)
+		delete(generalProviderMap, parser.NodeGET)
 		return
 	}
 
@@ -171,7 +171,7 @@ func TestErrors(t *testing.T) {
 		return
 	}
 
-	delete(generalProviderMap, parser.N_GET)
+	delete(generalProviderMap, parser.NodeGET)
 
 	// Test validation errors
 
@@ -219,9 +219,9 @@ func TestErrors(t *testing.T) {
 
 	// Test datastore errors
 
-	msm := mgs.StorageManager("main"+"mynode"+graph.STORAGE_SUFFIX_NODES, false).(*storage.MemoryStorageManager)
+	msm := mgs.StorageManager("main"+"mynode"+graph.StorageSuffixNodes, false).(*storage.MemoryStorageManager)
 
-	msm.AccessMap[1] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[1] = storage.AccessCacheAndFetchError
 
 	if err := runSearch("get mynode", "", rt); err.Error() !=
 		"GraphError: Failed to access graph storage component (Slot not found (mystorage/mainmynode.nodes - Location:1))" {
@@ -233,7 +233,7 @@ func TestErrors(t *testing.T) {
 
 	// Test nextStartKey error
 
-	msm.AccessMap[1] = storage.ACCESS_CACHE_AND_FETCH_SERIOUS_ERROR
+	msm.AccessMap[1] = storage.AccessCacheAndFetchSeriousError
 
 	if _, err := rt.nextStartKey(); err.Error() != "GraphError: Could not read graph information (Record is already in-use (? - ))" {
 		t.Error(err)
@@ -244,7 +244,7 @@ func TestErrors(t *testing.T) {
 
 	// Test FetchNodePart error
 
-	msm.AccessMap[3] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	msm.AccessMap[3] = storage.AccessCacheAndFetchError
 
 	if err := runSearch("get mynode", "", rt); err.Error() !=
 		"GraphError: Could not read graph information (Slot not found (mystorage/mainmynode.nodes - Location:3))" {
@@ -256,9 +256,9 @@ func TestErrors(t *testing.T) {
 
 	// Test TraverseMulti errors
 
-	msm = mgs.StorageManager("main"+"mynewnode"+graph.STORAGE_SUFFIX_NODES, false).(*storage.MemoryStorageManager)
+	msm = mgs.StorageManager("main"+"mynewnode"+graph.StorageSuffixNodes, false).(*storage.MemoryStorageManager)
 
-	msm.AccessMap[5] = storage.ACCESS_CACHE_AND_FETCH_ERROR // Node 3 attribute lookup
+	msm.AccessMap[5] = storage.AccessCacheAndFetchError // Node 3 attribute lookup
 
 	if err := runSearch("get mynode traverse :::mynewnode traverse :::mynewnode end end", "", rt); err.Error() !=
 		"GraphError: Could not read graph information (Slot not found (mystorage/mainmynewnode.nodes - Location:5))" {
@@ -268,7 +268,7 @@ func TestErrors(t *testing.T) {
 
 	delete(msm.AccessMap, 5)
 
-	msm.AccessMap[11] = storage.ACCESS_CACHE_AND_FETCH_ERROR // Traversal spec error
+	msm.AccessMap[11] = storage.AccessCacheAndFetchError // Traversal spec error
 
 	if err := runSearch("get mynode traverse :::mynewnode traverse :::mynewnode end end", "", rt); err.Error() !=
 		"GraphError: Could not read graph information (Slot not found (mystorage/mainmynewnode.nodes - Location:11))" {
@@ -278,13 +278,13 @@ func TestErrors(t *testing.T) {
 
 	delete(msm.AccessMap, 11)
 
-	msm = mgs.StorageManager("main"+"myedge"+graph.STORAGE_SUFFIX_EDGES, false).(*storage.MemoryStorageManager)
+	msm = mgs.StorageManager("main"+"myedge"+graph.StorageSuffixEdges, false).(*storage.MemoryStorageManager)
 
-	msmtree, _ := hash.LoadHTree(msm, msm.Root(graph.ROOT_ID_NODE_HTREE))
+	msmtree, _ := hash.LoadHTree(msm, msm.Root(graph.RootIDNodeHTree))
 	nm := util.NewNamesManager(mgs.MainDB())
-	_, slot, _ := msmtree.GetValueAndLocation([]byte(graph.PREFIX_NS_ATTR + "abc2" + nm.Encode32("name", false)))
+	_, slot, _ := msmtree.GetValueAndLocation([]byte(graph.PrefixNSAttr + "abc2" + nm.Encode32("name", false)))
 
-	msm.AccessMap[slot] = storage.ACCESS_CACHE_AND_FETCH_ERROR // Edge attribute
+	msm.AccessMap[slot] = storage.AccessCacheAndFetchError // Edge attribute
 
 	if err := runSearch("get mynode traverse :::mynewnode end show 1:n:key, 2:n:key, 2:e:key, 2:e:name", "", rt); strings.HasPrefix(err.Error(),
 		"GraphError: Could not read graph information (Slot not found (mystorage/mainmynewnode.nodes - ") {
@@ -379,7 +379,7 @@ func TestErrors(t *testing.T) {
 	}
 
 	ast.Runtime.(*getRuntime).rtp.colData[0] = "0:e:test"
-	ALLOW_MULTI_EVAL = true
+	allowMultiEval = true
 
 	if _, err = ast.Runtime.Eval(); err.Error() !=
 		"EQL result error in test: Invalid column data spec (Invalid data index: 0:e:test)" {
@@ -387,7 +387,7 @@ func TestErrors(t *testing.T) {
 		return
 	}
 
-	ALLOW_MULTI_EVAL = false
+	allowMultiEval = false
 
 	ast.Runtime.(*getRuntime).rtp.colData[0] = "1:e:test"
 
@@ -401,14 +401,14 @@ func TestErrors(t *testing.T) {
 		return "000", nil
 	}
 
-	ALLOW_MULTI_EVAL = true
+	allowMultiEval = true
 
 	if _, err = ast.Runtime.Eval(); err.Error() != "testerror" {
 		t.Error(err)
 		return
 	}
 
-	ALLOW_MULTI_EVAL = false
+	allowMultiEval = false
 
 	ast.Runtime.(*getRuntime).rtp.nextStartKey = oldNextStartKey
 
@@ -499,7 +499,7 @@ Data: 1:n:key, 2:n:key, 3:n:key, 4:n:key
 
 	ast.Runtime.Validate()
 
-	ALLOW_MULTI_EVAL = true
+	allowMultiEval = true
 	grt.eqlRuntimeProvider.allowNilTraversal = true
 
 	res, err = ast.Runtime.Eval()
@@ -529,7 +529,7 @@ Data: 1:n:key, 2:n:key, 3:n:key, 4:n:key
 		return
 	}
 
-	ALLOW_MULTI_EVAL = false
+	allowMultiEval = false
 
 	// Test showing the traversal attributes in reverse order
 
@@ -578,7 +578,7 @@ Data: 3:n:key, 2:n:key, 1:n:key
 	}
 }
 
-func simpleGraph() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
+func simpleGraph() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 
 	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
 	gm := graph.NewGraphManager(mgs)
@@ -589,17 +589,17 @@ func simpleGraph() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
 		edge.SetAttr("key", key)
 		edge.SetAttr("kind", "myedge")
 
-		edge.SetAttr(data.EDGE_END1_KEY, node1.Key())
-		edge.SetAttr(data.EDGE_END1_KIND, node1.Kind())
-		edge.SetAttr(data.EDGE_END1_ROLE, "node1")
-		edge.SetAttr(data.EDGE_END1_CASCADING, true)
+		edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+		edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+		edge.SetAttr(data.EdgeEnd1Role, "node1")
+		edge.SetAttr(data.EdgeEnd1Cascading, true)
 
-		edge.SetAttr(data.EDGE_END2_KEY, node2.Key())
-		edge.SetAttr(data.EDGE_END2_KIND, node2.Kind())
-		edge.SetAttr(data.EDGE_END2_ROLE, "node2")
-		edge.SetAttr(data.EDGE_END2_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+		edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+		edge.SetAttr(data.EdgeEnd2Role, "node2")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
 
-		edge.SetAttr(data.NODE_NAME, "Edge1"+key)
+		edge.SetAttr(data.NodeName, "Edge1"+key)
 
 		return edge
 	}
@@ -650,7 +650,7 @@ func simpleGraph() (*graph.GraphManager, *graphstorage.MemoryGraphStorage) {
 	return gm, mgs.(*graphstorage.MemoryGraphStorage)
 }
 
-func multiKindGraph() *graph.GraphManager {
+func multiKindGraph() *graph.Manager {
 
 	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
 	gm := graph.NewGraphManager(mgs)
@@ -661,17 +661,17 @@ func multiKindGraph() *graph.GraphManager {
 		edge.SetAttr("key", key)
 		edge.SetAttr("kind", "myedge")
 
-		edge.SetAttr(data.EDGE_END1_KEY, node1.Key())
-		edge.SetAttr(data.EDGE_END1_KIND, node1.Kind())
-		edge.SetAttr(data.EDGE_END1_ROLE, "src")
-		edge.SetAttr(data.EDGE_END1_CASCADING, true)
+		edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+		edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+		edge.SetAttr(data.EdgeEnd1Role, "src")
+		edge.SetAttr(data.EdgeEnd1Cascading, true)
 
-		edge.SetAttr(data.EDGE_END2_KEY, node2.Key())
-		edge.SetAttr(data.EDGE_END2_KIND, node2.Kind())
-		edge.SetAttr(data.EDGE_END2_ROLE, "dest")
-		edge.SetAttr(data.EDGE_END2_CASCADING, false)
+		edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+		edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+		edge.SetAttr(data.EdgeEnd2Role, "dest")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
 
-		edge.SetAttr(data.NODE_NAME, "edge:"+key)
+		edge.SetAttr(data.NodeName, "edge:"+key)
 
 		return edge
 	}

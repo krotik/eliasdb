@@ -94,7 +94,7 @@ func TestFreePhysicalSlotManager(t *testing.T) {
 
 	// Check pages are allocated
 
-	cursor := paging.NewPageCursor(fpsm.pager, view.TYPE_FREE_PHYSICAL_SLOT_PAGE, 0)
+	cursor := paging.NewPageCursor(fpsm.pager, view.TypeFreePhysicalSlotPage, 0)
 
 	if page, err := cursor.Next(); page != 1 || err != nil {
 		t.Error("Unexpected free physical slot page:", page, err)
@@ -105,17 +105,17 @@ func TestFreePhysicalSlotManager(t *testing.T) {
 		return
 	}
 
-	page := fpsm.pager.First(view.TYPE_FREE_PHYSICAL_SLOT_PAGE)
+	page := fpsm.pager.First(view.TypeFreePhysicalSlotPage)
 	if page != 1 {
 		t.Error("Unexpected first free physical slot page")
 		return
 	}
 
-	fpsp_rec, err := sf.Get(1)
+	fpspRec, err := sf.Get(1)
 	if err != nil {
 		t.Error(err)
 	}
-	fpsp := pageview.NewFreePhysicalSlotPage(fpsp_rec)
+	fpsp := pageview.NewFreePhysicalSlotPage(fpspRec)
 
 	if fsc := fpsp.FreeSlotCount(); fsc != 2 {
 		t.Error("Unexpected number of stored free slots", fsc)
@@ -133,7 +133,7 @@ func TestFreePhysicalSlotManager(t *testing.T) {
 		return
 	}
 
-	sf.ReleaseInUse(fpsp_rec)
+	sf.ReleaseInUse(fpspRec)
 
 	// Check that we can find them
 
@@ -227,7 +227,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := sf.ReleaseInUseId(1, false); err != nil {
+	if err := sf.ReleaseInUseID(1, false); err != nil {
 		t.Error(err)
 		return
 	}
@@ -246,7 +246,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := shadow.ReleaseInUseId(1, false); err != nil {
+	if err := shadow.ReleaseInUseID(1, false); err != nil {
 		t.Error(err)
 		return
 	}
@@ -262,7 +262,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 
 	// Count the allocated pages
 
-	c, err := paging.CountPages(fpsm.pager, view.TYPE_FREE_PHYSICAL_SLOT_PAGE)
+	c, err := paging.CountPages(fpsm.pager, view.TypeFreePhysicalSlotPage)
 	if c != 15 || err != nil {
 		t.Error("Unexpected counting result:", c, err)
 		return
@@ -298,7 +298,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := sf.ReleaseInUseId(2, false); err != nil {
+	if err := sf.ReleaseInUseID(2, false); err != nil {
 		t.Error(err)
 		return
 	}
@@ -326,7 +326,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := sf.ReleaseInUseId(3, false); err != nil {
+	if err := sf.ReleaseInUseID(3, false); err != nil {
 		t.Error(err)
 		return
 	}
@@ -361,7 +361,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := sf.ReleaseInUseId(2, false); err != nil {
+	if err := sf.ReleaseInUseID(2, false); err != nil {
 		t.Error(err)
 		return
 	}

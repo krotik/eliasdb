@@ -112,10 +112,10 @@ func TestSanityChecks(t *testing.T) {
 		return
 	}
 
-	gs.StorageManager("blabla"+STORAGE_SUFFIX_NODES, true)
-	gs.StorageManager("blabla"+STORAGE_SUFFIX_NODES_INDEX, true)
-	gs.StorageManager("blabla"+STORAGE_SUFFIX_EDGES, true)
-	gs.StorageManager("blabla"+STORAGE_SUFFIX_EDGES_INDEX, true)
+	gs.StorageManager("blabla"+StorageSuffixNodes, true)
+	gs.StorageManager("blabla"+StorageSuffixNodesIndex, true)
+	gs.StorageManager("blabla"+StorageSuffixEdges, true)
+	gs.StorageManager("blabla"+StorageSuffixEdgesIndex, true)
 
 	storage.MsmRetFlush = errors.New("Test")
 
@@ -247,24 +247,11 @@ func TestSanityChecks(t *testing.T) {
 		return
 	}
 
-	sm := gm.gs.StorageManager("mypart"+"mykind"+STORAGE_SUFFIX_NODES, false)
+	sm := gm.gs.StorageManager("mypart"+"mykind"+StorageSuffixNodes, false)
 
-	oldroot := sm.Root(ROOT_ID_NODE_HTREE)
-	sm.SetRoot(ROOT_ID_NODE_HTREE, 5)
-	sm.(*storage.MemoryStorageManager).AccessMap[5] = storage.ACCESS_CACHE_AND_FETCH_ERROR
-
-	_, _, err = gm.getNodeStorageHTree("mypart", "mykind", true)
-	if err.Error() != "GraphError: Failed to access graph storage component (Slot not found (test/mypartmykind.nodes - Location:5))" {
-		t.Error(err)
-		return
-	}
-
-	delete(sm.(*storage.MemoryStorageManager).AccessMap, 5)
-	sm.SetRoot(ROOT_ID_NODE_HTREE, oldroot)
-
-	oldroot = sm.Root(ROOT_ID_NODE_HTREE_SECOND)
-	sm.SetRoot(ROOT_ID_NODE_HTREE_SECOND, 5)
-	sm.(*storage.MemoryStorageManager).AccessMap[5] = storage.ACCESS_CACHE_AND_FETCH_ERROR
+	oldroot := sm.Root(RootIDNodeHTree)
+	sm.SetRoot(RootIDNodeHTree, 5)
+	sm.(*storage.MemoryStorageManager).AccessMap[5] = storage.AccessCacheAndFetchError
 
 	_, _, err = gm.getNodeStorageHTree("mypart", "mykind", true)
 	if err.Error() != "GraphError: Failed to access graph storage component (Slot not found (test/mypartmykind.nodes - Location:5))" {
@@ -273,7 +260,20 @@ func TestSanityChecks(t *testing.T) {
 	}
 
 	delete(sm.(*storage.MemoryStorageManager).AccessMap, 5)
-	sm.SetRoot(ROOT_ID_NODE_HTREE_SECOND, oldroot)
+	sm.SetRoot(RootIDNodeHTree, oldroot)
+
+	oldroot = sm.Root(RootIDNodeHTreeSecond)
+	sm.SetRoot(RootIDNodeHTreeSecond, 5)
+	sm.(*storage.MemoryStorageManager).AccessMap[5] = storage.AccessCacheAndFetchError
+
+	_, _, err = gm.getNodeStorageHTree("mypart", "mykind", true)
+	if err.Error() != "GraphError: Failed to access graph storage component (Slot not found (test/mypartmykind.nodes - Location:5))" {
+		t.Error(err)
+		return
+	}
+
+	delete(sm.(*storage.MemoryStorageManager).AccessMap, 5)
+	sm.SetRoot(RootIDNodeHTreeSecond, oldroot)
 
 	if res, err := gm.getEdgeStorageHTree("my part", "mykind", false); res != nil || err == nil {
 		t.Error("Unexpected Error", err)
@@ -303,15 +303,15 @@ func TestSanityChecks(t *testing.T) {
 		return
 	}
 
-	if _, ok := gs.MainDB()[MAINDB_NODE_ATTRS+"mykind"]; !ok {
+	if _, ok := gs.MainDB()[MainDBNodeAttrs+"mykind"]; !ok {
 		t.Error("Missing main db entry")
 		return
 	}
-	if _, ok := gs.MainDB()[MAINDB_NODE_EDGES+"mykind"]; !ok {
+	if _, ok := gs.MainDB()[MainDBNodeEdges+"mykind"]; !ok {
 		t.Error("Missing main db entry")
 		return
 	}
-	if _, ok := gs.MainDB()[MAINDB_NODE_COUNT+"mykind"]; !ok {
+	if _, ok := gs.MainDB()[MainDBNodeCount+"mykind"]; !ok {
 		t.Error("Missing main db entry")
 		return
 	}
@@ -323,65 +323,65 @@ func TestSanityChecks(t *testing.T) {
 		return
 	}
 
-	edge.SetAttr(data.NODE_KEY, "123")
-	edge.SetAttr(data.NODE_KIND, "myedge")
+	edge.SetAttr(data.NodeKey, "123")
+	edge.SetAttr(data.NodeKind, "myedge")
 
 	if err := gm.checkEdge(edge); err.Error() != "GraphError: Invalid data (Edge is missing a key value for end1)" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END1_KEY, "456")
+	edge.SetAttr(data.EdgeEnd1Key, "456")
 
 	if err := gm.checkEdge(edge); err.Error() != "GraphError: Invalid data (Edge is missing a kind value for end1)" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END1_KIND, "mykind1")
+	edge.SetAttr(data.EdgeEnd1Kind, "mykind1")
 
 	if err := gm.checkEdge(edge); err.Error() != "GraphError: Invalid data (Edge is missing a role value for end1)" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END1_ROLE, "myrole1")
-	edge.SetAttr(data.EDGE_END1_CASCADING, "wrong")
+	edge.SetAttr(data.EdgeEnd1Role, "myrole1")
+	edge.SetAttr(data.EdgeEnd1Cascading, "wrong")
 
 	if err := gm.checkEdge(edge); err.Error() != "GraphError: Invalid data (Edge is missing a cascading value for end1)" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END1_CASCADING, false)
+	edge.SetAttr(data.EdgeEnd1Cascading, false)
 
 	if err := gm.checkEdge(edge); err.Error() != "GraphError: Invalid data (Edge is missing a key value for end2)" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END2_KEY, "456")
+	edge.SetAttr(data.EdgeEnd2Key, "456")
 
 	if err := gm.checkEdge(edge); err.Error() != "GraphError: Invalid data (Edge is missing a kind value for end2)" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END2_KIND, "mykind1")
+	edge.SetAttr(data.EdgeEnd2Kind, "mykind1")
 
 	if err := gm.checkEdge(edge); err.Error() != "GraphError: Invalid data (Edge is missing a role value for end2)" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END2_ROLE, "myrole1")
+	edge.SetAttr(data.EdgeEnd2Role, "myrole1")
 
 	if err := gm.checkEdge(edge); err.Error() != "GraphError: Invalid data (Edge is missing a cascading value for end2)" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	edge.SetAttr(data.EDGE_END2_CASCADING, true)
+	edge.SetAttr(data.EdgeEnd2Cascading, true)
 
 	if err := gm.checkEdge(edge); err != nil {
 		t.Error("Unexpected result:", err)

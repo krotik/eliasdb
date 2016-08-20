@@ -9,6 +9,8 @@
  */
 
 /*
+Package interpreter contains the EQL interpreter.
+
 RuntimeProvider and Runtime for LOOKUP queries.
 */
 package interpreter
@@ -30,11 +32,11 @@ type lookupInst func(*LookupRuntimeProvider, *parser.ASTNode) parser.Runtime
 Runtime map for LOOKUP query specific components
 */
 var lookupProviderMap = map[string]lookupInst{
-	parser.N_LOOKUP: lookupRuntimeInst,
+	parser.NodeLOOKUP: lookupRuntimeInst,
 }
 
 /*
-Runtime provider data structure
+LookupRuntimeProvider data structure
 */
 type LookupRuntimeProvider struct {
 	*eqlRuntimeProvider
@@ -44,7 +46,7 @@ type LookupRuntimeProvider struct {
 NewLookupRuntimeProvider creates a new LookupRuntimeProvider object. This provider
 can interpret LOOKUP queries.
 */
-func NewLookupRuntimeProvider(name string, part string, gm *graph.GraphManager, ni NodeInfo) *LookupRuntimeProvider {
+func NewLookupRuntimeProvider(name string, part string, gm *graph.Manager, ni NodeInfo) *LookupRuntimeProvider {
 	return &LookupRuntimeProvider{&eqlRuntimeProvider{name, part, gm, ni, "", false, nil, "",
 		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}}
 }
@@ -86,14 +88,14 @@ func (rt *lookupRuntime) Validate() error {
 
 	// Check how many keys were given
 
-	keys := make([]string, 0)
+	var keys []string
 
 	// Assume initially that only keys where given
 
 	initIndex := len(rt.node.Children) - 1
 
 	for i, child := range rt.node.Children[1:] {
-		if child.Token.Id != parser.T_VALUE {
+		if child.Token.ID != parser.TokenVALUE {
 
 			// We have a first non-id child
 
@@ -143,7 +145,7 @@ func (rt *lookupRuntime) Validate() error {
 		// Try to lookup group node
 
 		nodes, _, err := rt.rtp.gm.TraverseMulti(rt.rtp.part, rt.rtp.groupScope,
-			GROUP_NODE_KIND, ":::"+startKind, false)
+			GroupNodeKind, ":::"+startKind, false)
 
 		if err != nil {
 			return err
@@ -158,11 +160,12 @@ func (rt *lookupRuntime) Validate() error {
 
 			if nodePtr >= 0 {
 				nodeKey := nodes[nodePtr].Key()
+
 				if _, ok := keyMap[nodeKey]; ok {
 					return nodeKey, nil
-				} else {
-					return rt.rtp.nextStartKey()
 				}
+
+				return rt.rtp.nextStartKey()
 			}
 
 			return "", nil

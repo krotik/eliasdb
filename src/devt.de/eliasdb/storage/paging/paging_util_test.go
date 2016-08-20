@@ -30,21 +30,21 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if pc, err := CountPages(psf, view.TYPE_DATA_PAGE); pc != 0 || err != nil {
+	if pc, err := CountPages(psf, view.TypeDataPage); pc != 0 || err != nil {
 		t.Error("Unexpected page count result:", pc, err)
 	}
 
 	for i := 0; i < 5; i++ {
-		_, err := psf.AllocatePage(view.TYPE_DATA_PAGE)
+		_, err := psf.AllocatePage(view.TypeDataPage)
 		if err != nil {
 			t.Error(err)
 		}
-		if pc, err := CountPages(psf, view.TYPE_DATA_PAGE); pc != i+1 || err != nil {
+		if pc, err := CountPages(psf, view.TypeDataPage); pc != i+1 || err != nil {
 			t.Error("Unexpected page count result:", pc, err)
 		}
 	}
 
-	if pc, err := CountPages(psf, view.TYPE_DATA_PAGE); pc != 5 || err != nil {
+	if pc, err := CountPages(psf, view.TypeDataPage); pc != 5 || err != nil {
 		t.Error("Unexpected page count result:", pc, err)
 	}
 
@@ -54,7 +54,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if pc, err := CountPages(psf, view.TYPE_DATA_PAGE); pc != -1 || err != file.ErrAlreadyInUse {
+	if pc, err := CountPages(psf, view.TypeDataPage); pc != -1 || err != file.ErrAlreadyInUse {
 		t.Error("Unexpected page count result:", pc, err)
 		return
 	}
@@ -67,7 +67,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if pc, err := CountPages(psf, view.TYPE_DATA_PAGE); pc != -1 || err != file.ErrAlreadyInUse {
+	if pc, err := CountPages(psf, view.TypeDataPage); pc != -1 || err != file.ErrAlreadyInUse {
 		t.Error("Unexpected page count result:", pc, err)
 		return
 	}

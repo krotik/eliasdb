@@ -24,17 +24,17 @@ import (
 Flag to enable / disable tests which use actual disk storage.
 (Only used for test development - should never be false)
 */
-const RUN_DISK_STORAGE_TESTS = true
+const RunDiskStorageTests = true
 
-const GRAPHMANAGER_TEST_DBDIR1 = "gmtest1"
-const GRAPHMANAGER_TEST_DBDIR2 = "gmtest2"
-const GRAPHMANAGER_TEST_DBDIR3 = "gmtest3"
-const GRAPHMANAGER_TEST_DBDIR4 = "gmtest4"
+const GraphManagerTestDBDir1 = "gmtest1"
+const GraphManagerTestDBDir2 = "gmtest2"
+const GraphManagerTestDBDir3 = "gmtest3"
+const GraphManagerTestDBDir4 = "gmtest4"
 
-var DBDIRS = []string{GRAPHMANAGER_TEST_DBDIR1, GRAPHMANAGER_TEST_DBDIR2,
-	GRAPHMANAGER_TEST_DBDIR3, GRAPHMANAGER_TEST_DBDIR4}
+var DBDIRS = []string{GraphManagerTestDBDir1, GraphManagerTestDBDir2,
+	GraphManagerTestDBDir3, GraphManagerTestDBDir4}
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const InvlaidFileName = "**" + string(0x0)
 
 // Main function for all tests in this package
 
@@ -69,6 +69,6 @@ func TestMain(m *testing.M) {
 /*
 NewGraphManager returns a new GraphManager instance without loading rules.
 */
-func newGraphManagerNoRules(gs graphstorage.GraphStorage) *GraphManager {
+func newGraphManagerNoRules(gs graphstorage.GraphStorage) *Manager {
 	return createGraphManager(gs)
 }

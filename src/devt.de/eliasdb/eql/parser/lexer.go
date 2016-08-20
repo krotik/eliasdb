@@ -9,7 +9,14 @@
  */
 
 /*
+Package parser contains the EQL parser.
+
 Lexer to convert a given search query into a list of tokens.
+
+Based on talk by Rob Pike:
+
+Lexical Scanning in Go - Rob Pike
+https://www.youtube.com/watch?v=HxaD_trXwRE
 */
 package parser
 
@@ -23,14 +30,11 @@ import (
 	"devt.de/common/stringutil"
 )
 
-// Lexer tokens
-// ============
-
 /*
-token represents a token which is returned by the lexer.
+LexToken represents a token which is returned by the lexer.
 */
 type LexToken struct {
-	Id    LexTokenId // Token kind
+	ID    LexTokenID // Token kind
 	Pos   int        // Starting position (in bytes)
 	Val   string     // Token value
 	Lline int        // Line in the input this token appears
@@ -38,7 +42,7 @@ type LexToken struct {
 }
 
 /*
-Return the position of this token in the origianl input as a string.
+PosString returns the position of this token in the origianl input as a string.
 */
 func (t LexToken) PosString() string {
 	return fmt.Sprintf("Line %v, Pos %v", t.Lline, t.Lpos)
@@ -51,16 +55,16 @@ func (t LexToken) String() string {
 
 	switch {
 
-	case t.Id == T_EOF:
+	case t.ID == TokenEOF:
 		return "EOF"
 
-	case t.Id == T_Error:
+	case t.ID == TokenError:
 		return fmt.Sprintf("Error: %s (%s)", t.Val, t.PosString())
 
-	case t.Id > TOKEN_SYMBOLS && t.Id < TOKEN_KEYWORDS:
+	case t.ID > TOKENodeSYMBOLS && t.ID < TOKENodeKEYWORDS:
 		return fmt.Sprintf("%s", strings.ToUpper(t.Val))
 
-	case t.Id > TOKEN_KEYWORDS:
+	case t.ID > TOKENodeKEYWORDS:
 		return fmt.Sprintf("<%s>", strings.ToUpper(t.Val))
 
 	case len(t.Val) > 10:
@@ -76,73 +80,73 @@ func (t LexToken) String() string {
 /*
 Map of keywords - these require spaces between them
 */
-var keywordMap = map[string]LexTokenId{
-	"get":           T_GET,
-	"lookup":        T_LOOKUP,
-	"from":          T_FROM,
-	"group":         T_GROUP,
-	"with":          T_WITH,
-	"filtering":     T_FILTERING,
-	"ordering":      T_ORDERING,
-	"nulltraversal": T_NULLTRAVERSAL,
-	"where":         T_WHERE,
-	"traverse":      T_TRAVERSE,
-	"end":           T_END,
-	"primary":       T_PRIMARY,
-	"show":          T_SHOW,
-	"as":            T_AS,
-	"format":        T_FORMAT,
-	"and":           T_AND,
-	"or":            T_OR,
-	"like":          T_LIKE,
-	"in":            T_IN,
-	"contains":      T_CONTAINS,
-	"beginswith":    T_BEGINSWITH,
-	"endswith":      T_ENDSWITH,
-	"containsnot":   T_CONTAINSNOT,
-	"not":           T_NOT,
-	"notin":         T_NOTIN,
-	"false":         T_FALSE,
-	"true":          T_TRUE,
-	"unique":        T_UNIQUE,
-	"uniquecount":   T_UNIQUECOUNT,
-	"null":          T_NULL,
-	"isnotnull":     T_ISNOTNULL,
-	"ascending":     T_ASCENDING,
-	"descending":    T_DESCENDING,
+var keywordMap = map[string]LexTokenID{
+	"get":           TokenGET,
+	"lookup":        TokenLOOKUP,
+	"from":          TokenFROM,
+	"group":         TokenGROUP,
+	"with":          TokenWITH,
+	"filtering":     TokenFILTERING,
+	"ordering":      TokenORDERING,
+	"nulltraversal": TokenNULLTRAVERSAL,
+	"where":         TokenWHERE,
+	"traverse":      TokenTRAVERSE,
+	"end":           TokenEND,
+	"primary":       TokenPRIMARY,
+	"show":          TokenSHOW,
+	"as":            TokenAS,
+	"format":        TokenFORMAT,
+	"and":           TokenAND,
+	"or":            TokenOR,
+	"like":          TokenLIKE,
+	"in":            TokenIN,
+	"contains":      TokenCONTAINS,
+	"beginswith":    TokenBEGINSWITH,
+	"endswith":      TokenENDSWITH,
+	"containsnot":   TokenCONTAINSNOT,
+	"not":           TokenNOT,
+	"notin":         TokenNOTIN,
+	"false":         TokenFALSE,
+	"true":          TokenTRUE,
+	"unique":        TokenUNIQUE,
+	"uniquecount":   TokenUNIQUECOUNT,
+	"null":          TokenNULL,
+	"isnotnull":     TokenISNOTNULL,
+	"ascending":     TokenASCENDING,
+	"descending":    TokenDESCENDING,
 }
 
 /*
 Special symbols which will always be unique - these will separate unquoted strings
 */
-var symbolMap = map[string]LexTokenId{
-	"@":  T_AT,
-	">=": T_GEQ,
-	"<=": T_LEQ,
-	"!=": T_NEQ,
-	"=":  T_EQ,
-	">":  T_GT,
-	"<":  T_LT,
-	"(":  T_LPAREN,
-	")":  T_RPAREN,
-	"[":  T_LBRACK,
-	"]":  T_RBRACK,
-	",":  T_COMMA,
-	"+":  T_PLUS,
-	"-":  T_MINUS,
-	"*":  T_TIMES,
-	"/":  T_DIV,
-	"//": T_DIVINT,
-	"%":  T_MODINT,
+var symbolMap = map[string]LexTokenID{
+	"@":  TokenAT,
+	">=": TokenGEQ,
+	"<=": TokenLEQ,
+	"!=": TokenNEQ,
+	"=":  TokenEQ,
+	">":  TokenGT,
+	"<":  TokenLT,
+	"(":  TokenLPAREN,
+	")":  TokenRPAREN,
+	"[":  TokenLBRACK,
+	"]":  TokenRBRACK,
+	",":  TokenCOMMA,
+	"+":  TokenPLUS,
+	"-":  TokenMINUS,
+	"*":  TokenTIMES,
+	"/":  TokenDIV,
+	"//": TokenDIVINT,
+	"%":  TokenMODINT,
 }
 
 // Lexer
 // =====
 
 /*
-Special rune which represents the end of the input
+RuneEOF is a special rune which represents the end of the input
 */
-const RUNE_EOF = -1
+const RuneEOF = -1
 
 /*
 Function which represents the current state of the lexer and returns the next state
@@ -160,7 +164,7 @@ type lexer struct {
 	lastnl int           // Last newline position
 	width  int           // Width of last rune
 	start  int           // Start position of the current red token
-	scope  LexTokenId    // Current scope
+	scope  LexTokenID    // Current scope
 	tokens chan LexToken // Channel for lexer output
 }
 
@@ -193,7 +197,7 @@ func Lex(name string, input string) chan LexToken {
 LexToList lexes a given input. Returns a list of tokens.
 */
 func LexToList(name string, input string) []LexToken {
-	tokens := make([]LexToken, 0)
+	var tokens []LexToken
 
 	for t := range Lex(name, input) {
 		tokens = append(tokens, t)
@@ -230,7 +234,7 @@ func (l *lexer) next(peek bool) rune {
 	// Check if we reached the end
 
 	if int(l.pos) >= len(l.input) {
-		return RUNE_EOF
+		return RuneEOF
 	}
 
 	// Decode the next rune
@@ -267,8 +271,8 @@ func (l *lexer) startNew() {
 /*
 emitToken passes a token back to the client.
 */
-func (l *lexer) emitToken(t LexTokenId) {
-	if t == T_EOF {
+func (l *lexer) emitToken(t LexTokenID) {
+	if t == TokenEOF {
 		l.emitTokenAndValue(t, "")
 		return
 	}
@@ -282,7 +286,7 @@ func (l *lexer) emitToken(t LexTokenId) {
 /*
 emitTokenAndValue passes a token with a given value back to the client.
 */
-func (l *lexer) emitTokenAndValue(t LexTokenId, val string) {
+func (l *lexer) emitTokenAndValue(t LexTokenID, val string) {
 	if l.tokens != nil {
 		l.tokens <- LexToken{t, l.start, val, l.line + 1, l.start - l.lastnl + 1}
 	}
@@ -293,7 +297,7 @@ emitError passes an error token back to the client.
 */
 func (l *lexer) emitError(msg string) {
 	if l.tokens != nil {
-		l.tokens <- LexToken{T_Error, l.start, msg, l.line + 1, l.start - l.lastnl + 1}
+		l.tokens <- LexToken{TokenError, l.start, msg, l.line + 1, l.start - l.lastnl + 1}
 	}
 }
 
@@ -341,10 +345,10 @@ func lexToken(l *lexer) lexFunc {
 		l.emitToken(token)
 
 		switch token {
-		case T_GET:
+		case TokenGET:
 			l.scope = token
 			return lexNodeKind
-		case T_LOOKUP:
+		case TokenLOOKUP:
 			l.scope = token
 			return lexNodeKind
 		}
@@ -354,7 +358,7 @@ func lexToken(l *lexer) lexFunc {
 		// An unknown token was found - it must be an unquoted value
 		// emit and continue
 
-		l.emitToken(T_VALUE)
+		l.emitToken(TokenVALUE)
 	}
 
 	return lexToken
@@ -366,11 +370,11 @@ skipRestOfLine skips all characters until the next newline character.
 func skipRestOfLine(l *lexer) lexFunc {
 	r := l.next(false)
 
-	for r != '\n' && r != RUNE_EOF {
+	for r != '\n' && r != RuneEOF {
 		r = l.next(false)
 	}
 
-	if r == RUNE_EOF {
+	if r == RuneEOF {
 		return nil
 	}
 
@@ -389,18 +393,17 @@ func lexNodeKind(l *lexer) lexFunc {
 		l.emitError("Invalid node kind " + fmt.Sprintf("'%v'", nodeKindCandidate) +
 			" - can only contain [a-zA-Z0-9_]")
 		return nil
-	} else {
-		l.emitToken(T_NODEKIND)
 	}
 
-	if l.scope == T_GET {
+	l.emitToken(TokenNODEKIND)
+
+	if l.scope == TokenGET {
 		return lexToken
-	} else {
-
-		// In a lookup scope more values are following
-
-		return lexValue
 	}
+
+	// In a lookup scope more values are following
+
+	return lexValue
 }
 
 /*
@@ -447,7 +450,7 @@ func lexValue(l *lexer) lexFunc {
 		}
 		r = l.next(false)
 
-		if r == RUNE_EOF {
+		if r == RuneEOF {
 			l.emitError("Unexpected end while reading value")
 			return nil
 		}
@@ -464,10 +467,10 @@ func lexValue(l *lexer) lexFunc {
 			return nil
 		}
 
-		l.emitTokenAndValue(T_VALUE, s)
+		l.emitTokenAndValue(TokenVALUE, s)
 
 	} else {
-		l.emitTokenAndValue(T_VALUE, l.input[l.start+2:l.pos-1])
+		l.emitTokenAndValue(TokenVALUE, l.input[l.start+2:l.pos-1])
 
 	}
 
@@ -488,15 +491,15 @@ reaches EOF while skipping whitespaces.
 */
 func skipWhiteSpace(l *lexer) bool {
 	r := l.next(false)
-	for unicode.IsSpace(r) || unicode.IsControl(r) || r == RUNE_EOF {
+	for unicode.IsSpace(r) || unicode.IsControl(r) || r == RuneEOF {
 		if r == '\n' {
 			l.line++
 			l.lastnl = l.pos
 		}
 		r = l.next(false)
 
-		if r == RUNE_EOF {
-			l.emitToken(T_EOF)
+		if r == RuneEOF {
+			l.emitToken(TokenEOF)
 			return false
 		}
 	}
@@ -528,7 +531,7 @@ func lexTextBlock(l *lexer, interpretToken bool) {
 		}
 	}
 
-	for !unicode.IsSpace(r) && !unicode.IsControl(r) && r != RUNE_EOF {
+	for !unicode.IsSpace(r) && !unicode.IsControl(r) && r != RuneEOF {
 
 		if interpretToken {
 
@@ -549,7 +552,7 @@ func lexTextBlock(l *lexer, interpretToken bool) {
 		r = l.next(false)
 	}
 
-	if r != RUNE_EOF {
+	if r != RuneEOF {
 		l.backup()
 	}
 }

@@ -11,7 +11,6 @@
 package version
 
 /*
-Package containing the version of EliasDB
+VERSION is the version of EliasDB
 */
-
 const VERSION = "0.8"

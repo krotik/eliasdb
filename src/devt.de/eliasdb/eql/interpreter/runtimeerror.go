@@ -9,7 +9,9 @@
  */
 
 /*
-Runtime related errors.
+Package interpreter contains the EQL interpreter.
+
+Interpreter runtime related errors.
 */
 package interpreter
 
@@ -28,7 +30,7 @@ func (rt *eqlRuntimeProvider) newRuntimeError(t error, d string, node *parser.AS
 }
 
 /*
-Runtime related error
+RuntimeError is a runtime related error
 */
 type RuntimeError struct {
 	Source string          // Name of the source which was given to the parser
@@ -56,17 +58,20 @@ func (re *RuntimeError) Error() string {
 Runtime related error types
 */
 var (
-	ErrNotARegex          = errors.New("Value of operand is not a valid regex")
-	ErrNotANumber         = errors.New("Value of operand is not a number")
-	ErrNotAList           = errors.New("Value of operand is not a list")
-	ErrInvalidConstruct   = errors.New("Invalid construct")
-	ErrUnknownNodeKind    = errors.New("Unknown node kind")
-	ErrInvalidSpec        = errors.New("Invalid traversal spec")
-	ErrInvalidWhere       = errors.New("Invalid where clause")
-	ErrInvalidColData     = errors.New("Invalid column data spec")
-	ErrEmptyTraversal     = errors.New("Empty traversal")
+	ErrNotARegex        = errors.New("Value of operand is not a valid regex")
+	ErrNotANumber       = errors.New("Value of operand is not a number")
+	ErrNotAList         = errors.New("Value of operand is not a list")
+	ErrInvalidConstruct = errors.New("Invalid construct")
+	ErrUnknownNodeKind  = errors.New("Unknown node kind")
+	ErrInvalidSpec      = errors.New("Invalid traversal spec")
+	ErrInvalidWhere     = errors.New("Invalid where clause")
+	ErrInvalidColData   = errors.New("Invalid column data spec")
+	ErrEmptyTraversal   = errors.New("Empty traversal")
 )
 
+/*
+ResultError is a result related error (e.g. wrong defined show clause)
+*/
 type ResultError struct {
 	Source string // Name of the source which was given to the parser
 	Type   error  // Error type (to be used for equal checks)

@@ -18,19 +18,19 @@ import (
 	"devt.de/common/fileutil"
 )
 
-const DBDIR = "test"
+const testdbdir = "test"
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const invalidFileName = "**" + string(0x0)
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
 	// Setup
-	if res, _ := fileutil.PathExists(DBDIR); res {
-		os.RemoveAll(DBDIR)
+	if res, _ := fileutil.PathExists(testdbdir); res {
+		os.RemoveAll(testdbdir)
 	}
 
-	err := os.Mkdir(DBDIR, 0770)
+	err := os.Mkdir(testdbdir, 0770)
 	if err != nil {
 		fmt.Print("Could not create test directory:", err.Error())
 		os.Exit(1)
@@ -40,7 +40,7 @@ func TestMain(m *testing.M) {
 	res := m.Run()
 
 	// Teardown
-	err = os.RemoveAll(DBDIR)
+	err = os.RemoveAll(testdbdir)
 	if err != nil {
 		fmt.Print("Could not remove test directory:", err.Error())
 	}
@@ -53,7 +53,7 @@ func TestPersistentMap(t *testing.T) {
 
 	// Test main scenario
 
-	pm, err := NewPersistentMap(DBDIR + "/testmap.map")
+	pm, err := NewPersistentMap(testdbdir + "/testmap.map")
 	if err != nil {
 		t.Error(nil)
 		return
@@ -64,7 +64,7 @@ func TestPersistentMap(t *testing.T) {
 
 	pm.Flush()
 
-	pm2, err := LoadPersistentMap(DBDIR + "/testmap.map")
+	pm2, err := LoadPersistentMap(testdbdir + "/testmap.map")
 
 	if len(pm2.Data) != 2 {
 		t.Error("Unexpected size of map")
@@ -78,19 +78,19 @@ func TestPersistentMap(t *testing.T) {
 
 	// Test error cases
 
-	pm, err = NewPersistentMap(INVALID_FILE_NAME)
+	pm, err = NewPersistentMap(invalidFileName)
 	if err == nil {
 		t.Error("Unexpected result of new map")
 		return
 	}
 
-	pm, err = LoadPersistentMap(INVALID_FILE_NAME)
+	pm, err = LoadPersistentMap(invalidFileName)
 	if err == nil {
 		t.Error("Unexpected result of new map")
 		return
 	}
 
-	pm = &PersistentMap{INVALID_FILE_NAME, make(map[string]string)}
+	pm = &PersistentMap{invalidFileName, make(map[string]string)}
 	if err := pm.Flush(); err == nil {
 		t.Error("Unexpected result of new map")
 		return

@@ -9,6 +9,8 @@
  */
 
 /*
+Package graphstorage contains classes which model storage objects for graph data.
+
 Graph storage which stores its data on disk.
 */
 package graphstorage
@@ -25,17 +27,17 @@ import (
 )
 
 /*
-Filename for name DB
+FilenameNameDB is the filename for the name storage file
 */
-var FILENAME_NAME_DB = "names.pm"
+var FilenameNameDB = "names.pm"
 
 /*
-DiskStorageManager data structure
+DiskGraphStorage data structure
 */
 type DiskGraphStorage struct {
-	name            string                            // Name of the graph storage
-	mainDB          *datautil.PersistentMap           // Database storing names
-	storagemanagers map[string]storage.StorageManager // Map of StorageManagers
+	name            string                     // Name of the graph storage
+	mainDB          *datautil.PersistentMap    // Database storing names
+	storagemanagers map[string]storage.Manager // Map of StorageManagers
 }
 
 /*
@@ -43,20 +45,20 @@ NewDiskGraphStorage creates a new DiskGraphStorage instance.
 */
 func NewDiskGraphStorage(name string) (GraphStorage, error) {
 
-	dgs := &DiskGraphStorage{name, nil, make(map[string]storage.StorageManager)}
+	dgs := &DiskGraphStorage{name, nil, make(map[string]storage.Manager)}
 
 	// Load the graph storage if the storage directory already exists if not try to create it
 
 	if res, _ := fileutil.PathExists(name); !res {
 		if err := os.Mkdir(name, 0770); err != nil {
-			return nil, &util.GraphError{util.ErrOpening, err.Error()}
+			return nil, &util.GraphError{Type: util.ErrOpening, Detail: err.Error()}
 		}
 
 		// Create the graph storage files
 
-		mainDB, err := datautil.NewPersistentMap(name + "/" + FILENAME_NAME_DB)
+		mainDB, err := datautil.NewPersistentMap(name + "/" + FilenameNameDB)
 		if err != nil {
-			return nil, &util.GraphError{util.ErrOpening, err.Error()}
+			return nil, &util.GraphError{Type: util.ErrOpening, Detail: err.Error()}
 		}
 
 		dgs.mainDB = mainDB
@@ -65,9 +67,9 @@ func NewDiskGraphStorage(name string) (GraphStorage, error) {
 
 		// Load graph storage files
 
-		mainDB, err := datautil.LoadPersistentMap(name + "/" + FILENAME_NAME_DB)
+		mainDB, err := datautil.LoadPersistentMap(name + "/" + FilenameNameDB)
 		if err != nil {
-			return nil, &util.GraphError{util.ErrOpening, err.Error()}
+			return nil, &util.GraphError{Type: util.ErrOpening, Detail: err.Error()}
 		}
 
 		dgs.mainDB = mainDB
@@ -94,13 +96,13 @@ func (dgs *DiskGraphStorage) MainDB() map[string]string {
 RollbackMain rollback the main database.
 */
 func (dgs *DiskGraphStorage) RollbackMain() error {
-	mainDB, err := datautil.LoadPersistentMap(dgs.name + "/" + FILENAME_NAME_DB)
+	mainDB, err := datautil.LoadPersistentMap(dgs.name + "/" + FilenameNameDB)
 	if err != nil {
-		return &util.GraphError{util.ErrOpening, err.Error()}
+		return &util.GraphError{Type: util.ErrOpening, Detail: err.Error()}
 	}
-	
+
 	dgs.mainDB = mainDB
-	
+
 	return nil
 }
 
@@ -109,7 +111,7 @@ FlushMain writes the main database to the storage.
 */
 func (dgs *DiskGraphStorage) FlushMain() error {
 	if err := dgs.mainDB.Flush(); err != nil {
-		return &util.GraphError{util.ErrFlushing, err.Error()}
+		return &util.GraphError{Type: util.ErrFlushing, Detail: err.Error()}
 	}
 	return nil
 }
@@ -118,7 +120,7 @@ func (dgs *DiskGraphStorage) FlushMain() error {
 StorageManager gets a storage manager with a certain name. A non-existing
 StorageManager is not created automatically if the create flag is set to false.
 */
-func (dgs *DiskGraphStorage) StorageManager(smname string, create bool) storage.StorageManager {
+func (dgs *DiskGraphStorage) StorageManager(smname string, create bool) storage.Manager {
 
 	sm, ok := dgs.storagemanagers[smname]
 
@@ -127,7 +129,7 @@ func (dgs *DiskGraphStorage) StorageManager(smname string, create bool) storage.
 	// Create storage manager object either if we may create or if the
 	// database already exists
 
-	if !ok && (create || storage.StorageFileExist(filename)) {
+	if !ok && (create || storage.DataFileExist(filename)) {
 		dsm := storage.NewDiskStorageManager(dgs.name+"/"+smname, false, false, false)
 		sm = storage.NewCachedDiskStorageManager(dsm, 100000)
 		dgs.storagemanagers[smname] = sm
@@ -141,7 +143,7 @@ Close closes the storage.
 */
 func (dgs *DiskGraphStorage) Close() error {
 
-	errors := make([]string, 0)
+	var errors []string
 
 	err := dgs.mainDB.Flush()
 	if err != nil {
@@ -158,7 +160,7 @@ func (dgs *DiskGraphStorage) Close() error {
 	if len(errors) > 0 {
 		details := fmt.Sprint(dgs.name, " :", strings.Join(errors, "; "))
 
-		return &util.GraphError{util.ErrClosing, details}
+		return &util.GraphError{Type: util.ErrClosing, Detail: details}
 	}
 
 	return nil

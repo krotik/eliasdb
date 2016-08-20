@@ -19,7 +19,7 @@ import (
 func TestPageView(t *testing.T) {
 	r := file.NewRecord(123, make([]byte, 20))
 
-	pv := NewPageView(r, TYPE_DATA_PAGE)
+	pv := NewPageView(r, TypeDataPage)
 
 	// Check that page type has been set
 
@@ -35,18 +35,18 @@ func TestPageView(t *testing.T) {
 
 	// Test corrupted page
 
-	r.WriteByte(0, 0x18)
+	r.WriteSingleByte(0, 0x18)
 	r.SetPageView(nil)
 
 	testCheckMagicPanic(t, r)
 
-	r.WriteByte(0, 0x19)
+	r.WriteSingleByte(0, 0x19)
 
 	// Record should now contain the correct magic
 
 	pv.checkMagic()
 
-	if pv.Type() != TYPE_DATA_PAGE {
+	if pv.Type() != TypeDataPage {
 		t.Error("Wrong type for page view")
 		return
 	}

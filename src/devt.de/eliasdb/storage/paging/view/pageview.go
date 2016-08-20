@@ -9,8 +9,10 @@
  */
 
 /*
+Package view contains general page view constants and functions.
+
 PageView is the super-struct for all page views. A page view is special object
-attached to a particular StorageFile record. A view provides specialised 
+attached to a particular StorageFile record. A view provides specialised
 functions for the record it is attached to.
 
 Use GetPageView if the record has already view information stored on it or
@@ -25,24 +27,24 @@ import (
 )
 
 /*
-Header magic number to identify view pages
+ViewPageHeader is the header magic number to identify view pages
 */
-const VIEW_PAGE_HEADER = 0x1990
+const ViewPageHeader = 0x1990
 
 /*
-Offset for next page id
+OffsetNextPage is the offset for next page id
 */
-const OFFSET_NEXT_PAGE = file.SIZE_SHORT
+const OffsetNextPage = file.SizeShort
 
 /*
-Offset for previous page id
+OffsetPrevPage is the offset for previous page id
 */
-const OFFSET_PREV_PAGE = OFFSET_NEXT_PAGE + file.SIZE_LONG
+const OffsetPrevPage = OffsetNextPage + file.SizeLong
 
 /*
-Offset for page specific data
+OffsetData is the offset for page specific data
 */
-const OFFSET_DATA = OFFSET_PREV_PAGE + file.SIZE_LONG
+const OffsetData = OffsetPrevPage + file.SizeLong
 
 /*
 PageView data structure
@@ -52,7 +54,7 @@ type PageView struct {
 }
 
 /*
-Return the page view of a given record.
+GetPageView returns the page view of a given record.
 */
 func GetPageView(record *file.Record) *PageView {
 	rpv := record.PageView()
@@ -70,7 +72,7 @@ func GetPageView(record *file.Record) *PageView {
 }
 
 /*
-Create a new page view for a given record.
+NewPageView creates a new page view for a given record.
 */
 func NewPageView(record *file.Record, pagetype int16) *PageView {
 	pv := &PageView{record}
@@ -83,14 +85,14 @@ func NewPageView(record *file.Record, pagetype int16) *PageView {
 Type gets the type of this page view which is stored on the record.
 */
 func (pv *PageView) Type() int16 {
-	return pv.Record.ReadInt16(0) - VIEW_PAGE_HEADER
+	return pv.Record.ReadInt16(0) - ViewPageHeader
 }
 
 /*
 SetType sets the type of this page view which is stored on the record.
 */
 func (pv *PageView) SetType(pagetype int16) {
-	pv.Record.WriteInt16(0, VIEW_PAGE_HEADER+pagetype)
+	pv.Record.WriteInt16(0, ViewPageHeader+pagetype)
 }
 
 /*
@@ -100,8 +102,8 @@ is valid.
 func (pv *PageView) checkMagic() bool {
 	magic := pv.Record.ReadInt16(0)
 
-	if magic >= VIEW_PAGE_HEADER &&
-		magic <= VIEW_PAGE_HEADER+TYPE_FREE_PHYSICAL_SLOT_PAGE {
+	if magic >= ViewPageHeader &&
+		magic <= ViewPageHeader+TypeFreePhysicalSlotPage {
 		return true
 	}
 	panic("Unexpected header found in PageView")
@@ -112,7 +114,7 @@ NextPage returns the id of the next page.
 */
 func (pv *PageView) NextPage() uint64 {
 	pv.checkMagic()
-	return pv.Record.ReadUInt64(OFFSET_NEXT_PAGE)
+	return pv.Record.ReadUInt64(OffsetNextPage)
 }
 
 /*
@@ -120,7 +122,7 @@ SetNextPage sets the id of the next page.
 */
 func (pv *PageView) SetNextPage(val uint64) {
 	pv.checkMagic()
-	pv.Record.WriteUInt64(OFFSET_NEXT_PAGE, val)
+	pv.Record.WriteUInt64(OffsetNextPage, val)
 }
 
 /*
@@ -128,7 +130,7 @@ PrevPage returns the id of the previous page.
 */
 func (pv *PageView) PrevPage() uint64 {
 	pv.checkMagic()
-	return pv.Record.ReadUInt64(OFFSET_PREV_PAGE)
+	return pv.Record.ReadUInt64(OffsetPrevPage)
 }
 
 /*
@@ -136,10 +138,10 @@ SetPrevPage sets the id of the previous page.
 */
 func (pv *PageView) SetPrevPage(val uint64) {
 	pv.checkMagic()
-	pv.Record.WriteUInt64(OFFSET_PREV_PAGE, val)
+	pv.Record.WriteUInt64(OffsetPrevPage, val)
 }
 
 func (pv *PageView) String() string {
 	return fmt.Sprintf("PageView: %v (type:%v previous page:%v next page:%v)",
-		pv.Record.Id(), pv.Type(), pv.PrevPage(), pv.NextPage())
+		pv.Record.ID(), pv.Type(), pv.PrevPage(), pv.NextPage())
 }

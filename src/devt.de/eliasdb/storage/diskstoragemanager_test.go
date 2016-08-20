@@ -77,7 +77,7 @@ func TestDiskStorageManager1(t *testing.T) {
 		t.Error(err)
 	}
 
-	checkLocation(t, loc, 1, pageview.OFFSET_TRANS_DATA)
+	checkLocation(t, loc, 1, pageview.OffsetTransData)
 
 	dsm.Fetch(loc, &res)
 	if res != "This is a test" {
@@ -86,7 +86,7 @@ func TestDiskStorageManager1(t *testing.T) {
 
 	// Get physical slot for stored data
 
-	ploc, err := dsm.logical_slot_manager.Fetch(loc)
+	ploc, err := dsm.logicalSlotManager.Fetch(loc)
 	if err != nil {
 		t.Error(err)
 		return
@@ -103,13 +103,13 @@ func TestDiskStorageManager1(t *testing.T) {
 
 	// Get new physical slot for stored data
 
-	new_ploc, err := dsm.logical_slot_manager.Fetch(loc)
+	newPloc, err := dsm.logicalSlotManager.Fetch(loc)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if ploc == new_ploc {
+	if ploc == newPloc {
 		t.Error("Physical address should have changed")
 		return
 	}
@@ -127,10 +127,10 @@ func TestDiskStorageManager1(t *testing.T) {
 		return
 	}
 
-	psp := dsm.physical_slots_pager
-	fpsp := dsm.physical_free_slots_pager
-	lsp := dsm.logical_slots_pager
-	flsp := dsm.logical_free_slots_pager
+	psp := dsm.physicalSlotsPager
+	fpsp := dsm.physicalFreeSlotsPager
+	lsp := dsm.logicalSlotsPager
+	flsp := dsm.logicalFreeSlotsPager
 
 	record, err := psp.StorageFile().Get(1)
 	if err != nil {
@@ -198,12 +198,12 @@ func TestDiskStorageManager1(t *testing.T) {
 		return
 	}
 
-	if !StorageFileExist(DBDIR + "/test1") {
+	if !DataFileExist(DBDIR + "/test1") {
 		t.Error("Main disk storage file was not detected.")
 		return
 	}
 
-	if StorageFileExist(DBDIR + "/" + INVALID_FILE_NAME) {
+	if DataFileExist(DBDIR + "/" + InvalidFileName) {
 		t.Error("Main disk storage file with invalid name should not exist.")
 		return
 	}
@@ -243,7 +243,7 @@ func TestDiskStorageManager2(t *testing.T) {
 		checkLocation(t, loc2, 1, uint16(18+i*8))
 	}
 
-	record, err := dsm.logical_slots_sf.Get(2)
+	record, err := dsm.logicalSlotsSf.Get(2)
 
 	_, err = dsm.Insert("This is a test")
 	if err != file.ErrAlreadyInUse {
@@ -257,7 +257,7 @@ func TestDiskStorageManager2(t *testing.T) {
 		return
 	}
 
-	dsm.logical_slots_sf.ReleaseInUse(record)
+	dsm.logicalSlotsSf.ReleaseInUse(record)
 
 	err = dsm.Fetch(util.PackLocation(3, 18), &res)
 	if err != ErrSlotNotFound {
@@ -265,7 +265,7 @@ func TestDiskStorageManager2(t *testing.T) {
 		return
 	}
 
-	record, err = dsm.logical_slots_sf.Get(1)
+	record, err = dsm.logicalSlotsSf.Get(1)
 
 	err = dsm.Update(loc, "test")
 	if err != file.ErrAlreadyInUse {
@@ -279,7 +279,7 @@ func TestDiskStorageManager2(t *testing.T) {
 		return
 	}
 
-	dsm.logical_slots_sf.ReleaseInUse(record)
+	dsm.logicalSlotsSf.ReleaseInUse(record)
 
 	err = dsm.Update(util.PackLocation(2, 18), "test")
 	if err != ErrSlotNotFound {
@@ -306,7 +306,7 @@ func TestDiskStorageManager2(t *testing.T) {
 		return
 	}
 
-	record, err = dsm.physical_slots_sf.Get(1)
+	record, err = dsm.physicalSlotsSf.Get(1)
 
 	var testres2 testutil.GobTestObject
 	err = dsm.Fetch(loc, &testres2)
@@ -323,7 +323,7 @@ func TestDiskStorageManager2(t *testing.T) {
 		return
 	}
 
-	dsm.physical_slots_sf.ReleaseInUse(record)
+	dsm.physicalSlotsSf.ReleaseInUse(record)
 
 	err = dsm.Update(loc, "tree")
 	if err != nil {
@@ -341,7 +341,7 @@ func TestDiskStorageManager2(t *testing.T) {
 		return
 	}
 
-	pl, _ := dsm.logical_slot_manager.Fetch(loc)
+	pl, _ := dsm.logicalSlotManager.Fetch(loc)
 	if util.LocationRecord(pl) != 1 {
 		t.Error("Unexpected initial location:", util.LocationRecord(pl))
 	}
@@ -366,7 +366,7 @@ func TestDiskStorageManager2(t *testing.T) {
 		return
 	}
 
-	pl, _ = dsm.logical_slot_manager.Fetch(loc)
+	pl, _ = dsm.logicalSlotManager.Fetch(loc)
 	if util.LocationRecord(pl) != 2 {
 		t.Error("Unexpected relocated location:", util.LocationRecord(pl))
 	}
@@ -402,23 +402,23 @@ func TestDiskStorageManager3(t *testing.T) {
 		t.Error("Unexpected fetch result:", res)
 	}
 
-	record, _ := dsm.physical_slots_sf.Get(1)
+	record, _ := dsm.physicalSlotsSf.Get(1)
 
 	if dsm.Free(loc) != file.ErrAlreadyInUse {
 		t.Error("Unexpected free result")
 		return
 	}
 
-	dsm.physical_slots_sf.ReleaseInUse(record)
+	dsm.physicalSlotsSf.ReleaseInUse(record)
 
-	record, _ = dsm.logical_slots_sf.Get(1)
+	record, _ = dsm.logicalSlotsSf.Get(1)
 
 	if dsm.Free(loc) != file.ErrAlreadyInUse {
 		t.Error("Unexpected free result")
 		return
 	}
 
-	dsm.logical_slots_sf.ReleaseInUse(record)
+	dsm.logicalSlotsSf.ReleaseInUse(record)
 
 	if err := dsm.Free(loc); err != nil {
 		t.Error(err)
@@ -450,7 +450,7 @@ func TestDiskStorageManagerRollback(t *testing.T) {
 		t.Error(err)
 	}
 
-	checkLocation(t, loc, 1, pageview.OFFSET_TRANS_DATA)
+	checkLocation(t, loc, 1, pageview.OffsetTransData)
 
 	if err := dsm.Rollback(); err != nil {
 		t.Error(err)
@@ -467,7 +467,7 @@ func TestDiskStorageManagerRollback(t *testing.T) {
 		t.Error(err)
 	}
 
-	checkLocation(t, loc, 1, pageview.OFFSET_TRANS_DATA)
+	checkLocation(t, loc, 1, pageview.OffsetTransData)
 
 	if err := dsm.Flush(); err != nil {
 		t.Error(err)
@@ -491,10 +491,10 @@ func TestDiskStorageManagerRollback(t *testing.T) {
 		return
 	}
 
-	psp := dsm.physical_slots_pager
-	fpsp := dsm.physical_free_slots_pager
-	lsp := dsm.logical_slots_pager
-	flsp := dsm.logical_free_slots_pager
+	psp := dsm.physicalSlotsPager
+	fpsp := dsm.physicalFreeSlotsPager
+	lsp := dsm.logicalSlotsPager
+	flsp := dsm.logicalFreeSlotsPager
 
 	rpsp, _ := psp.StorageFile().Get(1)
 	rfpsp, _ := fpsp.StorageFile().Get(1)
@@ -522,11 +522,11 @@ func TestDiskStorageManagerRollback(t *testing.T) {
 	}
 }
 
-const INVALID_FILE_NAME = "**" + string(0x0)
+const InvalidFileName = "**" + string(0x0)
 
 func TestDiskStorageManagerInit(t *testing.T) {
 	lockfile := lockutil.NewLockFile(DBDIR+"/"+"lock0.lck", time.Duration(50)*time.Millisecond)
-	dsm := &DiskStorageManager{DBDIR + "/" + INVALID_FILE_NAME, true, true, &sync.Mutex{},
+	dsm := &DiskStorageManager{DBDIR + "/" + InvalidFileName, true, true, &sync.Mutex{},
 		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, lockfile}
 
 	err := initDiskStorageManager(dsm)
@@ -546,7 +546,7 @@ func TestDiskStorageManagerInit(t *testing.T) {
 		return
 	}
 
-	dsm.SetRoot(ROOT_ID_VERSION, VERSION+1)
+	dsm.SetRoot(RootIDVersion, VERSION+1)
 
 	err = dsm.Close()
 	if err != nil {
@@ -564,7 +564,7 @@ func testCannotInitPanic(t *testing.T) {
 			t.Error("Creating DiskStorageManager with invalid filename did not cause a panic.")
 		}
 	}()
-	NewDiskStorageManager(DBDIR+"/"+INVALID_FILE_NAME, false, true, true)
+	NewDiskStorageManager(DBDIR+"/"+InvalidFileName, false, true, true)
 }
 
 func testClosedPanic(t *testing.T, dsm *DiskStorageManager) {
