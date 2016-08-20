@@ -260,7 +260,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	ptr, err = psf.AllocatePage(view.TypeTranslationPage)
+	_, err = psf.AllocatePage(view.TypeTranslationPage)
 	if err != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
@@ -274,7 +274,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	ptr, err = psf.AllocatePage(view.TypeTranslationPage)
+	_, err = psf.AllocatePage(view.TypeTranslationPage)
 	if err != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
@@ -282,7 +282,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 
 	sf.ReleaseInUse(record)
 
-	ptr, err = psf.AllocatePage(view.TypeTranslationPage)
+	_, err = psf.AllocatePage(view.TypeTranslationPage)
 	if err != nil {
 		t.Error(err)
 		return
