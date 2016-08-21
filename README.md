@@ -63,7 +63,11 @@ Note: It is not (and will never be) possible to access the REST API via HTTP.
 
 Building EliasDB
 ----------------
-To build EliasDB from source you first have to checkout the source. Create a directory and change into it. Run then:
+To build EliasDB from source you need to have Go installed. There a are two options:
+
+### Checkout from github:
+
+Create a directory, change into it and run:
 ```
 git clone https://github.com/krotik/eliasdb/ .
 ```
@@ -71,6 +75,18 @@ git clone https://github.com/krotik/eliasdb/ .
 Assuming your GOPATH is set to the new directory you should be able to build the binary with:
 ```
 go install devt.de/eliasdb
+```
+
+### Using go get:
+
+Create a directory, change into it and run:
+```
+go get -d devt.de/common devt.de/eliasdb
+```
+
+Assuming your GOPATH is set to the new directory you should be able to build the binary with:
+```
+go build devt.de/eliasdb
 ```
 
 Further Reading
