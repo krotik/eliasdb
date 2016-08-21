@@ -111,7 +111,7 @@ func main() {
 	var err error
 	var gs graphstorage.GraphStorage
 
-	print(fmt.Sprintf("EliasDB %s", version.VERSION))
+	print(fmt.Sprintf("EliasDB %v.%v", version.VERSION, version.REV))
 
 	// Load configuration
 

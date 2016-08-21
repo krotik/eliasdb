@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"devt.de/common/httputil"
+	"devt.de/eliasdb/version"
 )
 
 const TESTPORT = ":9090"
@@ -115,14 +116,15 @@ func TestEndpointHandling(t *testing.T) {
 
 	// Test about endpoints
 
-	if res := sendTestRequest(queryURL+"/db/about", "GET", nil); res != `
+	if res := sendTestRequest(queryURL+"/db/about", "GET", nil); res != fmt.Sprintf(`
 {
   "api_versions": [
     "v1"
   ],
   "product": "EliasDB",
-  "version": "0.8"
-}`[1:] {
+  "revision": "%v",
+  "version": "%v"
+}`[1:], version.REV, version.VERSION) {
 		t.Error("Unexpected response:", res)
 		return
 	}

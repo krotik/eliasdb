@@ -19,6 +19,7 @@ Endpoint which returns an object with version information.
     api_versions : List of available API versions e.g. [ "v1" ]
     product      : Name of the API provider (EliasDB)
     version:     : Version of the API provider
+    revision:    : Revision of the API provider
 }
 */
 package api
@@ -58,6 +59,7 @@ func (a *aboutEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resour
 		"api_versions": []string{"v1"},
 		"product":      "EliasDB",
 		"version":      version.VERSION,
+		"revision":     version.REV,
 	}
 
 	// Write data

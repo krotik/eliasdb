@@ -14,3 +14,8 @@ package version
 VERSION is the version of EliasDB
 */
 const VERSION = "0.8"
+
+/*
+REV is the revision of EliasDB
+*/
+const REV = "0"
