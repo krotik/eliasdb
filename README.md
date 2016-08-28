@@ -3,8 +3,8 @@ EliasDB
 EliasDB is a graph based database which aims to provide a lightweight solution for projects which want to store their data as a graph.
 
 <p>
-<img src="https://devt.de/nightly/build.eliasdb.svg" alt="Build status">
-<a href="https://devt.de/nightly/test.eliasdb.html"><img src="https://devt.de/nightly/test.eliasdb.svg" alt="Build status"></a>
+<a href="http://devt.de/build_status.html"><img src="https://devt.de/nightly/build.eliasdb.svg" alt="Build status"></a>
+<a href="https://devt.de/nightly/test.eliasdb.html"><img src="https://devt.de/nightly/test.eliasdb.svg" alt="Code coverage"></a>
 <a href="https://goreportcard.com/report/github.com/krotik/eliasdb">
 <img src="https://goreportcard.com/badge/github.com/krotik/eliasdb?style=flat-square" alt="Go Report Card"></a>
 </p>
