@@ -26,7 +26,7 @@ Features
 
 Getting Started (standalone application)
 ----------------------------------------
-You can download a precompiled package for Win64 [here](https://raw.githubusercontent.com/krotik/eliasdb/master/res/eliasdb_v0_8.zip).
+You can download a precompiled package for Windows (win64) or Linux (amd64) [here](https://devt.de/build_status.html).
 
 Extract it and execute the executable. The executable should automatically create 3 subfolders and a configuration file. It should start an HTTPS server on port 9090. To see a terminal point your webbrowser to:
 ```
@@ -52,14 +52,14 @@ EliasDB uses a single configuration file called eliasdb.config.json. After start
 | HTTPSCertificate | Name of the webserver certificate which should be used. A new one is created if it does not exist. |
 | HTTPSHost | Hostname the webserver should listen to. This host is also used in the dynamically generated swagger definition. |
 | HTTPSKey | Name of the webserver private key which should be used. A new one is created if it does not exist. |
-| HTTPSPort | Pot the webserver should listen on. |
+| HTTPSPort | Port on which the webserver should listen on. |
 | LocationDatastore | Directory for datastore files. |
 | LocationHTTPS | Directory for the webserver's SSL related files. |
 | LocationWebFolder | Directory of the webserver's webfolder. |
 | LockFile | Lockfile for the webserver which will be watched duing runtime. Replacing the content of this file with a single character will shutdown the webserver gracefully. |
 | MemoryOnlyStorage | Flag if the datastore should only be kept in memory. |
-| ResultCacheMaxAgeSeconds | EQL queries create result sets which are cached. The value describes the amount of time a result is kept in the cache. |
-| ResultCacheMaxSize | EQL queries create result sets which are cached. The value describes the amount results which can be kept in the cache. |
+| ResultCacheMaxAgeSeconds | EQL queries create result sets which are cached. The value describes the amount of time in seconds a result is kept in the cache. |
+| ResultCacheMaxSize | EQL queries create result sets which are cached. The value describes the number of results which can be kept in the cache. |
 
 Note: It is not (and will never be) possible to access the REST API via HTTP.
 
