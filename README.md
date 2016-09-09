@@ -95,6 +95,7 @@ Further Reading
 ---------------
 - A design document which describes the different components of the graph database. [Link](/doc/elias_db_design.md)
 - A reference for the EliasDB query language EQL. [Link](/doc/eql.md)
+- A quick overview of what you can do when you embed EliasDB in your own Go project. [Link](/doc/embedding.md)
 
 License
 -------
