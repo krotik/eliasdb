@@ -1,0 +1,171 @@
+EliasDB Code Tutorial
+=====================
+The following text will give you an introduction to EliasDB's code structure and how to embed EliasDB in another Go project.
+
+Getting the source code
+-----------------------
+The easiest way to get the source code of EliasDB is to use go get. Assuming you have ...
+```
+go get ...
+```
+For the rest of this tutorial it is assumed that you have the following directory structure:
+
+| Path | Description |
+| --- | --- |
+| src/devt.de/common | Common code used by EliasDB |
+| src/devt.de/eliasdb/ | Root directory for EliasDB containing the main package for the standalone server |
+| src/devt.de/eliasdb/api | HTTP endpoints for EliasDB's REST API |
+| src/devt.de/eliasdb/eql | Parser and interpreter for EQL |
+| src/devt.de/eliasdb/graph | API to the graph storage |
+| src/devt.de/eliasdb/hash | H-Tree implementation for EliasDB's underlying key-value store |
+| src/devt.de/eliasdb/storage | Low level storage API |
+| src/dect.de/eliasdb/version | Version file |
+
+For this tutorial we create a demo file:
+
+src/devt.de/demo/demo.go
+
+
+Simple graph database setup
+---------------------------
+The first step is to create a graph storage which will store the data. The following code will
+create a disk storage in the db/ subdirectory:
+```
+func main() {
+
+	// Create a graph storage
+
+	gs, err := graphstorage.NewDiskGraphStorage("db")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer gs.Close()
+...
+```
+It is important to close a disk storage before shutdown. It is also possible to create a memory-only storage with:
+```
+	gs = graphstorage.NewMemoryGraphStorage(config.MemoryOnlyStorage)
+```
+
+After creating a storage we can now create a GraphManager object which provides the graph API:
+```
+	gm := graph.NewGraphManager(gs)
+
+```
+
+Storing and retrieving data
+---------------------------
+The main storage element in a graph database are nodes. All nodes stored in EliasDB are identified by a combination of key and kind. The node kind is basically the node type (e.g. Person) while the key is a node unique identifier.
+
+To store a single node in the datastore we can write the following code:
+```
+	node1 := data.NewGraphNode()
+	node1.SetAttr("key", "123")
+	node1.SetAttr("kind", "mynode")
+	node1.SetAttr("name", "Node1")
+	node1.SetAttr("text", "The first stored node")
+
+	gm.StoreNode("main", node1)
+```
+The attributes key and kind are compulsory. Storing a node with the same key and kind will overwrite any existing node. Each node should have a name which should be a human-readable label for the node. The StoreNode call gets a partition as the first argument. Nodes stored in separate partitions can not be linked by an edge. Search queries are scoped to a single partition.
+
+Nodes can be linked together via an edge:
+```
+	node2 := data.NewGraphNode()
+	node2.SetAttr(data.NodeKey, "456")
+	node2.SetAttr(data.NodeKind, "mynode")
+	node2.SetAttr(data.NodeName, "Node2")
+
+	gm.StoreNode("main", node2)
+
+	edge := data.NewGraphEdge()
+
+	edge.SetAttr(data.NodeKey, "abc")
+	edge.SetAttr(data.NodeKind, "myedge")
+
+	edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+	edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+	edge.SetAttr(data.EdgeEnd1Role, "node1")
+	edge.SetAttr(data.EdgeEnd1Cascading, true)
+
+	edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+	edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+	edge.SetAttr(data.EdgeEnd2Role, "node2")
+	edge.SetAttr(data.EdgeEnd2Cascading, false)
+
+	edge.SetAttr(data.NodeName, "Edge1")
+
+	gm.StoreEdge("main", edge)
+```
+Edges have more compulsory attributes than nodes. As well as key and kind for the edge itself, you also need to define for each end the key, kind, a role and a cascading flag. The cascading flag defines if delete actions to an end should be propagated to the other end. The role is a name which defines one end's relationship to the other. It is only used for traversals. An example relationship of nodes through an edge could be described like this:
+
+(Hans/Person) Father -- Family -- Child (Klaus/Person)
+
+We could traverse this relationship by writing:
+```
+    gm.Traverse("main", node1.Key(), node1.Kind(), "Father:Family:Child:Person", true)
+```
+The last boolean flag indicates if all data from the target node should be received. If set to false only the key and kind will be populated. If multiple edge kinds or roles should be traversed it is possible to use gm.TraverseMulti. Omitting a traversal component is like using a wildcard (e.g. :Family:: will traverse all family edges to any node kind).
+
+The storage of nodes and edges can be combined in a transaction. The transaction either inserts all items or none.
+```
+	trans := graph.NewGraphTrans(gm)
+	trans.StoreNode(...)
+	trans.StoreEdge(...)
+	trans.Commit()
+```
+Now that the datastore has some data we can use the graph API to query the data. To query a node you can use a lookup:
+```
+	n, err := gm.FetchNode("main", "123", "mynode")
+	fmt.Println(n, err)
+```
+To iterate over all nodes of a specific kind you can use a node iterator:
+```
+it, err := gm.NodeKeyIterator("main", "mynode")
+for it.HasNext() {
+	key := it.Next()
+	
+	if it.LastError != nil {
+		break
+	}
+
+	n, err := gm.FetchNode("main", key, "mynode")
+	fmt.Println(n, err)
+}
+```
+
+Querying the datastore
+----------------------
+Besides direct lookups and iterators the datastore also supports higher search functionality such as phrase searching and a query language.
+
+All data in the datastore is indexed. To query for a cerain phrase you can run a phrase search:
+```
+idx, idxerr := gm.NodeIndexQuery("main", "mynode")
+if idxerr == nil {
+
+	keys, err := idx.LookupPhrase("text", "first stored")
+	if err == nil {
+
+		for _, key := range keys {
+			n, err := gm.FetchNode("main", key, "mynode")
+			fmt.Println(n, err)
+		}
+	}
+}
+
+```
+For even more complex searches you can use EQL (see also the EQL manual):
+```
+res, err := eql.RunQuery("myquery", "main", "get mynode where name = 'Node2'", gm)
+
+fmt.Println(res, err)
+```
+
+Adding REST API endpoints
+-------------------------
+EliasDB's REST API can be added easily when using Go's default webserver and router:
+```
+api.RegisterRestEndpoints(v1.V1EndpointMap)
+api.RegisterRestEndpoints(api.GeneralEndpointMap)
+```
