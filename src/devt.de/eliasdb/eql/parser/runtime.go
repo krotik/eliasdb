@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package parser contains the EQL parser.
-
-Runtime provides the runtime component for a specific node in the AST.
-*/
 package parser
 
 /*

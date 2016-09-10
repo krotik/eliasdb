@@ -11,7 +11,8 @@
 /*
 Package graphstorage contains classes which model storage objects for graph data.
 
-Graph storage which stores its data on disk.
+There are two main storage objects: DiskGraphStorage which provides disk storage
+and MemoryGraphStorage which provides memory-only storage.
 */
 package graphstorage
 
@@ -118,7 +119,7 @@ func (dgs *DiskGraphStorage) FlushMain() error {
 
 /*
 StorageManager gets a storage manager with a certain name. A non-existing
-StorageManager is not created automatically if the create flag is set to false.
+StorageManager is created automatically if the create flag is set to true.
 */
 func (dgs *DiskGraphStorage) StorageManager(smname string, create bool) storage.Manager {
 

@@ -8,13 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package api contains general REST API definitions.
-
-Dynamically generated swagger definition file. See: http://swagger.io
-
-/swagger.json
-*/
 package api
 
 import (

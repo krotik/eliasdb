@@ -102,8 +102,8 @@ k5:eee
 		t.Error("Live item should be deleted")
 		return
 	}
-	
-		if mc.String() != `
+
+	if mc.String() != `
 k4:ddd
 k5:eee
 `[1:] {

@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package view contains general page view constants and functions.
-
-This file contains all known types of pageviews.
-*/
 package view
 
 /*

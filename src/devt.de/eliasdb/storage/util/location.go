@@ -11,14 +11,31 @@
 /*
 Package util contains utility functions for slot headers.
 
-This file contains utility functions to pack and unpack location information
+Packing and unpacking of slot sizes
+
+The package contains functions to pack/unpack sizes for physical slots and
+logical buckets. The size info is a 4 byte value which allocates 2 bytes
+for current size and 2 bytes for available size.
+
+	CCCC CCCC CCCC CCCC AAAA AAAA AAAA AAAA
+
+The allocated size value is a packed integer using a 2 bit multiplier
+in the beginning - using these packed values a slot can grow up to
+138681822 bytes (138 MB). The space allocation becomes more and more
+wasteful with increasing slot size. The current size is stored as a
+difference to the allocated size. The maximum difference between
+alloacted and current space is 65534 bytes.
+
+Packing and unpacking locations
+
+The package contains utility functions to pack and unpack location information
 in an uint64. A location is a pointer which identifies a specific record and
 within the record a specific offset.
 
 The 8 byte uint64 value is split into a 6 byte (48 bits) record address and
 2 byte offset.
 
-RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR OOOO OOOO OOOO OOOO
+	RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR RRRR OOOO OOOO OOOO OOOO
 
 We can address at maximum (having a record size of 32767 bytes):
 

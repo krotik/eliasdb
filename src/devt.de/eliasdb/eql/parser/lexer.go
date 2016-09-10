@@ -8,16 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package parser contains the EQL parser.
-
-Lexer to convert a given search query into a list of tokens.
-
-Based on talk by Rob Pike:
-
-Lexical Scanning in Go - Rob Pike
-https://www.youtube.com/watch?v=HxaD_trXwRE
-*/
 package parser
 
 import (

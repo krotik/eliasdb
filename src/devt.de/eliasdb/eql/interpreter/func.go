@@ -10,8 +10,6 @@
 
 /*
 Package interpreter contains the EQL interpreter.
-
-Function related runtime components
 */
 package interpreter
 

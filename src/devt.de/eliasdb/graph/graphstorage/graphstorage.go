@@ -8,15 +8,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package graphstorage contains classes which model storage objects for graph data.
-*/
 package graphstorage
 
 import "devt.de/eliasdb/storage"
 
 /*
-GraphStorage interface models the storage mechanism for the graph manager.
+GraphStorage interface models the storage backend for a graph manager.
 */
 type GraphStorage interface {
 

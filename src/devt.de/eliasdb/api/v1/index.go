@@ -8,49 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package v1 contains EliasDB REST API Version 1.
-
-REST endpoint to handle index queries.
-
-/index
-
-The index query endpoint should be used to run index search queries against partitions.
-Index queries look for words or phrases on all nodes of a given node kind.
-
-A request to phrase finds all nodes/edges where an attribute contains a certain phrase.
-A request url which runs a new phrase search should be of the following form:
-
-/index/<partition>/n/<node kind>?phrase=<phrase>&attr=<attribute>
-/index/<partition>/e/<edge kind>?phrase=<phrase>&attr=<attribute>
-
-The return data is a list of node keys:
-
-[ <node key1>, <node key2>, ... ]
-
-A request to word finds all nodes/edges where an attribute contains a certain word.
-A request url which runs a new word search should be of the following form:
-
-/index/<partition>/n/<node kind>?word=<word>&attr=<attribute>
-/index/<partition>/e/<edge kind>?word=<word>&attr=<attribute>
-
-The return data is a map which maps node key to a list of word positions:
-
-{
-	<node key> : [ <pos1>, <pos2>, ... ],
-	...
-}
-
-A request to value finds all nodes/edges where an attribute has a certain value.
-A request url which runs a new value search should be of the following form:
-
-/index/<partition>/n/<node kind>?value=<value>&attr=<attribute>
-/index/<partition>/e/<edge kind>?value=<value>&attr=<attribute>
-
-The return data is a list of node keys:
-
-[ <node key1>, <node key2>, ... ]
-*/
 package v1
 
 import (

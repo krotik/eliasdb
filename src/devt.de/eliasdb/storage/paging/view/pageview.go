@@ -15,8 +15,8 @@ PageView is the super-struct for all page views. A page view is special object
 attached to a particular StorageFile record. A view provides specialised
 functions for the record it is attached to.
 
-Use GetPageView if the record has already view information stored on it or
-NewPageView to initialise or reassign a given record.
+Use GetPageView() if the record has already view information stored on it or
+NewPageView() to initialise or reassign a given record.
 */
 package view
 

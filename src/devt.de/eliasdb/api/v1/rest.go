@@ -8,9 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package v1 contains EliasDB REST API Version 1.
-*/
 package v1
 
 import (

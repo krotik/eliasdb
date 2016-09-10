@@ -12,12 +12,30 @@
 Package hash provides a HTree implementation to provide key-value storage functionality
 for a StorageManager.
 
-The HTree provides a persistent hashtable. Storing values in buckets and buckets on
-pages as the tree gorwn. It is not possible to store nil values. Storing a nil value
+The HTree provides a persistent hashtable. Storing values in buckets on
+pages as the tree gorws. It is not possible to store nil values. Storing a nil value
 is equivalent to removing a key.
 
-The default tree has 4 levels each with 256 possible children. A hash code
-for the tree has 32 bits = 4 levels * 8 bit.
+As the tree grows each tree level contains pages with links to underlying pages.
+The last link is always to a bucket. The default tree has 4 levels each with 
+256 possible children. A hash code for the tree has 32 bits = 4 levels * 8 bit.
+
+Hash buckets are on the lowest level of the tree and contain actual keys and
+values. The object stores multiple keys and values if there are hash collisions.
+In a sparsely populated tree buckets can also be found on the upper levels.
+
+Iterator
+
+Entries in the HTree can be iterated by using an HTreeIterator. The HTree may
+change behind the iterator's back. The iterator will try to cope with best
+effort and only report an error as a last resort.
+
+Hash function
+
+The HTree uses an implementation of Austin Appleby's MurmurHash3 (32bit) function
+as hash function.
+
+Reference implementation: http://code.google.com/p/smhasher/wiki/MurmurHash3
 */
 package hash
 

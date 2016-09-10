@@ -8,14 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package graph contains the main API to the graph datastore.
-
-A transaction is used to build up multiple store and delete tasks for the
-graph database. Nothing is written to the database before calling commit().
-A transaction commit does an automatic rollback if an error occurs
-(except fatal disk write errors which will cause a panic).
-*/
 package graph
 
 import (

@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package interpreter contains the EQL interpreter.
-
-RuntimeProvider and Runtime for LOOKUP queries.
-*/
 package interpreter
 
 import (

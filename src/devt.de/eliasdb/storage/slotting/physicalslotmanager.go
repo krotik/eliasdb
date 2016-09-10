@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package slotting contains managers which deal with slots on pages.
-
-PhysicalSlotManager is a list manager for physical slots.
-*/
 package slotting
 
 import (

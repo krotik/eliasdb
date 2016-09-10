@@ -8,24 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package util contains utility classes for the graph storage.
-
-Index manager managing the full text search index. This index supports simple
-word searches as well as phrase searches.
-
-The index manages 2 types of entries:
-
-Each node attribute value is split up into words. Each word gets an entry:
-
-PREFIX_ATTR_WORD + attr num + word (string) -> ids + pos
-(provides word and phrase lookup)
-
-Each node attribute value is also converted into a MD5 sum:
-
-PREFIX_ATTR_HASH + attr num + hash (md5) -> ids
-(provides exact match lookup)
-*/
 package util
 
 import (

@@ -9,6 +9,9 @@
 
 /*
 Package bitutil contains common function for bit-level operations.
+
+Pack and Unpack functions are used to pack and unpack a list of non-zero numbers
+very efficiently.
 */
 package bitutil
 
@@ -32,7 +35,7 @@ func CompareByteArray(arr1 []byte, arr2 []byte) bool {
 			return false
 		}
 	}
-	return true;
+	return true
 }
 
 /*

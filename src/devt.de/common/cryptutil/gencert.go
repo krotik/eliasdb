@@ -1,11 +1,11 @@
 /*
 Package cryptutil contains cryptographic utility functions.
 
-Certificate generation code based on
+Certificate generation code based on:
 go source src/crypto/tls/generate_cert.go
 
 Copyright 2009 The Go Authors. All rights reserved.
-Use of this source code is governed by a BSD-style
+Use of this source code is governed by a BSD-style license.
 */
 package cryptutil
 

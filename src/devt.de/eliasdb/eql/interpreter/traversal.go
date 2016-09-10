@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package interpreter contains the EQL interpreter.
-
-Traversal runtime component.
-*/
 package interpreter
 
 import (
@@ -23,7 +18,7 @@ import (
 )
 
 /*
-Runtime for traversals
+traversalRuntime is the runtime for traversals.
 */
 type traversalRuntime struct {
 	rtp  *eqlRuntimeProvider

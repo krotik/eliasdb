@@ -11,10 +11,19 @@
 /*
 Package data contains classes and functions to handle graph data.
 
+Nodes
+
+Nodes are items stored in the graph. The graphNode object is the minimal
+implementation of the Node interface and represents a simple node. Setting a
+nil value to an attribute is equivalent to removing the attribute. An attribute
+value can be any object which can be serialized by gob.
+
+Edges
+
 Edges are items stored in the graph. Edges connect nodes. The graphEdge object
 is the minimal implementation of the Edge interface and represents a simple edge.
-Edges have attributes which may or may not be presentable as a string. Setting a
-nil value to an attribute is equivalent to removing the attribute.
+Setting a nil value to an attribute is equivalent to removing the attribute. An
+attribute value can be any object which can be serialized by gob.
 */
 package data
 

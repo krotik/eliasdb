@@ -11,16 +11,24 @@
 /*
 Package api contains general REST API definitions.
 
-Endpoint which returns an object with version information.
+The REST API provides an interface to EliasDB. It allows querying and modifying
+of the datastore. The API responds to GET, POST, PUT and DELETE requests in JSON
+if the request was successful (Return code 200 OK) and plain text in all other cases.
+
+Common API definitions
 
 /about
 
-{
-    api_versions : List of available API versions e.g. [ "v1" ]
-    product      : Name of the API provider (EliasDB)
-    version:     : Version of the API provider
-    revision:    : Revision of the API provider
-}
+Endpoint which returns an object with version information.
+
+	api_versions : List of available API versions e.g. [ "v1" ]
+	product      : Name of the API provider (EliasDB)
+	version:     : Version of the API provider
+	revision:    : Revision of the API provider
+
+/swagger.json
+
+Dynamically generated swagger definition file. See: http://swagger.io
 */
 package api
 

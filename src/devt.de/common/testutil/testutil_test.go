@@ -13,7 +13,69 @@ import (
 	"bytes"
 	"encoding/gob"
 	"testing"
+	"time"
 )
+
+func TestErrorTestingConnection(t *testing.T) {
+	c := &ErrorTestingConnection{}
+
+	// Check methods which do nothing
+
+	c.Close()
+	c.LocalAddr()
+	c.RemoteAddr()
+	c.SetDeadline(time.Now())
+	c.SetReadDeadline(time.Now())
+	c.SetWriteDeadline(time.Now())
+
+	c.In.WriteString("This is a test")
+	c.InErr = 4
+
+	tb := make([]byte, 4, 4)
+
+	// First read of 4 bytes should be fine
+
+	n, err := c.Read(tb)
+	if err != nil || n != 4 {
+		t.Error(n, err)
+		return
+	}
+
+	// Then we should get an error
+
+	n, err = c.Read(tb)
+	if err.Error() != "Test reading error" || n != 0 {
+		t.Error(n, err)
+		return
+	}
+
+	c.OutErr = 4
+
+	// First write of 4 bytes should be fine
+
+	n, err = c.Write([]byte("test"))
+	if err != nil || n != 4 {
+		t.Error(n, err)
+		return
+	}
+
+	// Then we should get an error
+
+	n, err = c.Write([]byte("test"))
+	if err.Error() != "Test writing error" || n != 0 {
+		t.Error(n, err)
+		return
+	}
+
+	c.OutErr = 0
+	c.OutClose = true
+
+	n, err = c.Write([]byte("test"))
+	if err != nil || n != 0 {
+		t.Error(n, err)
+		return
+	}
+}
 
 func TestErrorTestingBuffer(t *testing.T) {
 

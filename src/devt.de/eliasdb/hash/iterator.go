@@ -8,14 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package hash provides a HTree implementation to provide key-value storage functionality
-for a StorageManager.
-
-Iterator object to iterate HTree keys and values. The HTree may change behind
-the iterator's back. The iterator will try to cope with best efforts and
-only report an error as a last resort.
-*/
 package hash
 
 import (

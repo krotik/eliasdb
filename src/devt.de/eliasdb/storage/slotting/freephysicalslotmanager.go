@@ -8,12 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package slotting contains managers which deal with slots on pages.
-
-FreePhysicalSlotManager is a list manager for free physical slots. This manager
-object is used by the PhysicalSlotManager.
-*/
 package slotting
 
 import (

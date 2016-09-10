@@ -8,12 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package interpreter contains the EQL interpreter.
-
-Runtime provider for EQL. The eqlRuntimeProvider defines the main interpreter
-datastructure and all functions for general evaluation.
-*/
 package interpreter
 
 import (
@@ -56,7 +50,8 @@ const GroupNodeKind = "group"
 // ========================
 
 /*
-General runtime provider data structure
+eqlRuntimeProvider defines the main interpreter
+datastructure and all functions for general evaluation.
 */
 type eqlRuntimeProvider struct {
 	name       string         // Name to identify the input

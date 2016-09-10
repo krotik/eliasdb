@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package graph contains the main API to the graph datastore.
-
-This module contains iterator related code.
-*/
 package graph
 
 import (

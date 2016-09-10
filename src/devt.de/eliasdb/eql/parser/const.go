@@ -11,7 +11,24 @@
 /*
 Package parser contains the EQL parser.
 
-Constants for parser and lexer.
+Lexer
+
+Lex() is a lexer function to convert a given search query into a list of tokens.
+
+Based on a talk by Rob Pike: Lexical Scanning in Go
+
+https://www.youtube.com/watch?v=HxaD_trXwRE
+
+Parser
+
+Parse() is a parser which produces a parse tree from a given set of lexer tokens.
+
+Based on an article by Douglas Crockford: Top Down Operator Precedence
+
+http://javascript.crockford.com/tdop/tdop.html
+
+ParseWithRuntime() parses a given input and decorates the resulting parse tree
+with runtime components which can be used to interpret the parsed query.
 */
 package parser
 

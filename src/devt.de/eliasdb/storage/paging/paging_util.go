@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package paging contains functions and constants necessary for paging of records.
-
-Utility functions for a PagedStorageFile.
-*/
 package paging
 
 /*

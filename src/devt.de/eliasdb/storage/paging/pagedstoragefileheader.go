@@ -8,12 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package paging contains functions and constants necessary for paging of records.
-
-PagedStorageFileHeader is a wrapper object for the header record of a StorageFile.
-The header record stores information about linked lists and root values.
-*/
 package paging
 
 import "devt.de/eliasdb/storage/file"

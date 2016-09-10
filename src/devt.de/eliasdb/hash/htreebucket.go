@@ -8,13 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package hash provides a HTree implementation to provide key-value storage functionality
-for a StorageManager.
-
-Hash bucket which contains actual keys and values. The object stores multiple
-keys and values if there are hash collisions.
-*/
 package hash
 
 import (

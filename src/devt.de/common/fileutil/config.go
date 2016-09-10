@@ -9,8 +9,6 @@
 
 /*
 Package fileutil contains file based utilities and helper functions.
-
-JSON based configuration files which can be loaded on startup.
 */
 package fileutil
 
@@ -20,8 +18,9 @@ import (
 )
 
 /*
-LoadConfig loads or creates a config file. Missing settings from the config file
-will be filled with default settings.
+LoadConfig loads or creates a JSON based configuration file. Missing settings
+from the config file will be filled with default settings. This function provides
+a simple mechanism for programs to handle user-defined configuration files.
 */
 func LoadConfig(filename string, defaultConfig map[string]interface{}) (map[string]interface{}, error) {
 	var mdata []byte

@@ -7,6 +7,9 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/*
+Package pools contains object pooling utilities.
+*/
 package pools
 
 import (

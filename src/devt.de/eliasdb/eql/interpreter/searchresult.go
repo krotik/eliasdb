@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package interpreter contains the EQL interpreter.
-
-A search result represents the result of an EQL query.
-*/
 package interpreter
 
 import (
@@ -26,7 +21,7 @@ import (
 )
 
 /*
-SearchHeader is the header of a search result
+SearchHeader is the header of a search result.
 */
 type SearchHeader struct {
 	ResPrimaryKind string   // Primary node kind
@@ -66,7 +61,7 @@ func (sh *SearchHeader) Data() []string {
 }
 
 /*
-SearchResult data structure.
+SearchResult data structure. A search result represents the result of an EQL query.
 */
 type SearchResult struct {
 	name      string     // Name to identify the result

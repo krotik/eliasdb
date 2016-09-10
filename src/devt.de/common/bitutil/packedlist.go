@@ -7,11 +7,6 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/*
-Package bitutil contains common function for bit-level operations.
-
-Functions to pack and unpack a list of non-zero numbers very efficiently.
-*/
 package bitutil
 
 import (

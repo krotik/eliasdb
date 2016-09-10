@@ -23,6 +23,25 @@ func TestPluralCompareByteArray(t *testing.T) {
 		t.Error("1 item should have no 's'")
 	}
 }
+func TestStripCStyleComments(t *testing.T) {
+
+	test := `
+// Comment1
+This is a test
+/* A
+comment
+// Comment2
+  */ bla
+`
+
+	if out := string(StripCStyleComments([]byte(test))); out != `
+This is a test
+ bla
+` {
+		t.Error("Unexpected return:", out)
+		return
+	}
+}
 
 func TestGlobToRegex(t *testing.T) {
 	globMatch(t, true, "*", "^$", "foo", "bar")
@@ -201,9 +220,9 @@ func TestGenerateRollingString(t *testing.T) {
 }
 
 func TestMD5HexString(t *testing.T) {
-	res :=  MD5HexString("This is a test") 
+	res := MD5HexString("This is a test")
 	if res != "ce114e4501d2f4e2dcea3e17b546f339" {
 		t.Error("Unexpected md5 hex result", res)
-		
+
 	}
 }

@@ -21,6 +21,15 @@ import (
 	"strings"
 )
 
+var cSyleCommentsRegexp = regexp.MustCompile("(?s)//.*?\n|/\\*.*?\\*/")
+
+/*
+StripCStyleComments strips out C-Style comments from a given string.
+*/
+func StripCStyleComments(text []byte) []byte {
+	return cSyleCommentsRegexp.ReplaceAll(text, nil)
+}
+
 /*
 Plural returns the string 's' if the parameter is greater than one.
 */

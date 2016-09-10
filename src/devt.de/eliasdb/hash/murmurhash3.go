@@ -7,14 +7,6 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/*
-Package hash provides a HTree implementation to provide key-value storage functionality
-for a StorageManager.
-
-Implementation of Austin Appleby's MurmurHash3 (32bit)
-
-Reference implementation: http://code.google.com/p/smhasher/wiki/MurmurHash3
-*/
 package hash
 
 import "fmt"

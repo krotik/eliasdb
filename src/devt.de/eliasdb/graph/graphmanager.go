@@ -8,50 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package graph contains the main API to the graph datastore.
-
-A graph manager handles the graph storage and provides the API for
-the graph database.
-
-Names database
-==============
-Names can be encoded (into a number) or decoded (into a string)
-
-32 bit values for any given node attribute names
-16 bit values for any given edge role names
-16 bit values for any given edge kind names
-
-Nodes database
-==============
-Each node kind database stores:
-
-PREFIX_NS_ATTRS + node key -> [ ATTRS ]
-(a list of attributes of a certain node)
-
-PREFIX_NS_ATTR +  node key + attr num -> value
-(attribute value of a certain node)
-
-PREFIX_NS_SPECS + node key -> map[spec]""
-(a lookup for available specs for a certain node)
-
-PREFIX_NS_EDGE + node key + spec -> map[edge key]edgeinfo{other node key, other node kind}]
-(connection from one node to another via a spec)
-
-Edges database
-==============
-Each edge kind database stores:
-
-PREFIX_NS_ATTRS + edge key -> [ ATTRS ]
-(a list of attributes of a certain edge)
-
-PREFIX_NS_ATTR + edge key + attr num -> value
-(attribute value of a certain edge)
-
-Index database
-==============
-This is managed by util/indexmanager.go
-*/
 package graph
 
 import (

@@ -11,8 +11,31 @@
 /*
 Package file deals with low level file storage and transaction management.
 
-Record is a wrapper data structure for a byte array which provides read and write
-methods for several data types.
+StorageFile
+
+StorageFile models a logical storage file which stores fixed size records on
+disk. Each record has a unique record id. On disk this logical storage file
+might be split into several smaller files. StorageFiles can be reused after
+they were closed if the transaction management has been disabled. This is 
+not the case otherwise.
+
+Record
+
+A record is a byte slice of a StorageFile. It is a wrapper data structure for
+a byte array which provides read and write methods for several data types.
+
+TransactionManager
+
+TransactionManager provides an optional transaction management for StorageFile.
+
+When used each record which is released from use is added to an in memory
+transaction log. Once the client calls Flush() on the StorageFile the
+in memory transaction is written to a transaction log on disk. The in-memory log
+is kept. The in-memory transaction log is written to the actual StorageFile once
+maxTrans is reached or the StorageFile is closed.
+
+Should the process crash during a transaction, then the transaction log is
+written to the StorageFile on the next startup using the recover() function.
 */
 package file
 

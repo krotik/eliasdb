@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package graph contains the main API to the graph datastore.
-
-Graph rules provide automatic operations which help to keep the graph consistent.
-*/
 package graph
 
 import (
@@ -195,7 +190,8 @@ func (r *SystemRuleDeleteNodeEdges) Handle(gm *Manager, trans *Trans, event int,
 // =====================================
 
 /*
-SystemRuleUpdateNodeStats is a system rule to update node stat entries in the MainDB.
+SystemRuleUpdateNodeStats is a system rule to update info entries such as
+known node or edge kinds in the MainDB.
 */
 type SystemRuleUpdateNodeStats struct {
 }

@@ -8,46 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package v1 contains EliasDB REST API Version 1.
-
-REST endpoint to handle queries.
-
-/query
-
-The query endpoint should be used to run EQL search queries against partitions.
-The return value is always a list (even if there is only a single entry).
-
-A query result gets an ID and is stored in a cache. The id is returned in the
-X-Cache-Id header. Subsequent requests for the same result can use the id
-instead of a query.
-
-The endpoint supports the optional limit and offset parameter:
-
-limit  - How many list items to return
-offset - Offset in the dataset
-
-The total number of entries in the result is returned in the X-Total-Count header.
-A request url which runs a new query should be of the following form:
-
-/query/<partition>?q=<query>
-/query/<partition>?rid=<result id>
-
-The return data is a result object:
-
-{
-    header  : {
-                  labels       : All column labels of the search result.
-                  format       : All column format definitions of the search result.
-                  data         : The data which is displayed in each column of the search result.
-                                 (e.g. 1:n:name - Name of starting nodes,
-	                                   3:e:key  - Key of edge traversed in the second traversal)
-                  primary_kind : The primary kind of the search result.
-	          }
-    rows    : [ [ <col1>, <col2>, ... ] ]
-	sources : [ [ <src col1>, <src col2>, ... ] ]
-}
-*/
 package v1
 
 import (

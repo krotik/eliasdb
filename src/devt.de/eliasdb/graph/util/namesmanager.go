@@ -8,13 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package util contains utility classes for the graph storage.
-
-Name manager managing names of kinds, roles and attributes. Each stored name
-gets either a 16 or 32 bit (little endian) number assigned. The manager provides functions to lookup
-these names or their numbers.
-*/
 package util
 
 import "encoding/binary"

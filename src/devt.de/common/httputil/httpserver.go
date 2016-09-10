@@ -9,7 +9,7 @@
 
 /*
 Package httputil contains a HTTP/HTTPS Server which can be stopped via signals
-or via a file lock.
+or a Shutdown() call.
 */
 package httputil
 

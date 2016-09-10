@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package storage contains API classes for data storage in slots.
-
-A disk storage manager handles the data storage on disk.
-*/
 package storage
 
 import (

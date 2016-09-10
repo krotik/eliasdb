@@ -15,8 +15,7 @@ package errorutil
 import "strings"
 
 /*
-CompositeError datastructure. Composite errors can collect multiple errors in a
-single error object.
+CompositeError can collect multiple errors in a single error object.
 */
 type CompositeError struct {
 	Errors []string

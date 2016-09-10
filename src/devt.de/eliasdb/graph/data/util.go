@@ -8,9 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package data contains classes and functions to handle graph data.
-*/
 package data
 
 import "devt.de/common/datautil"

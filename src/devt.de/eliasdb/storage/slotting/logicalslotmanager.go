@@ -8,12 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package slotting contains managers which deal with slots on pages.
-
-LogicalSlotManager is a list manager for logical slots. Logical slots are stored
-on translation pages which store just pointers to physical slots.
-*/
 package slotting
 
 import (

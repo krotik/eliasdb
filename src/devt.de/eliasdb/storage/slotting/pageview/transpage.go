@@ -8,12 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package pageview contains object wrappers for different page types.
-
-TransPage is a page which holds data to translate between physical and logical
-slots.
-*/
 package pageview
 
 import (

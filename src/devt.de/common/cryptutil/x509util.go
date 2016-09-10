@@ -7,9 +7,6 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/*
-Package cryptutil contains cryptographic utility functions.
-*/
 package cryptutil
 
 import (

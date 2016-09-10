@@ -7,14 +7,6 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/*
-Package datautil contains general data handling objects and helper methods.
-
-A map based cache object storing string->interface{}. It is possible to specify
-a maximum size, which when reached causes the oldest entries to be removed.
-It is also possible to set an expiry time for values which causes values which
-are too old to be purged.
-*/
 package datautil
 
 import (
@@ -27,7 +19,10 @@ import (
 )
 
 /*
-MapCache datastructure.
+MapCache is a map based cache object storing string->interface{}. It is possible
+to specify a maximum size, which when reached causes the oldest entries to be
+removed. It is also possible to set an expiry time for values. Values which are
+old are purged on the next access to the object.
 */
 type MapCache struct {
 	data    map[string]interface{} // Data for the cache

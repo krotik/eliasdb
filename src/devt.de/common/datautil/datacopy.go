@@ -9,8 +9,6 @@
 
 /*
 Package datautil contains general data handling objects and helper methods.
-
-Common functions for copying data.
 */
 package datautil
 

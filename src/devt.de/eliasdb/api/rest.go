@@ -8,14 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package api contains general REST API definitions.
-
-RESTful API for EliasDB. This REST API provides an interface to EliasDB.
-It allows querying and modifying of the datastore. The API responds to GET,
-POST, PUT and DELETE requests in JSON if the request was successful
-(Return code 200 OK) and plain text in all other cases.
-*/
 package api
 
 import (

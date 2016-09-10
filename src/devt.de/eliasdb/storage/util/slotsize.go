@@ -8,22 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package util contains utility functions for slot.
-
-This file contains functions to pack/unpack sizes for physical slots and
-logical buckets. The size info is a 4 byte value which allocates 2 bytes
-for current size and 2 bytes for available size.
-
-CCCC CCCC CCCC CCCC AAAA AAAA AAAA AAAA
-
-The allocated size value is a packed integer using a 2 bit multiplier
-in the beginning - using these packed values a slot can grow up to
-138681822 bytes (138 MB). The space allocation becomes more and more
-wasteful with increasing slot size. The current size is stored as a
-difference to the allocated size. The maximum difference between
-alloacted and current space is 65534 bytes.
-*/
 package util
 
 import (

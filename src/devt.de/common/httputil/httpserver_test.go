@@ -31,8 +31,8 @@ import (
 
 const certdir = "certs"
 
-const testporthttp = ":9090"
-const testporthttps = ":9091"
+const testporthttp = ":9050"
+const testporthttps = ":9051"
 
 const invalidFileName = "**" + string(0x0)
 
@@ -177,7 +177,7 @@ func TestSignalling(t *testing.T) {
 	var wg2 sync.WaitGroup
 	wg2.Add(1)
 	hs2 := &HTTPServer{}
-	err := hs2.RunHTTPServer(":9090", &wg2)
+	err := hs2.RunHTTPServer(testporthttp, &wg2)
 	if hs2.LastError == nil || (hs2.LastError.Error() != "listen tcp "+testporthttp+
 		": bind: address already in use" && hs2.LastError.Error() != "listen tcp "+testporthttp+
 		": bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.") ||

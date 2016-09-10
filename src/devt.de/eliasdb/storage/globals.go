@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package storage contains API classes for data storage in slots.
-
-Global variables for StorageManagers.
-*/
 package storage
 
 import (

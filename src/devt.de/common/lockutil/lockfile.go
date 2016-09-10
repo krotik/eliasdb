@@ -9,7 +9,10 @@
 
 /*
 Package lockutil contains a file based lock which can be used to lock file resources
-across different processes.
+across different processes. The lock file is monitored by a Go routine. Invalidating
+the lock file (e.g. just writing a single character to it) causes the Go routine
+to exit. A client can check if the lockfile is still being monitored by calling
+WatcherRunning().
 */
 package lockutil
 

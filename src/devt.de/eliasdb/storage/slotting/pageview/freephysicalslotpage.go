@@ -8,12 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package pageview contains object wrappers for different page types.
-
-FreePhysicalSlotPage is a page which holds information about free physical slots.
-The page stores the slot location and its size in a slotinfo data structure.
-*/
 package pageview
 
 import (

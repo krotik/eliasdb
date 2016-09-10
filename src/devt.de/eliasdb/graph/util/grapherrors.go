@@ -11,8 +11,34 @@
 /*
 Package util contains utility classes for the graph storage.
 
-Graph related errors. Low-level errors should be wrapped in a graph error
+GraphError
+
+Models a graph related error. Low-level errors should be wrapped in a GraphError
 before they are returned to a client.
+
+IndexManager
+
+Manages the full text search index. The index supports simple word searches as
+well as phrase searches.
+
+The index is a basically a key-value lookup which manages 2 types of entries:
+
+Each node attribute value is split up into words. Each word gets an entry:
+
+PrefixAttrWord + attr num + word (string) -> ids + pos
+(provides word and phrase lookup)
+
+Each node attribute value is also converted into a MD5 sum which makes attribute
+value lookups very efficient:
+
+PrefixAttrHash + attr num + hash (md5) -> ids
+(provides exact match lookup)
+
+NamesManager
+
+Manages names of kinds, roles and attributes. Each stored name gets either a 16
+or 32 bit (little endian) number assigned. The manager provides functions to lookup
+either the names or their numbers.
 */
 package util
 

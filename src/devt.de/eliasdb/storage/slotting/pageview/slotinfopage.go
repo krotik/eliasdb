@@ -8,13 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package pageview contains object wrappers for different page types.
-
-SlotInfoPage is the super-struct for all page views which manage slotinfos.
-Slotinfo are location (see location.go) pointers into the data store containing
-record id and offset.
-*/
 package pageview
 
 import (

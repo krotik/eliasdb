@@ -11,7 +11,92 @@
 /*
 Package graph contains the main API to the graph datastore.
 
-This file contains constants.
+Manager API
+
+The main API is provided by a Manager object which can be created with the
+NewGraphManager() constructor function. The manager CRUD functionality for
+nodes and edges through store, fetch and remove functions. It also provides
+the basic traversal functionality which allos the traversal from one node to
+other nodes.
+
+Node iterator
+
+All available node keys in a partition of a given kind can be iterated by using
+a NodeKeyIterator. The manager can produce these with the NodeKeyIterator()
+function.
+
+Fulltext search
+
+All nodes and edges in the datastore are indexed. The index can be queried
+using a IndexQuery object. The manager can produce these with the NodeIndexQuery()
+or EdgeIndexQuery function.
+
+Transactions
+
+A transaction is used to build up multiple store and delete tasks for the
+graph database. Nothing is written to the database before calling commit().
+A transaction commit does an automatic rollback if an error occurs
+(except fatal disk write errors which might cause a panic).
+
+A trans object can be created with the NewGraphTrans() function.
+
+Rules
+
+(Use with caution)
+
+Graph rules provide automatic operations which help to keep the graph consistent.
+Rules trigger on global graph events. The rules SystemRuleDeleteNodeEdges and
+SystemRuleUpdateNodeStats are automatically loaded when a new Manager is created.
+See the code for further details.
+
+Graph databases
+
+A graph manager handles the graph storage and provides the API for
+the graph database. The storage is divided into several databases:
+
+Main database
+
+MainDB stores various meta information such as known node/edge kinds, attributes
+or version information.
+
+Names database
+
+Names can be encoded (into a number) or decoded (into a string)
+
+	32 bit values for any given node attribute names
+	16 bit values for any given edge role names
+	16 bit values for any given edge kind names
+
+Nodes database
+
+Each node kind database stores:
+
+	PrefixNSAttrs + node key -> [ ATTRS ]
+	(a list of attributes of a certain node)
+
+	PrefixNSAttr + node key + attr num -> value
+	(attribute value of a certain node)
+
+	PrefixNSSpecs + node key -> map[spec]<empty string>
+	(a lookup for available specs for a certain node)
+
+	PrefixNSEdge + node key + spec -> map[edge key]edgeinfo{other node key, other node kind}]
+	(connection from one node to another via a spec)
+
+Edges database
+
+Each edge kind database stores:
+
+	PrefixNSAttrs + edge key -> [ ATTRS ]
+	(a list of attributes of a certain edge)
+
+	PrefixNSAttr + edge key + attr num -> value
+	(attribute value of a certain edge)
+
+Index database
+
+The text index managed by util/indexmanager.go. IndexQuery provides access to
+the full text search index.
 */
 package graph
 

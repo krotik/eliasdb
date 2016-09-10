@@ -8,15 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package file deals with low level file storage and transaction management.
-
-StorageFile models a logical storage file which stores fixed size records on
-disk. Each record has a unique record id. On disk this record file might be
-split into several smaller files. StorageFiles can be reused after they were
-closed if the transaction management has been disabled. This is not the case
-otherwise.
-*/
 package file
 
 import (

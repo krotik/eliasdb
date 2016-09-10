@@ -8,23 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package v1 contains EliasDB REST API Version 1.
-
-REST endpoint to return general database information.
-
-/info
-
-The info endpoint returns general database information such as known
-node kinds, known attributes, etc ..
-
-The return data is a key-value map:
-
-{
-	<info name> : <info value>,
-	...
-}
-*/
 package v1
 
 import (

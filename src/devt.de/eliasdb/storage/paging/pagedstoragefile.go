@@ -8,15 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package paging contains functions and constants necessary for paging of records.
-
-PagedStorageFile is a wrapper object for a StorageFile which views the file
-records as a linked list of pages.
-
-NOTE: Operations on this page are expected to either fail completely or succeed. Errors
-in the middle of an operation may leave the datastructures in an inconsistent state.
-*/
 package paging
 
 import (

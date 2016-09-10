@@ -7,11 +7,6 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/*
-Package datautil contains general data handling objects and helper methods.
-
-A persistent map storing string values.
-*/
 package datautil
 
 import (
@@ -20,7 +15,7 @@ import (
 )
 
 /*
-PersistentMap datastructure.
+PersistentMap is a persistent map storing string values.
 */
 type PersistentMap struct {
 	filename string            // File of the persistent map

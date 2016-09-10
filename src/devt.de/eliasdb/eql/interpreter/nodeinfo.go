@@ -8,11 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package interpreter contains the EQL interpreter.
-
-NodeInfo objects are used by the EQL interpreter to format search results.
-*/
 package interpreter
 
 import (
@@ -24,7 +19,8 @@ import (
 )
 
 /*
-NodeInfo interface.
+NodeInfo interface. NodeInfo objects are used by the EQL interpreter to format
+search results.
 */
 type NodeInfo interface {
 	/*

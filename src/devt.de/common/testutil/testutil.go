@@ -13,9 +13,92 @@ Package testutil contains common datastructures and functions for testing.
 package testutil
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"net"
+	"time"
 )
+
+/*
+ErrorTestingConnection testing object for connection errors.
+*/
+type ErrorTestingConnection struct {
+	In       bytes.Buffer
+	Out      bytes.Buffer
+	rc       int
+	InErr    int
+	wc       int
+	OutErr   int
+	OutClose bool
+}
+
+/*
+Read reads from the test connection in buffer.
+*/
+func (c *ErrorTestingConnection) Read(b []byte) (n int, err error) {
+	c.rc += len(b)
+	if c.InErr != 0 && c.rc > c.InErr {
+		return 0, errors.New("Test reading error")
+	}
+	return c.In.Read(b)
+}
+
+/*
+Write write to the test connections buffer.
+*/
+func (c *ErrorTestingConnection) Write(b []byte) (n int, err error) {
+	c.wc += len(b)
+	if c.OutErr != 0 && c.wc > c.OutErr {
+		return 0, errors.New("Test writing error")
+	}
+	if c.OutClose {
+		return 0, nil
+	}
+	return c.Out.Write(b)
+}
+
+/*
+Close is a method stub to satisfy the net.Conn interface.
+*/
+func (c *ErrorTestingConnection) Close() error {
+	return nil
+}
+
+/*
+LocalAddr is a method stub to satisfy the net.Conn interface.
+*/
+func (c *ErrorTestingConnection) LocalAddr() net.Addr {
+	return nil
+}
+
+/*
+RemoteAddr is a method stub to satisfy the net.Conn interface.
+*/
+func (c *ErrorTestingConnection) RemoteAddr() net.Addr {
+	return nil
+}
+
+/*
+SetDeadline is a method stub to satisfy the net.Conn interface.
+*/
+func (c *ErrorTestingConnection) SetDeadline(t time.Time) error {
+	return nil
+}
+
+/*
+SetReadDeadline is a method stub to satisfy the net.Conn interface.
+*/
+func (c *ErrorTestingConnection) SetReadDeadline(t time.Time) error {
+	return nil
+}
+
+/*
+SetWriteDeadline is a method stub to satisfy the net.Conn interface.
+*/
+func (c *ErrorTestingConnection) SetWriteDeadline(t time.Time) error {
+	return nil
+}
 
 /*
 GobTestObject testing object for gob errors.

@@ -9,10 +9,31 @@
  */
 
 /*
-Package storage contains API classes for data storage in slots.
+Package storage contains the low-level API for data storage. Data is stored
+in slots. The interface defines methods to store, retrieve, update and delete
+a given object to and from the disk. There are 3 main implementations:
 
-Cache wrapper for DiskStorageManager. The cache has a fixed size and keeps the
-most recent elements.
+DiskStorageManager
+
+A disk storage manager handles the data storage on disk. It controls the actual
+PhysicalSlotManager and LogicalSlotManager objects. It holds references to all
+involved files and ensures exclusive access to them through a generated lock
+file. The lockfile is checked and attempting to open another instance of the
+DiskStorageManager on the same files will result in an error. The DiskStorageManager
+is also responsible for marshalling given abstract objects into a binary form which
+can be written to physical slots.
+
+CachedDiskStorageManager
+
+The CachedDiskStorageManager is a cache wrapper for the DiskStorageManager. Its
+purpose is to intercept calls and to maintain a cache of stored objects. The cache
+is limited in size by the number of total objects it references. Once the cache
+is full it will forget the objects which have been requested the least.
+
+MemoryStorageManager
+
+A storage manager which keeps all its data in memory and provides several
+error simulation facilities.
 */
 package storage
 

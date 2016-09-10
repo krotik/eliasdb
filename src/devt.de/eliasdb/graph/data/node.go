@@ -8,14 +8,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/*
-Package data contains classes and functions to handle graph data.
-
-Nodes are items stored in the graph. The graphNode object is the minimal
-implementation of the Node interface and represents a simple node. Nodes
-have attributes which may or may not be presentable as a string. Setting a
-nil value to an attribute is equivalent to removing the attribute.
-*/
 package data
 
 import (
