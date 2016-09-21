@@ -105,11 +105,11 @@ Functions
 Functions can be used to construct result values. A function can be used inside a where clause and inside a show clause. All function start with an “@” sign.
 
 Functions for conditions:
-
-- count(<traversal spec>) - Counts how many nodes can be reached via a given spec from the traversal step of the condition.
-
+```
+count(<traversal spec>) - Counts how many nodes can be reached via a given spec from the traversal step of the condition.
+```
 
 Functions for the show clause:
-
-- count(<traversal step>, <traversal spec>) - Counts how many nodes can be reached via a given spec from a given traversal step.
-
+```
+count(<traversal step>, <traversal spec>) - Counts how many nodes can be reached via a given spec from a given traversal step.
+```
