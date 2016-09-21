@@ -28,7 +28,7 @@ The examples in this tutorial are based on an example dataset which contains inf
 
 store
 
-into the terminal and press enter. Copy now the contents of the file [tutorial_data.json](http://) into the terminal - either drag the file onto the terminal input or copy/paste its contents. 
+into the terminal and press enter. Copy now the contents of the file [tutorial_data.json](https://github.com/krotik/eliasdb/blob/master/doc/tutorial_data.json?raw=true) into the terminal - either drag the file onto the terminal input or copy/paste its contents. 
 
 ![](https://github.com/krotik/eliasdb/blob/master/doc/tutorial2.png?raw=true)
 
