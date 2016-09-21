@@ -106,10 +106,10 @@ Functions can be used to construct result values. A function can be used inside 
 
 Functions for conditions:
 ```
-count(<traversal spec>) - Counts how many nodes can be reached via a given spec from the traversal step of the condition.
+@count(<traversal spec>) - Counts how many nodes can be reached via a given spec from the traversal step of the condition.
 ```
 
 Functions for the show clause:
 ```
-count(<traversal step>, <traversal spec>) - Counts how many nodes can be reached via a given spec from a given traversal step.
+@count(<traversal step>, <traversal spec>) - Counts how many nodes can be reached via a given spec from a given traversal step.
 ```
