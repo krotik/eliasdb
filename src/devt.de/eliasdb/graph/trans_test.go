@@ -48,7 +48,7 @@ func TestNormalTrans(t *testing.T) {
 		return edge
 	}
 
-	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir4)
+	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir4, false)
 	if err != nil {
 		t.Error(err)
 		return

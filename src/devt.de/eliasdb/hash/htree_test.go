@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestHTreeSerialization(t *testing.T) {
-	sm := storage.NewDiskStorageManager(DBDIR+"/test1", false, false, false)
+	sm := storage.NewDiskStorageManager(DBDIR+"/test1", false, false, false, false)
 
 	htree, err := NewHTree(sm)
 	if err != nil {
@@ -64,7 +64,7 @@ func TestHTreeSerialization(t *testing.T) {
 
 	sm.Close()
 
-	sm2 := storage.NewDiskStorageManager(DBDIR+"/test1", false, false, false)
+	sm2 := storage.NewDiskStorageManager(DBDIR+"/test1", false, false, false, false)
 
 	htree2, _ := LoadHTree(sm2, loc)
 

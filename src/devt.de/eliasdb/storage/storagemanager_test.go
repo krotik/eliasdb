@@ -67,7 +67,7 @@ func TestStorageManagerConcurrency(t *testing.T) {
 	threads := 50
 	ops := 1000
 
-	dsm := NewDiskStorageManager(DBDIR+"/ctest_dsm", false, true, false)
+	dsm := NewDiskStorageManager(DBDIR+"/ctest_dsm", false, false, true, false)
 	cdsm := NewCachedDiskStorageManager(dsm, 50000)
 	sm := cdsm
 
@@ -121,7 +121,7 @@ func TestStorageManagerPerformance(t *testing.T) {
 	// loose the benefit of the cache (i.e. oldest elements are removed first)
 
 	for i := 1000; i < 51001; i += 5000 {
-		dsm := NewDiskStorageManager(DBDIR+"/ptest_dsm", false, true, false)
+		dsm := NewDiskStorageManager(DBDIR+"/ptest_dsm", false, false, true, false)
 		cdsm := NewCachedDiskStorageManager(dsm, 50000)
 		runPerformanceTest("1", cdsm, i)
 	}

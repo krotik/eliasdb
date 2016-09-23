@@ -60,7 +60,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestDiskGraphStorage(t *testing.T) {
-	dgsnew, err := NewDiskGraphStorage(diskGraphStorageTestDBDir)
+	dgsnew, err := NewDiskGraphStorage(diskGraphStorageTestDBDir, false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -121,7 +121,7 @@ func TestDiskGraphStorage(t *testing.T) {
 
 	// Open the storage again to make sure we can load it
 
-	dgs, err := NewDiskGraphStorage(diskGraphStorageTestDBDir)
+	dgs, err := NewDiskGraphStorage(diskGraphStorageTestDBDir, false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -132,6 +132,18 @@ func TestDiskGraphStorage(t *testing.T) {
 		return
 	}
 
+	// Check readonly mode
+
+	dgs.(*DiskGraphStorage).readonly = true
+
+	if err := dgs.RollbackMain(); err.Error() != "GraphError: Failed write to readonly storage (Cannot rollback main db)" {
+		t.Error("Unexpected error return:", err)
+	}
+
+	if err := dgs.FlushMain(); err.Error() != "GraphError: Failed write to readonly storage (Cannot flush main db)" {
+		t.Error("Unexpected error return:", err)
+	}
+
 	if err := dgs.Close(); err != nil {
 		t.Error(err)
 		return
@@ -139,7 +151,7 @@ func TestDiskGraphStorage(t *testing.T) {
 }
 
 func TestDiskGraphStorageErrors(t *testing.T) {
-	_, err := NewDiskGraphStorage(invalidFileName)
+	_, err := NewDiskGraphStorage(invalidFileName, false)
 	if err == nil {
 		t.Error("Unexpected new disk graph storage result")
 		return
@@ -150,14 +162,14 @@ func TestDiskGraphStorageErrors(t *testing.T) {
 	old := FilenameNameDB
 	FilenameNameDB = invalidFileName
 
-	_, err = NewDiskGraphStorage(diskGraphStorageTestDBDir2)
+	_, err = NewDiskGraphStorage(diskGraphStorageTestDBDir2, false)
 	if err == nil {
 		t.Error("Unexpected new disk graph storage result")
 		FilenameNameDB = old
 		return
 	}
 
-	_, err = NewDiskGraphStorage(diskGraphStorageTestDBDir2)
+	_, err = NewDiskGraphStorage(diskGraphStorageTestDBDir2, false)
 	if err == nil {
 		t.Error("Unexpected new disk graph storage result")
 		FilenameNameDB = old
@@ -166,7 +178,7 @@ func TestDiskGraphStorageErrors(t *testing.T) {
 
 	FilenameNameDB = old
 
-	dgs := &DiskGraphStorage{invalidFileName, nil, make(map[string]storage.Manager)}
+	dgs := &DiskGraphStorage{invalidFileName, false, nil, make(map[string]storage.Manager)}
 	pm, _ := datautil.NewPersistentMap(invalidFileName)
 	dgs.mainDB = pm
 

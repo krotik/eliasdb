@@ -24,7 +24,7 @@ type cachetestobj struct {
 
 func TestCachedDiskStorageManager(t *testing.T) {
 
-	dsm := NewDiskStorageManager(DBDIR+"/ctest1", false, true, true)
+	dsm := NewDiskStorageManager(DBDIR+"/ctest1", false, false, true, true)
 
 	if dsm.Name() != "DiskStorageFile:"+DBDIR+"/ctest1" {
 		t.Error("Unexpected name for DiskStorageManager:", dsm.Name())
@@ -212,7 +212,7 @@ func TestCachedDiskStorageManager(t *testing.T) {
 
 func TestCachedDiskStorageManagerTransactions(t *testing.T) {
 
-	dsm := NewDiskStorageManager(DBDIR+"/ctest2", false, false, true)
+	dsm := NewDiskStorageManager(DBDIR+"/ctest2", false, false, false, true)
 
 	if dsm.Name() != "DiskStorageFile:"+DBDIR+"/ctest2" {
 		t.Error("Unexpected name for DiskStorageManager:", dsm.Name())
@@ -299,7 +299,7 @@ func TestCachedDiskStorageManagerCacheManagement(t *testing.T) {
 
 	var ret string
 
-	dsm := NewDiskStorageManager(DBDIR+"/ctest3", false, true, true)
+	dsm := NewDiskStorageManager(DBDIR+"/ctest3", false, false, true, true)
 
 	cdsm := NewCachedDiskStorageManager(dsm, 3)
 

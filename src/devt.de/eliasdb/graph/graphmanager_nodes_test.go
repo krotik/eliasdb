@@ -29,7 +29,7 @@ func TestSimpleNodeStorage(t *testing.T) {
 		return
 	}
 
-	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2)
+	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2, false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -160,7 +160,7 @@ func TestSimpleNodeStorage(t *testing.T) {
 
 	// Check that we can do the lookup with a new graph storage
 
-	dgs2, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2)
+	dgs2, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2, false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -274,7 +274,7 @@ func TestSimpleNodeUpdate(t *testing.T) {
 		return
 	}
 
-	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2)
+	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir2, false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -668,7 +668,7 @@ func TestGraphManagerDiskStorage(t *testing.T) {
 		return
 	}
 
-	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir1)
+	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir1, false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -693,7 +693,7 @@ func TestGraphManagerDiskStorage(t *testing.T) {
 
 	dgs.Close()
 
-	dgs2, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir1)
+	dgs2, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir1, false)
 	if err != nil {
 		t.Error(err)
 		return

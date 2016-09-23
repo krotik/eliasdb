@@ -75,6 +75,7 @@ var (
 	ErrRollback        = errors.New("Failed to rollback changes")
 	ErrClosing         = errors.New("Failed to close graph storage")
 	ErrAccessComponent = errors.New("Failed to access graph storage component")
+	ErrReadOnly        = errors.New("Failed write to readonly storage")
 )
 
 /*

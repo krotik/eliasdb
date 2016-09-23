@@ -37,6 +37,7 @@ DiskGraphStorage data structure
 */
 type DiskGraphStorage struct {
 	name            string                     // Name of the graph storage
+	readonly        bool                       // Flag for readonly mode
 	mainDB          *datautil.PersistentMap    // Database storing names
 	storagemanagers map[string]storage.Manager // Map of StorageManagers
 }
@@ -44,9 +45,9 @@ type DiskGraphStorage struct {
 /*
 NewDiskGraphStorage creates a new DiskGraphStorage instance.
 */
-func NewDiskGraphStorage(name string) (GraphStorage, error) {
+func NewDiskGraphStorage(name string, readonly bool) (GraphStorage, error) {
 
-	dgs := &DiskGraphStorage{name, nil, make(map[string]storage.Manager)}
+	dgs := &DiskGraphStorage{name, readonly, nil, make(map[string]storage.Manager)}
 
 	// Load the graph storage if the storage directory already exists if not try to create it
 
@@ -97,6 +98,13 @@ func (dgs *DiskGraphStorage) MainDB() map[string]string {
 RollbackMain rollback the main database.
 */
 func (dgs *DiskGraphStorage) RollbackMain() error {
+
+	// Fail operation when readonly
+
+	if dgs.readonly {
+		return &util.GraphError{Type: util.ErrReadOnly, Detail: "Cannot rollback main db"}
+	}
+
 	mainDB, err := datautil.LoadPersistentMap(dgs.name + "/" + FilenameNameDB)
 	if err != nil {
 		return &util.GraphError{Type: util.ErrOpening, Detail: err.Error()}
@@ -111,6 +119,13 @@ func (dgs *DiskGraphStorage) RollbackMain() error {
 FlushMain writes the main database to the storage.
 */
 func (dgs *DiskGraphStorage) FlushMain() error {
+
+	// Fail operation when readonly
+
+	if dgs.readonly {
+		return &util.GraphError{Type: util.ErrReadOnly, Detail: "Cannot flush main db"}
+	}
+
 	if err := dgs.mainDB.Flush(); err != nil {
 		return &util.GraphError{Type: util.ErrFlushing, Detail: err.Error()}
 	}
@@ -131,7 +146,7 @@ func (dgs *DiskGraphStorage) StorageManager(smname string, create bool) storage.
 	// database already exists
 
 	if !ok && (create || storage.DataFileExist(filename)) {
-		dsm := storage.NewDiskStorageManager(dgs.name+"/"+smname, false, false, false)
+		dsm := storage.NewDiskStorageManager(dgs.name+"/"+smname, dgs.readonly, false, false, false)
 		sm = storage.NewCachedDiskStorageManager(dsm, 100000)
 		dgs.storagemanagers[smname] = sm
 	}

@@ -80,6 +80,7 @@ const (
 	LockFile                 = "LockFile"
 	HTTPSHost                = "HTTPSHost"
 	HTTPSPort                = "HTTPSPort"
+	EnableReadOnly           = "EnableReadOnly"
 	EnableWebFolder          = "EnableWebFolder"
 	EnableWebTerminal        = "EnableWebTerminal"
 	ResultCacheMaxSize       = "ResultCacheMaxSize"
@@ -91,6 +92,7 @@ DefaultConfig is the defaut configuration
 */
 var DefaultConfig = map[string]interface{}{
 	MemoryOnlyStorage:        false,
+	EnableReadOnly:           false,
 	EnableWebFolder:          true,
 	EnableWebTerminal:        true,
 	LocationDatastore:        "db",
@@ -152,17 +154,25 @@ func main() {
 
 		gs = graphstorage.NewMemoryGraphStorage(MemoryOnlyStorage)
 
+		if Config[EnableReadOnly].(bool) {
+			print("Ignoring EnableReadOnly setting")
+		}
+
 	} else {
 
 		loc := basepath + fmt.Sprint(Config[LocationDatastore])
 
-		print("Starting datastore in ", loc)
+		if Config[EnableReadOnly].(bool) {
+			print("Starting datastore (readonly) in ", loc)
+		} else {
+			print("Starting datastore in ", loc)
+		}
 
 		// Ensure path for database exists
 
 		ensurePath(loc)
 
-		gs, err = graphstorage.NewDiskGraphStorage(loc)
+		gs, err = graphstorage.NewDiskGraphStorage(loc, Config[EnableReadOnly].(bool))
 		if err != nil {
 			fatal(err)
 			return
@@ -185,6 +195,12 @@ func main() {
 
 		os.RemoveAll(basepath + config(LockFile))
 	}()
+
+	// Handle command line
+
+	if !handleCommandLine(api.GM) {
+		return
+	}
 
 	// Setting other API parameters
 
@@ -275,10 +291,8 @@ func main() {
 	// HTTPS Server has started
 
 	if hs.LastError != nil {
-
 		fatal(hs.LastError)
 		return
-
 	}
 
 	// Read server certificate and write a fingerprint file
@@ -332,23 +346,4 @@ func main() {
 	wg.Wait()
 
 	print("Shutting down")
-}
-
-/*
-Read config value as string value.
-*/
-func config(key string) string {
-	return fmt.Sprint(Config[key])
-}
-
-/*
-Ensure that a given relative path exists.
-*/
-func ensurePath(path string) {
-	if res, _ := fileutil.PathExists(path); !res {
-		if err := os.Mkdir(path, 0770); err != nil {
-			fatal("Could not create directory:", err.Error())
-			return
-		}
-	}
 }

@@ -13,6 +13,7 @@ package storage
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -75,10 +76,16 @@ pointers will always be small. They only need tiny blocks.
 const BlockSizeFreeSlots = 1024
 
 /*
+ErrReadonly is returned when attempting a write operation on a readonly datastore.
+*/
+var ErrReadonly = errors.New("Storage is readonly")
+
+/*
 DiskStorageManager data structure
 */
 type DiskStorageManager struct {
 	filename      string      // Filename for all managed files
+	readonly      bool        // Flag to make the storage readonly
 	onlyAppend    bool        // Flag for append-only mode
 	transDisabled bool        // Flag if transactions are enabled
 	mutex         *sync.Mutex // Mutex to protect actual file operations
@@ -107,7 +114,7 @@ not attempt to reuse space once it was released after use. If the
 transDisabled flag is set then the storage manager will not support
 transactions.
 */
-func NewDiskStorageManager(filename string, onlyAppend bool, transDisabled bool, lockfileDisabled bool) *DiskStorageManager {
+func NewDiskStorageManager(filename string, readonly bool, onlyAppend bool, transDisabled bool, lockfileDisabled bool) *DiskStorageManager {
 	var lf *lockutil.LockFile
 
 	// Create a lockfile which is checked every 50 milliseconds
@@ -117,7 +124,7 @@ func NewDiskStorageManager(filename string, onlyAppend bool, transDisabled bool,
 			time.Duration(50)*time.Millisecond)
 	}
 
-	dsm := &DiskStorageManager{filename, onlyAppend, transDisabled, &sync.Mutex{}, nil, nil,
+	dsm := &DiskStorageManager{filename, readonly, onlyAppend, transDisabled, &sync.Mutex{}, nil, nil,
 		nil, nil, nil, nil, nil, nil, nil, nil, lf}
 
 	err := initDiskStorageManager(dsm)
@@ -164,6 +171,13 @@ func (dsm *DiskStorageManager) Root(root int) uint64 {
 SetRoot writes a root value.
 */
 func (dsm *DiskStorageManager) SetRoot(root int, val uint64) {
+
+	// When readonly this operation becomes a NOP
+
+	if dsm.readonly {
+		return
+	}
+
 	dsm.mutex.Lock()
 	defer dsm.mutex.Unlock()
 
@@ -176,6 +190,12 @@ Insert inserts an object and return its storage location.
 */
 func (dsm *DiskStorageManager) Insert(o interface{}) (uint64, error) {
 	dsm.checkFileOpen()
+
+	// Fail operation if readonly
+
+	if dsm.readonly {
+		return 0, ErrReadonly
+	}
 
 	// Request a buffer from the buffer pool
 
@@ -220,6 +240,12 @@ Update updates a storage location.
 */
 func (dsm *DiskStorageManager) Update(loc uint64, o interface{}) error {
 	dsm.checkFileOpen()
+
+	// Fail operation if readonly
+
+	if dsm.readonly {
+		return ErrReadonly
+	}
 
 	// Get the physical slot for the given logical slot
 
@@ -335,6 +361,12 @@ Free frees a storage location.
 func (dsm *DiskStorageManager) Free(loc uint64) error {
 	dsm.checkFileOpen()
 
+	// Fail operation if readonly
+
+	if dsm.readonly {
+		return ErrReadonly
+	}
+
 	// Continue single threaded from here on
 
 	dsm.mutex.Lock()
@@ -371,6 +403,12 @@ Flush writes all pending changes to disk.
 */
 func (dsm *DiskStorageManager) Flush() error {
 	dsm.checkFileOpen()
+
+	// When readonly this operation becomes a NOP
+
+	if dsm.readonly {
+		return nil
+	}
 
 	ce := errorutil.NewCompositeError()
 
@@ -419,9 +457,9 @@ Rollback cancels all pending changes which have not yet been written to disk.
 */
 func (dsm *DiskStorageManager) Rollback() error {
 
-	// Rollback has no effect if transactions are disabled
+	// Rollback has no effect if transactions are disabled or when readonly
 
-	if dsm.transDisabled {
+	if dsm.transDisabled || dsm.readonly {
 		return nil
 	}
 

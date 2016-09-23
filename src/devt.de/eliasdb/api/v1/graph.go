@@ -526,7 +526,7 @@ func (ge *graphEndpoint) handleGraphRequest(w http.ResponseWriter, r *http.Reque
 
 	if nDataList != nil {
 
-		// Store a nodes in transaction
+		// Store nodes in transaction
 
 		for _, ndata := range nDataList {
 			node := data.NewGraphNodeFromMap(ndata)
@@ -540,7 +540,7 @@ func (ge *graphEndpoint) handleGraphRequest(w http.ResponseWriter, r *http.Reque
 
 	if eDataList != nil {
 
-		// Store a edges in transaction
+		// Store edges in transaction
 
 		for _, edata := range eDataList {
 			edge := data.NewGraphEdgeFromNode(data.NewGraphNodeFromMap(edata))

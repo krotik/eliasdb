@@ -28,7 +28,7 @@ func TestSimpleGraphStorage(t *testing.T) {
 		return
 	}
 
-	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir3)
+	dgs, err := graphstorage.NewDiskGraphStorage(GraphManagerTestDBDir3, false)
 	if err != nil {
 		t.Error(err)
 		return
