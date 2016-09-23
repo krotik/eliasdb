@@ -44,11 +44,24 @@ To get an idea of what EliasDB is about have a look at the [tutorial](/doc/tutor
 
 The terminal uses a REST API to communicate with the backend. The REST API can be browsed using a dynamically generated swagger.json definition (https://localhost:9090/db/swagger.json). You can browse the API of EliasDB's latest version [here](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json#/default).
 
+### Command line options
+EliasDB has a few command line options. Using these runs the main executable like a normal command line tool: 
+```
+Usage of  ./eliasdb  [options]
+  -?	Show this help message
+  -dumpdb string
+    	Dump the contents of a partition to a JSON file and exit
+  -import string
+    	Import a graph from a JSON file to a partition (exit if storing on disk)
+  -part string
+    	Partition to operate on when importing or dumping data
+```
 ### Configuration
 EliasDB uses a single configuration file called eliasdb.config.json. After starting EliasDB for the first time it should create a default configuration file. Available configurations are:
 
 | Configuration Option | Description |
 | --- | --- |
+| EnableReadOnly | Flag if the datastore should be open read-only. |
 | EnableWebFolder | Flag if the files in the webfolder /web should be served up by the webserver. If false only the REST API is accessible. |
 | EnableWebTerminal | Flag if the web terminal file /web/db/term.html should be created. |
 | HTTPSCertificate | Name of the webserver certificate which should be used. A new one is created if it does not exist. |
