@@ -59,7 +59,7 @@ Nodes and edges in the datastore are identified by the kind and the key attribut
 
 Query data with EQL
 -------------------
-Data in the datastore can be gueried using EliasDB's own query language called EQL. To get a list of all stored tube lines run the command:
+Data in the datastore can be queried using EliasDB's own query language called EQL. To get a list of all stored tube lines run the command:
 ```
 get Line
 ```
