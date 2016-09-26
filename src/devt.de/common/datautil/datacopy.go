@@ -47,3 +47,19 @@ func CopyObject(src interface{}, dest interface{}) error {
 
 	return nil
 }
+
+/*
+MergeMaps merges all given maps into a new map. Contents are shallow copies
+and conflicts are resolved as last-one-wins.
+*/
+func MergeMaps(maps ...map[string]interface{}) map[string]interface{} {
+	ret := make(map[string]interface{})
+
+	for _, m := range maps {
+		for k, v := range m {
+			ret[k] = v
+		}
+	}
+
+	return ret
+}

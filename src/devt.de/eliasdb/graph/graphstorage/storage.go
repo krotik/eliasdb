@@ -13,9 +13,9 @@ package graphstorage
 import "devt.de/eliasdb/storage"
 
 /*
-GraphStorage interface models the storage backend for a graph manager.
+Storage interface models the storage backend for a graph manager.
 */
-type GraphStorage interface {
+type Storage interface {
 
 	/*
 	   Name returns the name of the GraphStorage instance.

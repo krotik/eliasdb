@@ -45,7 +45,7 @@ type DiskGraphStorage struct {
 /*
 NewDiskGraphStorage creates a new DiskGraphStorage instance.
 */
-func NewDiskGraphStorage(name string, readonly bool) (GraphStorage, error) {
+func NewDiskGraphStorage(name string, readonly bool) (Storage, error) {
 
 	dgs := &DiskGraphStorage{name, readonly, nil, make(map[string]storage.Manager)}
 

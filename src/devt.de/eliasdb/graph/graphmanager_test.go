@@ -69,6 +69,6 @@ func TestMain(m *testing.M) {
 /*
 NewGraphManager returns a new GraphManager instance without loading rules.
 */
-func newGraphManagerNoRules(gs graphstorage.GraphStorage) *Manager {
+func newGraphManagerNoRules(gs graphstorage.Storage) *Manager {
 	return createGraphManager(gs)
 }

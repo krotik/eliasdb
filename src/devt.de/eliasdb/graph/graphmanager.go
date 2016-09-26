@@ -25,7 +25,7 @@ import (
 Manager data structure
 */
 type Manager struct {
-	gs       graphstorage.GraphStorage    // Graph storage of this graph manager
+	gs       graphstorage.Storage         // Graph storage of this graph manager
 	gr       *graphRulesManager           // Manager for graph rules
 	nm       *util.NamesManager           // Manager object which manages name encodings
 	mapCache map[string]map[string]string // Cache which caches maps stored in the main database
@@ -35,7 +35,7 @@ type Manager struct {
 /*
 NewGraphManager returns a new GraphManager instance.
 */
-func NewGraphManager(gs graphstorage.GraphStorage) *Manager {
+func NewGraphManager(gs graphstorage.Storage) *Manager {
 	gm := createGraphManager(gs)
 
 	gm.SetGraphRule(&SystemRuleDeleteNodeEdges{})
@@ -47,7 +47,7 @@ func NewGraphManager(gs graphstorage.GraphStorage) *Manager {
 /*
 createGraphManager creates a new GraphManager instance.
 */
-func createGraphManager(gs graphstorage.GraphStorage) *Manager {
+func createGraphManager(gs graphstorage.Storage) *Manager {
 
 	mdb := gs.MainDB()
 

@@ -63,7 +63,7 @@ The API to the actual graph database structure is provided by a GraphManager obj
 
 Using these specs it is possible to traverse the graph from one node to another. The specs are also called traversal specs since they describe a traversal from one node to another. Each end has furthermore a cascading flag attribute. If the flag is set then all delete operations on the end will be cascaded to the other end.
 
-The GraphManager object stores its data in a GraphStorage which is implemented as a DiskGraphStorage using a StorageManager and as a MemoryGraphStorage using just memory storage.
+The GraphManager object stores its data in a graphstorage.Storage which is implemented as a DiskGraphStorage using a StorageManager and as a MemoryGraphStorage using just memory storage.
 
 To further facilitate data segregation nodes and edges can be stored in different "partitions" of the database. By default the GraphManager will also maintain a full text search index which contains all data stored in the graph database. It is possible to search nodes by word, phrase or direct match.
 

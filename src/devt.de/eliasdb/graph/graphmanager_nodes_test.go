@@ -765,7 +765,7 @@ func TestGraphManagerDiskStorage(t *testing.T) {
 	delete(msm.AccessMap, 2)
 }
 
-func testVersionPanic(t *testing.T, gs graphstorage.GraphStorage) {
+func testVersionPanic(t *testing.T, gs graphstorage.Storage) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("Opening a graph with a newer version did not cause a panic.")

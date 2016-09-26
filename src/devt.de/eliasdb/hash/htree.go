@@ -17,7 +17,7 @@ pages as the tree gorws. It is not possible to store nil values. Storing a nil v
 is equivalent to removing a key.
 
 As the tree grows each tree level contains pages with links to underlying pages.
-The last link is always to a bucket. The default tree has 4 levels each with 
+The last link is always to a bucket. The default tree has 4 levels each with
 256 possible children. A hash code for the tree has 32 bits = 4 levels * 8 bit.
 
 Hash buckets are on the lowest level of the tree and contain actual keys and

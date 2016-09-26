@@ -116,7 +116,7 @@ var Config map[string]interface{}
 // ============
 
 /*
-Fatal logger method. Using custom type so we can test log.Fatal calls
+Using custom consolelogger type so we can test log.Fatal calls
 with unit tests.
 */
 type consolelogger func(v ...interface{})
@@ -134,7 +134,7 @@ Main entry point for EliasDB.
 */
 func main() {
 	var err error
-	var gs graphstorage.GraphStorage
+	var gs graphstorage.Storage
 
 	print(fmt.Sprintf("EliasDB %v.%v", version.VERSION, version.REV))
 

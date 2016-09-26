@@ -15,6 +15,26 @@ import (
 	"devt.de/common/testutil"
 )
 
+func TestMergeMaps(t *testing.T) {
+	m := MergeMaps(map[string]interface{}{
+		"a": 1,
+		"b": 2,
+	}, map[string]interface{}{
+		"b": 3,
+		"c": 4,
+	})
+
+	if len(m) != 3 {
+		t.Error("Unexpected number of result entries:", len(m))
+		return
+	}
+
+	if m["a"] != 1 || m["b"] != 3 || m["c"] != 4 {
+		t.Error("Unexpected entries:", m)
+		return
+	}
+}
+
 func TestCopyObject(t *testing.T) {
 
 	var ret2 string

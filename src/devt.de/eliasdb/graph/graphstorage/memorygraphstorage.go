@@ -39,7 +39,7 @@ type MemoryGraphStorage struct {
 /*
 NewMemoryGraphStorage creates a new MemoryGraphStorage instance.
 */
-func NewMemoryGraphStorage(name string) GraphStorage {
+func NewMemoryGraphStorage(name string) Storage {
 	return &MemoryGraphStorage{name, make(map[string]string),
 		make(map[string]storage.Manager)}
 }

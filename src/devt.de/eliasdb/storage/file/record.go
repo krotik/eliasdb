@@ -16,7 +16,7 @@ StorageFile
 StorageFile models a logical storage file which stores fixed size records on
 disk. Each record has a unique record id. On disk this logical storage file
 might be split into several smaller files. StorageFiles can be reused after
-they were closed if the transaction management has been disabled. This is 
+they were closed if the transaction management has been disabled. This is
 not the case otherwise.
 
 Record
