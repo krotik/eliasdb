@@ -82,7 +82,7 @@ Building EliasDB
 ----------------
 To build EliasDB from source you need to have Go installed. There a are two options:
 
-### Checkout from github:
+### Checkout from github (use this method if you want code + documentation and tutorials):
 
 Create a directory, change into it and run:
 ```
@@ -94,7 +94,7 @@ Assuming your GOPATH is set to the new directory you should be able to build the
 go install devt.de/eliasdb
 ```
 
-### Using go get:
+### Using go get (use this method if you want to embed EliasDB in your project):
 
 Create a directory, change into it and run:
 ```
