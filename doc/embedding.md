@@ -4,9 +4,10 @@ The following text will give you an introduction to EliasDB's code structure and
 
 Getting the source code
 -----------------------
-The easiest way to get the source code of EliasDB is to use go get. Assuming you have ...
+The easiest way to get the source code of EliasDB is to use go get. Assuming you have a normal go project with GOROOT pointing to its root.
+You can checkout the source code of EliasDB with:
 ```
-go get ...
+go get -d devt.de/common devt.de/eliasdb
 ```
 For the rest of this tutorial it is assumed that you have the following directory structure:
 
@@ -45,7 +46,7 @@ func main() {
 ```
 It is important to close a disk storage before shutdown. It is also possible to create a memory-only storage with:
 ```
-	gs = graphstorage.NewMemoryGraphStorage(config.MemoryOnlyStorage)
+	gs = graphstorage.NewMemoryGraphStorage("memdb")
 ```
 
 After creating a storage we can now create a GraphManager object which provides the graph API:
@@ -153,7 +154,6 @@ if idxerr == nil {
 		}
 	}
 }
-
 ```
 For even more complex searches you can use EQL (see also the EQL manual):
 ```
@@ -168,4 +168,141 @@ EliasDB's REST API can be added easily when using Go's default webserver and rou
 ```
 api.RegisterRestEndpoints(v1.V1EndpointMap)
 api.RegisterRestEndpoints(api.GeneralEndpointMap)
+```
+
+Example source
+--------------
+An example demo.go could look like this:
+```
+package demo
+
+import (
+	"fmt"
+	"log"
+
+	"devt.de/eliasdb/eql"
+	"devt.de/eliasdb/graph"
+	"devt.de/eliasdb/graph/data"
+	"devt.de/eliasdb/graph/graphstorage"
+)
+
+func main() {
+
+	// Create a graph storage
+
+	//gs, err := graphstorage.NewDiskGraphStorage("db")
+	//if err != nil {
+	//		log.Fatal(err)
+	//		return
+	//	}
+	//defer gs.Close()
+
+	// For memory only storage do:
+
+	gs := graphstorage.NewMemoryGraphStorage("memdb")
+
+	gm := graph.NewGraphManager(gs)
+
+	// Create transaction
+
+	trans := graph.NewGraphTrans(gm)
+
+	// Store node1
+
+	node1 := data.NewGraphNode()
+	node1.SetAttr("key", "123")
+	node1.SetAttr("kind", "mynode")
+	node1.SetAttr("name", "Node1")
+	node1.SetAttr("text", "The first stored node")
+
+	if err := trans.StoreNode("main", node1); err != nil {
+		log.Fatal(err)
+	}
+
+	// Store node 2
+
+	node2 := data.NewGraphNode()
+	node2.SetAttr(data.NodeKey, "456")
+	node2.SetAttr(data.NodeKind, "mynode")
+	node2.SetAttr(data.NodeName, "Node2")
+
+	if err := trans.StoreNode("main", node2); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := trans.Commit(); err != nil {
+		log.Fatal(err)
+	}
+
+	trans = graph.NewGraphTrans(gm)
+
+	// Store edge between nodes
+
+	edge := data.NewGraphEdge()
+
+	edge.SetAttr(data.NodeKey, "abc")
+	edge.SetAttr(data.NodeKind, "myedge")
+
+	edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+	edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+	edge.SetAttr(data.EdgeEnd1Role, "node1")
+	edge.SetAttr(data.EdgeEnd1Cascading, true)
+
+	edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+	edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+	edge.SetAttr(data.EdgeEnd2Role, "node2")
+	edge.SetAttr(data.EdgeEnd2Cascading, false)
+
+	edge.SetAttr(data.NodeName, "Edge1")
+
+	if err := gm.StoreEdge("main", edge); err != nil {
+		log.Fatal(err)
+	}
+
+	// Commit transaction
+
+	if err := trans.Commit(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Demo traversal:
+
+	nodes, edges, err := gm.TraverseMulti("main", "123", "mynode", ":::", false)
+	fmt.Println("out1:", nodes, edges, err)
+
+	// Demo key iterator:
+
+	it, err := gm.NodeKeyIterator("main", "mynode")
+	for it.HasNext() {
+		key := it.Next()
+
+		if it.LastError != nil {
+			break
+		}
+
+		n, err := gm.FetchNode("main", key, "mynode")
+		fmt.Println("out2:", n, err)
+	}
+
+	// Demo full text search
+
+	idx, idxerr := gm.NodeIndexQuery("main", "mynode")
+	if idxerr == nil {
+
+		keys, err := idx.LookupPhrase("text", "first stored")
+		if err == nil {
+
+			for _, key := range keys {
+				n, err := gm.FetchNode("main", key, "mynode")
+				fmt.Println("out3:", n, err)
+			}
+		}
+	}
+
+	// Demo eql query
+
+	res, err := eql.RunQuery("myquery", "main", "get mynode where name = 'Node2'", gm)
+
+	fmt.Println("out4:", res, err)
+}
 ```
