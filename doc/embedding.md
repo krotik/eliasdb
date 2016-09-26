@@ -140,7 +140,7 @@ Querying the datastore
 ----------------------
 Besides direct lookups and iterators the datastore also supports higher search functionality such as phrase searching and a query language.
 
-All data in the datastore is indexed. To query for a cerain phrase you can run a phrase search:
+All data in the datastore is indexed. To query for a certain phrase you can run a phrase search:
 ```
 idx, idxerr := gm.NodeIndexQuery("main", "mynode")
 if idxerr == nil {
