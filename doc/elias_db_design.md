@@ -22,7 +22,7 @@ The lists of pages are used to manage data slots. A data slot has a unique id (l
 
 Physical slots are allocated space in StorageFile records. The amount of data a physical slot can store depends on its initial allocation - writing beyond the boundaries would overwrite data in other slots.
 
-Physical slots have a 4 byte header which stores the slot's allocated size and used (current) size. The allocated size value is a packed integer using a 2 bit multiplier in the beginning - using these packed values a slot can grow up to 138681822 bytes (138 MB). The space allocation is exact up to 17 kb and becomes more and more wasteful with increasing slot size. The current size is stored as a difference to the allocated size. The maximum difference between alloacted and current space is 65534 bytes (65 kb).
+Physical slots have a 4 byte header which stores the slot's allocated size and used (current) size. The allocated size value is a packed integer using a 2 bit multiplier in the beginning - using these packed values a slot can grow up to 138681822 bytes (138 MB). The space allocation is exact up to 17 kb and becomes more and more wasteful with increasing slot size. The current size is stored as a difference to the allocated size. The maximum difference between allocated and current space is 65534 bytes (65 kb).
 
 Logical slots are nothing more than pointers to physical slots. The data stored in a logical slot is stored in the physical slot which it points to. If the content of a logical slot changes and grows beyond the allocated space of its physical slot then the associated physical slot is changed. The logical slot pointer is updated to the new physical slot. The unique id (location) of the logical slot does not change.
 
