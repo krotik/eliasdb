@@ -9,6 +9,8 @@ EliasDB is a graph based database which aims to provide a lightweight solution f
 <img src="https://goreportcard.com/badge/github.com/krotik/eliasdb?style=flat-square" alt="Go Report Card"></a>
 <a href="http://devt.de/docs/pkg/devt.de/eliasdb/">
 <img src="https://devt.de/nightly/godoc_badge.svg" alt="Go Doc"></a>
+<a href="https://gitter.im/eliasdb/Lobby">
+<img src="https://badges.gitter.im/gitterHQ/gitter.svg" alt="Gitter Chat"></a>
 </p>
 
 Features
