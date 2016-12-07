@@ -41,6 +41,7 @@ func TestMain(m *testing.M) {
 
 	gm, msm := songGraph()
 	api.GM = gm
+	api.GS = msm
 	gmMSM = msm
 
 	hs, wg := startServer()

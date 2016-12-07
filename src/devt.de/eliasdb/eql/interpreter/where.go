@@ -330,6 +330,12 @@ func (rt *whereRuntime) Validate() error {
 				valRuntime.condVal = val
 				valRuntime.isNodeAttrValue = rt.rtp.ni.IsValidAttr(val)
 				valRuntime.isEdgeAttrValue = false
+
+				// Check if we have a nested value
+
+				if valRuntime.isNodeAttrValue && strings.Contains(val, ".") {
+					valRuntime.nestedValuePath = strings.Split(val, ".")
+				}
 			}
 
 			// Make sure attributes are queried

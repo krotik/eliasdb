@@ -704,3 +704,40 @@ func multiKindGraph() *graph.Manager {
 
 	return gm
 }
+
+func dataNodes() *graph.Manager {
+
+	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
+	gm := graph.NewGraphManager(mgs)
+
+	node0 := data.NewGraphNode()
+	node0.SetAttr("key", "000")
+	node0.SetAttr("kind", "mynode")
+	node0.SetAttr("name", "Node0")
+	node0.SetAttr("type", "type1")
+	gm.StoreNode("main", node0)
+
+	node1 := data.NewGraphNode()
+	node1.SetAttr("key", "123")
+	node1.SetAttr("kind", "mynode")
+	node1.SetAttr("name", "Node1")
+	node1.SetAttr("nested.nest1.nest2.atom1", 1.46)
+	node1.SetAttr("type", "type1")
+	gm.StoreNode("main", node1)
+
+	node2 := data.NewGraphNode()
+	node2.SetAttr("key", "456")
+	node2.SetAttr("kind", "mynode")
+	node2.SetAttr("name", "Node2")
+	node2.SetAttr("type", "type2")
+	node2.SetAttr("nested", map[string]interface{}{
+		"nest1": map[string]interface{}{
+			"nest2": map[string]interface{}{
+				"atom1": 1.45,
+			},
+		},
+	})
+	gm.StoreNode("main", node2)
+
+	return gm
+}

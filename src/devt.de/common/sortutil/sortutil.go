@@ -8,7 +8,7 @@
  */
 
 /*
-Package sortutil contains common sorting definitions.
+Package sortutil contains common sorting definitions and utilities for sorting data.
 */
 package sortutil
 

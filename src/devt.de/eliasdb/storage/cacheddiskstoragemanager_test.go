@@ -239,7 +239,7 @@ func TestCachedDiskStorageManagerTransactions(t *testing.T) {
 
 	var ret string
 	if err := cdsm.Fetch(loc, &ret); err != ErrSlotNotFound ||
-		err.Error() != "Slot not found (DiskStorageFile:storagemanagertest/ctest2 - Location:1 18)" {
+		err.Error() != "Slot not found (ByteDiskStorageFile:storagemanagertest/ctest2 - Location:1 18)" {
 
 		t.Error("Unexpected fetch result:", err)
 		return

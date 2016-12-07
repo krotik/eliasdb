@@ -11,6 +11,8 @@
 package storage
 
 import (
+	"bytes"
+	"encoding/gob"
 	"os"
 	"sync"
 	"testing"
@@ -68,6 +70,8 @@ func TestDiskStorageManager1(t *testing.T) {
 	// Make sure that another process which attempts to open the same
 	// storage would panic
 
+	time.Sleep(100 * time.Millisecond) // Need some time here otherwise Windows fails sometimes
+
 	testLockfileStartPanic(t)
 
 	// Test simple insert
@@ -82,6 +86,19 @@ func TestDiskStorageManager1(t *testing.T) {
 	dsm.Fetch(loc, &res)
 	if res != "This is a test" {
 		t.Error("Unexpected fetch result:", res)
+	}
+
+	// Test case where we give a byte slice
+
+	var res2 string
+
+	bs := make([]byte, 18)
+	dsm.ByteDiskStorageManager.Fetch(loc, bs)
+
+	err = gob.NewDecoder(bytes.NewReader(bs)).Decode(&res2)
+
+	if err != nil || string(res2) != "This is a test" {
+		t.Error("Unexpected fetch result:", err, res2)
 	}
 
 	// Get physical slot for stored data
@@ -216,7 +233,8 @@ func testLockfileStartPanic(t *testing.T) {
 		}
 	}()
 
-	NewDiskStorageManager(DBDIR+"/test1", false, false, false, false)
+	dsm := NewDiskStorageManager(DBDIR+"/test1", false, false, false, false)
+	dsm.Close()
 }
 
 func TestDiskStorageManager2(t *testing.T) {
@@ -575,10 +593,10 @@ const InvalidFileName = "**" + string(0x0)
 
 func TestDiskStorageManagerInit(t *testing.T) {
 	lockfile := lockutil.NewLockFile(DBDIR+"/"+"lock0.lck", time.Duration(50)*time.Millisecond)
-	dsm := &DiskStorageManager{DBDIR + "/" + InvalidFileName, false, true, true, &sync.Mutex{},
-		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, lockfile}
+	dsm := &DiskStorageManager{&ByteDiskStorageManager{DBDIR + "/" + InvalidFileName, false, true, true, &sync.Mutex{},
+		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, lockfile}}
 
-	err := initDiskStorageManager(dsm)
+	err := initByteDiskStorageManager(dsm.ByteDiskStorageManager)
 	if err == nil {
 		t.Error("Initialising a DiskStorageManager with an invalid filename should cause an error")
 		return
@@ -586,10 +604,10 @@ func TestDiskStorageManagerInit(t *testing.T) {
 
 	testCannotInitPanic(t)
 
-	dsm = &DiskStorageManager{DBDIR + "/test999", false, true, true, &sync.Mutex{},
-		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}
+	dsm = &DiskStorageManager{&ByteDiskStorageManager{DBDIR + "/test999", false, true, true, &sync.Mutex{},
+		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}}
 
-	err = initDiskStorageManager(dsm)
+	err = initByteDiskStorageManager(dsm.ByteDiskStorageManager)
 	if err != nil {
 		t.Error(err)
 		return
@@ -627,8 +645,8 @@ func testClosedPanic(t *testing.T, dsm *DiskStorageManager) {
 }
 
 func testVersionCheckPanic(t *testing.T) {
-	dsm := &DiskStorageManager{DBDIR + "/test999", false, true, true, &sync.Mutex{},
-		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}
+	dsm := &DiskStorageManager{&ByteDiskStorageManager{DBDIR + "/test999", false, true, true, &sync.Mutex{},
+		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil}}
 
 	defer func() {
 		if r := recover(); r == nil {
@@ -636,7 +654,7 @@ func testVersionCheckPanic(t *testing.T) {
 		}
 	}()
 
-	initDiskStorageManager(dsm)
+	initByteDiskStorageManager(dsm.ByteDiskStorageManager)
 }
 
 func checkLocation(t *testing.T, loc uint64, record uint64, offset uint16) {

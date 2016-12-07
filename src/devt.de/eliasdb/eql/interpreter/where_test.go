@@ -21,6 +21,52 @@ import (
 	"devt.de/eliasdb/graph/graphstorage"
 )
 
+func TestDataQueries(t *testing.T) {
+	gm := dataNodes()
+	rt := NewGetRuntimeProvider("test", "main", gm, NewDefaultNodeInfo(gm))
+
+	if err := runSearch("get mynode", `
+Labels: Mynode Key, Mynode Name, Nested, Nested.Nest1.Nest2.Atom1, Type
+Format: auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:nested, 1:n:nested.nest1.nest2.atom1, 1:n:type
+000, Node0, <not set>, <not set>, type1
+123, Node1, <not set>, 1.46, type1
+456, Node2, map[nest1:map[nest2:map[atom1:1.45]]], <not set>, type2
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where attr:nested.nest1.nest2.atom1 != null", `
+Labels: Mynode Key, Mynode Name, Nested, Nested.Nest1.Nest2.Atom1, Type
+Format: auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:nested, 1:n:nested.nest1.nest2.atom1, 1:n:type
+123, Node1, <not set>, 1.46, type1
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where nested.nest1.nest2.atom1 = 1.45", `
+Labels: Mynode Key, Mynode Name, Nested, Nested.Nest1.Nest2.Atom1, Type
+Format: auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:nested, 1:n:nested.nest1.nest2.atom1, 1:n:type
+456, Node2, map[nest1:map[nest2:map[atom1:1.45]]], <not set>, type2
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where nested.nest1.nest2.atom = 1.45", `
+Labels: Mynode Key, Mynode Name, Nested, Nested.Nest1.Nest2.Atom1, Type
+Format: auto, auto, auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:nested, 1:n:nested.nest1.nest2.atom1, 1:n:type
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+}
+
 func TestWhere(t *testing.T) {
 	gm, _ := simpleGraph()
 	rt := NewGetRuntimeProvider("test", "main", gm, NewDefaultNodeInfo(gm))

@@ -14,6 +14,16 @@ import (
 	"testing"
 )
 
+func TestAsserts(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("Giving AssertOk an error should cause a panic.")
+		}
+	}()
+
+	AssertOk(errors.New("test"))
+}
+
 func TestCompositeError(t *testing.T) {
 
 	ce := NewCompositeError()

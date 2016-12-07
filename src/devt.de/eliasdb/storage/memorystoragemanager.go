@@ -67,8 +67,8 @@ MemoryStorageManager data structure
 */
 type MemoryStorageManager struct {
 	name  string                 // Name of the storage manager
-	roots map[int]uint64         // Map of roots
-	data  map[uint64]interface{} // Map of data
+	Roots map[int]uint64         // Map of roots
+	Data  map[uint64]interface{} // Map of data
 	mutex *sync.Mutex            // Mutex to protect map operations
 
 	LocCount  uint64         // Counter for locations
@@ -97,7 +97,7 @@ func (msm *MemoryStorageManager) Root(root int) uint64 {
 	msm.mutex.Lock()
 	defer msm.mutex.Unlock()
 
-	return msm.roots[root]
+	return msm.Roots[root]
 }
 
 /*
@@ -107,7 +107,7 @@ func (msm *MemoryStorageManager) SetRoot(root int, val uint64) {
 	msm.mutex.Lock()
 	defer msm.mutex.Unlock()
 
-	msm.roots[root] = val
+	msm.Roots[root] = val
 }
 
 /*
@@ -122,7 +122,7 @@ func (msm *MemoryStorageManager) Insert(o interface{}) (uint64, error) {
 	}
 	loc := msm.LocCount
 	msm.LocCount++
-	msm.data[loc] = o
+	msm.Data[loc] = o
 	return loc, nil
 }
 
@@ -136,7 +136,7 @@ func (msm *MemoryStorageManager) Update(loc uint64, o interface{}) error {
 	if msm.AccessMap[loc] == AccessUpdateError {
 		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
 	}
-	msm.data[loc] = o
+	msm.Data[loc] = o
 	return nil
 }
 
@@ -150,7 +150,7 @@ func (msm *MemoryStorageManager) Free(loc uint64) error {
 	if msm.AccessMap[loc] == AccessFreeError {
 		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
 	}
-	delete(msm.data, loc)
+	delete(msm.Data, loc)
 	return nil
 }
 
@@ -159,6 +159,8 @@ Fetch fetches an object from a given storage location and writes it to
 a given data container.
 */
 func (msm *MemoryStorageManager) Fetch(loc uint64, o interface{}) error {
+	var err error
+
 	msm.mutex.Lock()
 	defer msm.mutex.Unlock()
 
@@ -168,12 +170,12 @@ func (msm *MemoryStorageManager) Fetch(loc uint64, o interface{}) error {
 		return file.ErrAlreadyInUse
 	}
 
-	if obj, ok := msm.data[loc]; ok {
-		datautil.CopyObject(obj, o)
+	if obj, ok := msm.Data[loc]; ok {
+		err = datautil.CopyObject(obj, o)
 	} else {
-		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
+		err = ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
 	}
-	return nil
+	return err
 }
 
 /*
@@ -189,8 +191,7 @@ func (msm *MemoryStorageManager) FetchCached(loc uint64) (interface{}, error) {
 	} else if msm.AccessMap[loc] == AccessCacheAndFetchSeriousError {
 		return nil, file.ErrAlreadyInUse
 	}
-
-	return msm.data[loc], nil
+	return msm.Data[loc], nil
 }
 
 /*
@@ -225,7 +226,7 @@ func (msm *MemoryStorageManager) String() string {
 
 	buf.WriteString(fmt.Sprintf("MemoryStorageManager %v\n", msm.name))
 
-	for k, v := range msm.data {
+	for k, v := range msm.Data {
 		buf.WriteString(fmt.Sprintf("%v - %v\n", k, v))
 	}
 

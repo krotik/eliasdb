@@ -18,6 +18,11 @@ MgsRetClose is the return value on successful close
 var MgsRetClose error
 
 /*
+MgsRetFlushAll is the return value on successful flush all
+*/
+var MgsRetFlushAll error
+
+/*
 MgsRetFlushMain is the return value on successful flush
 */
 var MgsRetFlushMain error
@@ -86,6 +91,13 @@ func (mgs *MemoryGraphStorage) StorageManager(smname string, create bool) storag
 	}
 
 	return sm
+}
+
+/*
+FlushAll writes all pending changes to the storage.
+*/
+func (mgs *MemoryGraphStorage) FlushAll() error {
+	return MgsRetFlushAll
 }
 
 /*

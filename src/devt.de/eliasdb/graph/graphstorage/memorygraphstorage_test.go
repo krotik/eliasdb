@@ -17,6 +17,7 @@ func TestMemoryGraphStorage(t *testing.T) {
 
 	// Test nop functions
 
+	mstore.FlushAll()
 	mstore.RollbackMain()
 	mstore.FlushMain()
 	mstore.Close()

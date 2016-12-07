@@ -12,6 +12,7 @@ package data
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -160,6 +161,8 @@ func (gn *graphNode) stringAttr(attr string) string {
 		return st
 	} else if st, ok := val.(fmt.Stringer); found && ok {
 		return st.String()
+	} else if found {
+		return fmt.Sprintf("%v", val)
 	}
 
 	return ""
@@ -180,31 +183,64 @@ createIndexMap creates a representation of a node as a string map. A filter
 function can be specified to filters out specific attributes.
 */
 func createIndexMap(gn *graphNode, attFilter func(attr string) bool) map[string]string {
+	var addMap func(prefix string, data map[string]interface{})
+
 	ret := make(map[string]string)
 
-	for attr, val := range gn.data {
+	addMap = func(prefix string, data map[string]interface{}) {
 
-		// Ignore attributes which are uninteresting for a full-text search
+		for key, val := range data {
+			attr := prefix + key
 
-		if attFilter(attr) {
-			continue
-		}
+			// Ignore attributes which are uninteresting for a full-text search
 
-		// See the type of val and print it accordingly - ignore byte slices
+			if attFilter(attr) {
+				continue
+			}
 
-		if st, ok := val.(string); ok {
-			ret[attr] = st
+			// Detect nested structures and recurse into them
 
-		} else if st, ok := val.(fmt.Stringer); ok {
-			ret[attr] = st.String()
+			if valmap, ok := val.(map[string]interface{}); ok {
+				addMap(prefix+key+".", valmap)
+			}
 
-		} else if _, ok := val.([]byte); !ok {
+			// See the type of val and print it accordingly - ignore byte slices
 
-			// Except in case of byte slices do best effort printing
+			if st, ok := val.(string); ok {
 
-			ret[attr] = fmt.Sprintf("%v", val)
+				// Value is actually a string - no change needed
+
+				ret[attr] = st
+
+			} else if st, ok := val.(fmt.Stringer); ok {
+
+				// Value has a proper string representation - use that
+
+				ret[attr] = st.String()
+
+			} else if _, ok := val.([]byte); !ok {
+
+				// For all other cases (except ignored byte slices) try first a
+				// JSON representation
+
+				jsonBytes, err := json.Marshal(val)
+				jsonString := string(jsonBytes)
+
+				if err == nil && jsonString != "{}" {
+
+					ret[attr] = string(jsonString)
+
+				} else {
+
+					// Otherwise do best effort printing
+
+					ret[attr] = fmt.Sprintf("%v", val)
+				}
+			}
 		}
 	}
+
+	addMap("", gn.data)
 
 	return ret
 }

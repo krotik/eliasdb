@@ -27,6 +27,7 @@ import (
 	"devt.de/common/fileutil"
 	"devt.de/common/httputil"
 	"devt.de/eliasdb/api"
+	"devt.de/eliasdb/cluster/manager"
 	"devt.de/eliasdb/graph"
 	"devt.de/eliasdb/graph/data"
 	"devt.de/eliasdb/graph/graphstorage"
@@ -562,16 +563,29 @@ func TestMainNormalCase(t *testing.T) {
 		handler(nil, nil)
 	}
 
+	// Start cluster by default
+
+	Config[EnableCluster] = true
+	Config[EnableClusterTerminal] = true
+
 	// Kick off main function
 
 	go func() {
 		out, _ := execMain(nil)
 
-		if out != "" {
-			t.Error("In the normal case no stderr output should be happening:", out)
-		}
+		Config[EnableCluster] = false
+		Config[EnableClusterTerminal] = false
+
+		lines := strings.Split(strings.TrimSpace(out), "\n")
 
 		errorChan <- nil
+
+		// stderr should contain one line from the rpc code
+
+		if len(lines) != 1 || !strings.Contains(lines[0], "rpc.Serve: accept") {
+			t.Error("Unexpected stderr:", out)
+			return
+		}
 	}()
 
 	// To exit the main function the lock watcher thread
@@ -598,20 +612,27 @@ func TestMainNormalCase(t *testing.T) {
 	if logString := strings.Join(printLog, "\n"); logString != `
 EliasDB 0.8.0
 Starting datastore in testdb/db
+Reading cluster config
+Opening cluster state info
+Starting cluster (log history: 100)
+[Cluster] member1: Starting member manager member1 rpc server on: localhost:9030
 Creating GraphManager instance
 Creating key (key.pem) and certificate (cert.pem) in: ssl
 Ensuring web folder: testdb/web
 Ensuring web termminal: testdb/web/db/term.html
+Ensuring cluster termminal: testdb/web/db/cluster.html
 Starting server on: localhost:9090
 Writing fingerprint file: testdb/web/fingerprint.json
 Waiting for shutdown
 Lockfile was modified
 Shutting down
+[Cluster] member1: Housekeeping stopped
+[Cluster] member1: Shutdown rpc server on: localhost:9030
+[Cluster] member1: Connection closed: localhost:9030
 Closing datastore`[1:] {
 		t.Error("Unexpected log:", logString)
 		return
 	}
-
 }
 
 func TestMainErrorCases(t *testing.T) {
@@ -746,6 +767,46 @@ func TestMainErrorCases(t *testing.T) {
 		return
 	}
 
+	// Set back logs
+
+	printLog = []string{}
+	errorLog = []string{}
+
+	Config[EnableCluster] = true
+
+	Config[ClusterStateInfoFile] = invalidFileName
+
+	execMain(nil)
+
+	if len(errorLog) != 1 ||
+		!strings.Contains(errorLog[0], "Failed to load cluster state info") {
+		t.Error("Unexpected error:", errorLog)
+		return
+	}
+
+	// Set back logs
+
+	printLog = []string{}
+	errorLog = []string{}
+
+	Config[ClusterConfigFile] = invalidFileName
+
+	execMain(nil)
+
+	if len(errorLog) != 1 ||
+		!strings.Contains(errorLog[0], "Failed to load cluster config") {
+		t.Error("Unexpected error:", errorLog)
+		return
+	}
+
+	// Call to debug log function
+
+	manager.LogDebug("test debug text")
+	if logout := api.DDLog.String(); !strings.Contains(logout, "test debug text") {
+		t.Error("Unexpected error:", logout)
+		return
+	}
+
 	Config = nil
 }
 
@@ -784,6 +845,7 @@ func execMain(args []string) (string, error) {
 	// Exchange stderr to a file
 
 	origStdErr := os.Stderr
+
 	outFile, err := os.Create("out.txt")
 	if err != nil {
 		return "", err
@@ -795,9 +857,11 @@ func execMain(args []string) (string, error) {
 		// Put Stderr back
 
 		os.Stderr = origStdErr
+		log.SetOutput(os.Stderr)
 	}()
 
 	os.Stderr = outFile
+	log.SetOutput(outFile)
 
 	if args == nil {
 		args = []string{"eliasdb"}

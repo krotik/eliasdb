@@ -11,6 +11,7 @@
 package interpreter
 
 import (
+	"devt.de/common/datautil"
 	"devt.de/eliasdb/eql/parser"
 	"devt.de/eliasdb/graph/data"
 )
@@ -65,6 +66,7 @@ type valueRuntime struct {
 	node            *parser.ASTNode
 	isNodeAttrValue bool
 	isEdgeAttrValue bool
+	nestedValuePath []string
 	condVal         string
 }
 
@@ -72,7 +74,7 @@ type valueRuntime struct {
 valueRuntimeInst returns a new runtime component instance.
 */
 func valueRuntimeInst(rtp *eqlRuntimeProvider, node *parser.ASTNode) parser.Runtime {
-	return &valueRuntime{rtp, node, false, false, ""}
+	return &valueRuntime{rtp, node, false, false, nil, ""}
 }
 
 /*
@@ -137,13 +139,28 @@ func (rt *valueRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, e
 
 	// Check if this is describing a node or edge value
 
+	var valRet interface{}
+
 	if rt.isNodeAttrValue {
-		return node.Attr(rt.condVal), nil
+
+		// Check for nested values
+
+		if rt.nestedValuePath != nil {
+			if valMap, ok := node.Attr(rt.nestedValuePath[0]).(map[string]interface{}); ok {
+				valRet, _ = datautil.GetNestedValue(valMap, rt.nestedValuePath[1:])
+			}
+		} else {
+			valRet = node.Attr(rt.condVal)
+		}
+
+		return valRet, nil
+
 	} else if rt.isEdgeAttrValue {
 		if edge == nil {
 			return nil, rt.rtp.newRuntimeError(ErrInvalidWhere,
 				"No edge data available at this level", rt.node)
 		}
+
 		return edge.Attr(rt.condVal), nil
 	}
 

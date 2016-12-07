@@ -14,7 +14,10 @@ import (
 	"net/http"
 	"strings"
 
+	"devt.de/common/datautil"
+	"devt.de/eliasdb/cluster"
 	"devt.de/eliasdb/graph"
+	"devt.de/eliasdb/graph/graphstorage"
 )
 
 /*
@@ -85,6 +88,23 @@ type RestEndpointHandler interface {
 GM is the GraphManager instance which should be used by the REST API.
 */
 var GM *graph.Manager
+
+/*
+GS is the GraphStorage instance which should be used by the REST API.
+*/
+var GS graphstorage.Storage
+
+/*
+DD is the DistributedStorage instance which should be used by the REST API.
+(Only available if clustering is enabled.)
+*/
+var DD *cluster.DistributedStorage
+
+/*
+DDLog is a ringbuffer containing cluster related logs.
+(Only available if clustering is enabled.)
+*/
+var DDLog *datautil.RingBuffer
 
 /*
 Map of all registered endpoint handlers.

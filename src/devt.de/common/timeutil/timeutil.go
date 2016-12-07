@@ -26,6 +26,31 @@ func MakeTimestamp() string {
 }
 
 /*
+CompareTimestamp compares 2 given timestamps. Returns 0 if they are equal,
+1 if the frist is older and -1 if the second is older.
+*/
+func CompareTimestamp(ts1, ts2 string) (int, error) {
+	if ts1 == ts2 {
+		return 0, nil
+	}
+
+	millis1, err := strconv.ParseInt(ts1, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	millis2, err := strconv.ParseInt(ts2, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	if millis1 < millis2 {
+		return 1, nil
+	}
+
+	return -1, nil
+}
+
+/*
 TimestampString prints a given timestamp as a human readable time.
 */
 func TimestampString(ts, loc string) (string, error) {

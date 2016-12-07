@@ -37,10 +37,12 @@ const HTTPHeaderCacheID = "X-Cache-Id"
 V1EndpointMap is a map of urls to endpoints for version 1 of the API
 */
 var V1EndpointMap = map[string]api.RestEndpointInst{
-	EndpointIndexQuery: IndexEndpointInst,
-	EndpointQuery:      QueryEndpointInst,
-	EndpointGraph:      GraphEndpointInst,
-	EndpointInfoQuery:  InfoEndpointInst,
+	EndpointBlob:         BlobEndpointInst,
+	EndpointIndexQuery:   IndexEndpointInst,
+	EndpointQuery:        QueryEndpointInst,
+	EndpointGraph:        GraphEndpointInst,
+	EndpointInfoQuery:    InfoEndpointInst,
+	EndpointClusterQuery: ClusterEndpointInst,
 }
 
 // Helper functions

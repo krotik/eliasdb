@@ -25,6 +25,11 @@ func TestMapCache(t *testing.T) {
 	mc.Put("k2", "bbb")
 	mc.Put("k3", "ccc")
 
+	if s := mc.Size(); s != 3 {
+		t.Error("Unexpected size:", s)
+		return
+	}
+
 	// Simulate different timings
 
 	mc.ts["k1"] = time.Now().Unix() - 6 // Expired

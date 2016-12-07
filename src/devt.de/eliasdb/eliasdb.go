@@ -49,11 +49,16 @@ import (
 	"time"
 
 	"devt.de/common/cryptutil"
+	"devt.de/common/datautil"
+	"devt.de/common/errorutil"
 	"devt.de/common/fileutil"
 	"devt.de/common/httputil"
 	"devt.de/common/lockutil"
+	"devt.de/common/timeutil"
 	"devt.de/eliasdb/api"
 	"devt.de/eliasdb/api/v1"
+	"devt.de/eliasdb/cluster"
+	"devt.de/eliasdb/cluster/manager"
 	"devt.de/eliasdb/graph"
 	"devt.de/eliasdb/graph/graphstorage"
 	"devt.de/eliasdb/version"
@@ -83,8 +88,13 @@ const (
 	EnableReadOnly           = "EnableReadOnly"
 	EnableWebFolder          = "EnableWebFolder"
 	EnableWebTerminal        = "EnableWebTerminal"
+	EnableCluster            = "EnableCluster"
+	EnableClusterTerminal    = "EnableClusterTerminal"
 	ResultCacheMaxSize       = "ResultCacheMaxSize"
 	ResultCacheMaxAgeSeconds = "ResultCacheMaxAgeSeconds"
+	ClusterStateInfoFile     = "ClusterStateInfoFile"
+	ClusterConfigFile        = "ClusterConfigFile"
+	ClusterLogHistory        = "ClusterLogHistory"
 )
 
 /*
@@ -95,6 +105,8 @@ var DefaultConfig = map[string]interface{}{
 	EnableReadOnly:           false,
 	EnableWebFolder:          true,
 	EnableWebTerminal:        true,
+	EnableCluster:            false,
+	EnableClusterTerminal:    false,
 	LocationDatastore:        "db",
 	LocationHTTPS:            "ssl",
 	LocationWebFolder:        "web",
@@ -105,6 +117,9 @@ var DefaultConfig = map[string]interface{}{
 	LockFile:                 "eliasdb.lck",
 	ResultCacheMaxSize:       "",
 	ResultCacheMaxAgeSeconds: "",
+	ClusterStateInfoFile:     "cluster.stateinfo",
+	ClusterConfigFile:        "cluster.config.json",
+	ClusterLogHistory:        100.0,
 }
 
 /*
@@ -148,6 +163,8 @@ func main() {
 		}
 	}
 
+	// Create graph storage
+
 	if Config[MemoryOnlyStorage].(bool) {
 
 		print("Starting memory only datastore")
@@ -179,11 +196,66 @@ func main() {
 		}
 	}
 
+	// Check if clustering is enabled
+
+	if Config[EnableCluster].(bool) {
+
+		print("Reading cluster config")
+
+		cconfig, err := fileutil.LoadConfig(basepath+config(ClusterConfigFile), manager.DefaultConfig)
+		if err != nil {
+			fatal("Failed to load cluster config:", err)
+			return
+		}
+
+		print("Opening cluster state info")
+
+		si, err := manager.NewDefaultStateInfo(basepath + config(ClusterStateInfoFile))
+		if err != nil {
+			fatal("Failed to load cluster state info:", err)
+			return
+		}
+
+		loghist := int(Config[ClusterLogHistory].(float64))
+
+		print(fmt.Sprintf("Starting cluster (log history: %v)", loghist))
+
+		ds, err := cluster.NewDistributedStorage(gs, cconfig, si)
+		if err != nil {
+			fatal("Failed to create distributed storage:", err)
+			return
+		}
+
+		gs = ds
+
+		// Make the distributed storage and the cluster log available for the REST API
+
+		api.DD = ds
+		api.DDLog = datautil.NewRingBuffer(loghist)
+
+		logFunc := func(v ...interface{}) {
+			api.DDLog.Log(timeutil.MakeTimestamp(), " ", fmt.Sprint(v...))
+		}
+		logPrintFunc := func(v ...interface{}) {
+			print("[Cluster] ", fmt.Sprint(v...))
+			api.DDLog.Log(timeutil.MakeTimestamp(), " ", fmt.Sprint(v...))
+		}
+
+		manager.LogDebug = logFunc
+		manager.LogInfo = logPrintFunc
+
+		// Kick off the cluster
+
+		ds.MemberManager.Start()
+	}
+
 	// Create GraphManager
 
 	print("Creating GraphManager instance")
 
+	api.GS = gs
 	api.GM = graph.NewGraphManager(gs)
+
 	defer func() {
 
 		print("Closing datastore")
@@ -256,7 +328,7 @@ func main() {
 			fs.ServeHTTP(w, r)
 		})
 
-		// Write terminal
+		// Write terminal(s)
 
 		if Config[EnableWebTerminal].(bool) {
 
@@ -266,7 +338,28 @@ func main() {
 
 			print("Ensuring web termminal: ", termFile)
 
-			ioutil.WriteFile(termFile, []byte(TermSRC[1:]), 0644)
+			errorutil.AssertOk(ioutil.WriteFile(termFile, []byte(TermSRC[1:]), 0644))
+
+		}
+
+		if Config[EnableClusterTerminal].(bool) {
+
+			ensurePath(path.Join(webFolder, api.APIRoot))
+
+			termFile := path.Join(webFolder, api.APIRoot, "cluster.html")
+
+			if Config[EnableCluster].(bool) {
+
+				// Add the url to the member info of the member manager
+
+				api.DD.MemberManager.MemberInfo()[manager.MemberInfoTermURL] =
+					fmt.Sprintf("https://%v:%v%v/%v", Config[HTTPSHost],
+						Config[HTTPSPort], api.APIRoot, "cluster.html")
+			}
+
+			print("Ensuring cluster termminal: ", termFile)
+
+			errorutil.AssertOk(ioutil.WriteFile(termFile, []byte(ClusterTermSRC[1:]), 0644))
 		}
 	}
 
@@ -346,4 +439,11 @@ func main() {
 	wg.Wait()
 
 	print("Shutting down")
+
+	if Config[EnableCluster].(bool) {
+
+		// Shutdown cluster
+
+		gs.(*cluster.DistributedStorage).MemberManager.Shutdown()
+	}
 }

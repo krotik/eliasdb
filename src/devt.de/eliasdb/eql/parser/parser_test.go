@@ -254,6 +254,27 @@ get
 		return
 	}
 
+	input = `
+GeT bla where nest.nint = 1 AND b = -1`
+	expectedOutput = `
+get
+  value: "bla"
+  where
+    and
+      =
+        value: "nest.nint"
+        value: "1"
+      =
+        value: "b"
+        minus
+          value: "1"
+`[1:]
+
+	if res, err := Parse("mytest", input); err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
+		return
+	}
+
 	// Test traverse clause
 
 	input = `

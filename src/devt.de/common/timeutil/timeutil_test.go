@@ -31,19 +31,52 @@ func TestTimestamp(t *testing.T) {
 
 	if err != nil {
 		t.Error("Unexpected error during timestamp printing:", err)
+		return
 	} else if tsTime.String() != tss {
 		t.Error("Unexpected timestamp printing result:", tss)
+		return
 	}
 
 	_, err = TimestampString("abc", "UTC")
 
 	if err.Error() != "strconv.ParseInt: parsing \"abc\": invalid syntax" {
 		t.Error("Unexpected error during timestamp printing:", err)
+		return
 	}
 
 	_, err = TimestampString(ts, "U_B_C")
 
 	if !strings.HasPrefix(err.Error(), "cannot find U_B_C") {
 		t.Error("Unexpected error during timestamp printing:", err)
+		return
+	}
+
+	// Test compare
+
+	ts = MakeTimestamp()
+
+	if res, err := CompareTimestamp("1475602478271", "1475615168232"); res != 1 || err != nil {
+		t.Error("Unexpected compare result:", res, err)
+		return
+	}
+
+	if res, err := CompareTimestamp("1475602478271", "1375615168232"); res != -1 || err != nil {
+		t.Error("Unexpected compare result:", res, err)
+		return
+	}
+
+	if _, err := CompareTimestamp("1475602478271", ""); err == nil {
+		t.Error("Unexpected compare result:", err)
+		return
+	}
+
+	if _, err := CompareTimestamp("", "1"); err == nil {
+		t.Error("Unexpected compare result:", err)
+		return
+	}
+
+	if res, err := CompareTimestamp("1", "1"); res != 0 || err != nil {
+		t.Error("Unexpected compare result:", res, err)
+		return
 	}
 }

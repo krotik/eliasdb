@@ -39,6 +39,11 @@ type Storage interface {
 	FlushMain() error
 
 	/*
+	   FlushAll writes all pending changes to the storage.
+	*/
+	FlushAll() error
+
+	/*
 	   StorageManager gets a storage manager with a certain name. A non-existing
 	   StorageManager is not created automatically if the create flag is set to false.
 	*/

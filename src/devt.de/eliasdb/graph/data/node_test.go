@@ -12,6 +12,9 @@ package data
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -112,6 +115,66 @@ func TestGraphNode(t *testing.T) {
 	nnode := NewGraphNodeFromMap(gn.Data())
 	if nnode.Data()["key"] != gn.(*graphNode).data["key"] {
 		t.Error("Unexpected data reference")
+		return
+	}
+
+	gn.SetAttr("key", []int{1, 2, 3})
+
+	if res := gn.String(); res != "GraphNode:\n"+
+		"        key : [1 2 3]\n"+
+		"       kind : mykind\n"+
+		"    amyattr : another test\n"+
+		"    myattr2 : abba\n"+
+		"    myattr3 : test123\n" {
+		t.Error("Unexpected string output:", res)
+		return
+	}
+
+	if gn.Key() != "[1 2 3]" {
+		t.Error("Unexpected key as string:", gn.Key())
+		return
+	}
+
+	if fmt.Sprintf("%T", gn.Attr("key")) != "[]int" {
+		t.Errorf("Unexpected ckey type: %T", gn.Attr("key"))
+		return
+	}
+}
+
+func TestNestedNode(t *testing.T) {
+	gn := NewGraphNode()
+
+	gn.SetAttr("key", "456")
+	gn.SetAttr("kind", "mynode")
+	gn.SetAttr("name", "Node2")
+	gn.SetAttr("type", "type2")
+	gn.SetAttr("err", errors.New("bla"))
+	gn.SetAttr("nested", map[string]interface{}{
+		"nest1": map[string]interface{}{
+			"nest2": map[string]interface{}{
+				"atom1": 1.45,
+			},
+		},
+	})
+
+	im := gn.IndexMap()
+	jsonString, err := json.MarshalIndent(im, "", "  ")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if string(jsonString) != `
+{
+  "err": "bla",
+  "name": "Node2",
+  "nested": "{\"nest1\":{\"nest2\":{\"atom1\":1.45}}}",
+  "nested.nest1": "{\"nest2\":{\"atom1\":1.45}}",
+  "nested.nest1.nest2": "{\"atom1\":1.45}",
+  "nested.nest1.nest2.atom1": "1.45",
+  "type": "type2"
+}`[1:] {
+		t.Error("Unexpected result: ", string(jsonString))
 		return
 	}
 }

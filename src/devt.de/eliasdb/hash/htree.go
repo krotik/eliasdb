@@ -72,7 +72,7 @@ const MaxBucketElements = 8
 HTree data structure
 */
 type HTree struct {
-	Root  *htreePage  //  Root page of the HTree
+	Root  *htreePage  // Root page of the HTree
 	mutex *sync.Mutex // Mutex to protect tree operations
 }
 

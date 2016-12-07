@@ -12,14 +12,98 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
+	"devt.de/common/datautil"
 	"devt.de/eliasdb/api"
 	"devt.de/eliasdb/graph"
 	"devt.de/eliasdb/graph/data"
 	"devt.de/eliasdb/hash"
 	"devt.de/eliasdb/storage"
 )
+
+func TestNestedStorage(t *testing.T) {
+	queryURL := "http://localhost" + TESTPORT + EndpointGraph
+
+	// Store a nested node
+
+	st, _, res := sendTestRequest(queryURL+"main/n", "POST", []byte(`
+[{
+	"key":"nestedtest",
+	"kind":"Test",
+	"int":42,
+	"float":3.1415926,
+	"str":"foo bar",
+	"nested":{
+		"nested_int":12,
+		"nested_float":1.234,
+		"nested_str":"time flies like an arrow",
+		"more nesting": {
+			"atom" : "value42"
+		}
+	}
+}]
+`[1:]))
+
+	if st != "200 OK" {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+
+	n, err := api.GM.FetchNode("main", "nestedtest", "Test")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	// Check that the node was stored correctly
+
+	nested := n.Attr("nested")
+
+	if nt := fmt.Sprintf("%T", nested); nt != "map[string]interface {}" {
+		t.Error("Unexpected type:", nt)
+		return
+	}
+
+	nf, err := datautil.GetNestedValue(nested.(map[string]interface{}), []string{"nested_float"})
+
+	if nft := fmt.Sprintf("%T %v", nf, nf); nft != "float64 1.234" {
+		t.Error("Unexpected type:", nft)
+		return
+	}
+
+	ns, err := datautil.GetNestedValue(nested.(map[string]interface{}), []string{"more nesting", "atom"})
+
+	if nst := fmt.Sprintf("%T %v", ns, ns); nst != "string value42" {
+		t.Error("Unexpected type:", nst)
+		return
+	}
+
+	// Now try to retrieve the value
+
+	st, _, res = sendTestRequest(queryURL+"/main/n/Test/nestedtest", "GET", nil)
+
+	if st != "200 OK" || res != `
+{
+  "float": 3.1415926,
+  "int": 42,
+  "key": "nestedtest",
+  "kind": "Test",
+  "nested": {
+    "more nesting": {
+      "atom": "value42"
+    },
+    "nested_float": 1.234,
+    "nested_int": 12,
+    "nested_str": "time flies like an arrow"
+  },
+  "str": "foo bar"
+}`[1:] {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+}
 
 func TestGraphQuery(t *testing.T) {
 	queryURL := "http://localhost" + TESTPORT + EndpointGraph

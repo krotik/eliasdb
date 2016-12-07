@@ -15,6 +15,15 @@ package errorutil
 import "strings"
 
 /*
+AssertOk will panic on any non-nil error parameter.
+*/
+func AssertOk(err error) {
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+/*
 CompositeError can collect multiple errors in a single error object.
 */
 type CompositeError struct {

@@ -44,6 +44,13 @@ func NewMapCache(maxsize uint64, maxage int64) *MapCache {
 }
 
 /*
+Size returns the current size of the MapCache.
+*/
+func (mc *MapCache) Size() uint64 {
+	return mc.size
+}
+
+/*
 Put stores an item in the MapCache.
 */
 func (mc *MapCache) Put(k string, v interface{}) {

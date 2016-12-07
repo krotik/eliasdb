@@ -37,7 +37,7 @@ type infoEndpoint struct {
 }
 
 /*
-HandleGET handles a search query REST call.
+HandleGET handles a info query REST call.
 */
 func (ie *infoEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
 

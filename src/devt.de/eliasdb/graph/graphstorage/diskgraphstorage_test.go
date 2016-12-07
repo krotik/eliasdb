@@ -114,6 +114,10 @@ func TestDiskGraphStorage(t *testing.T) {
 	dgsnew.FlushMain()
 	dgsnew.RollbackMain()
 
+	if err := dgsnew.FlushAll(); err != nil {
+		t.Error("Unexpected error return:", err)
+	}
+
 	if err := dgsnew.Close(); err != nil {
 		t.Error(err)
 		return
@@ -128,7 +132,7 @@ func TestDiskGraphStorage(t *testing.T) {
 	}
 
 	if res := dgs.MainDB()["test1"]; res != "test1value" {
-		t.Error("Unexpected value in mainDB value")
+		t.Error("Unexpected value in mainDB value:", res)
 		return
 	}
 
@@ -141,6 +145,10 @@ func TestDiskGraphStorage(t *testing.T) {
 	}
 
 	if err := dgs.FlushMain(); err.Error() != "GraphError: Failed write to readonly storage (Cannot flush main db)" {
+		t.Error("Unexpected error return:", err)
+	}
+
+	if err := dgs.FlushAll(); err != nil {
 		t.Error("Unexpected error return:", err)
 	}
 
@@ -178,12 +186,14 @@ func TestDiskGraphStorageErrors(t *testing.T) {
 
 	FilenameNameDB = old
 
-	dgs := &DiskGraphStorage{invalidFileName, false, nil, make(map[string]storage.Manager)}
-	pm, _ := datautil.NewPersistentMap(invalidFileName)
+	dgs := &DiskGraphStorage{invalidFileName, false, nil,
+		make(map[string]storage.Manager)}
+	pm, _ := datautil.NewPersistentStringMap(invalidFileName)
 	dgs.mainDB = pm
 
 	msm := storage.NewMemoryStorageManager("test")
 	dgs.storagemanagers["test"] = msm
+	storage.MsmRetFlush = errors.New("TestError")
 	storage.MsmRetClose = errors.New("TestError")
 
 	if err := dgs.RollbackMain(); err == nil {
@@ -193,6 +203,11 @@ func TestDiskGraphStorageErrors(t *testing.T) {
 
 	if err := dgs.FlushMain(); err == nil {
 		t.Error("Unexpected flush result")
+		return
+	}
+
+	if err := dgs.FlushAll(); err == nil {
+		t.Error("Unexpected flush all result")
 		return
 	}
 

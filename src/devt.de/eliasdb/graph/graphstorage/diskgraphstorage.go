@@ -36,10 +36,10 @@ var FilenameNameDB = "names.pm"
 DiskGraphStorage data structure
 */
 type DiskGraphStorage struct {
-	name            string                     // Name of the graph storage
-	readonly        bool                       // Flag for readonly mode
-	mainDB          *datautil.PersistentMap    // Database storing names
-	storagemanagers map[string]storage.Manager // Map of StorageManagers
+	name            string                        // Name of the graph storage
+	readonly        bool                          // Flag for readonly mode
+	mainDB          *datautil.PersistentStringMap // Database storing names
+	storagemanagers map[string]storage.Manager    // Map of StorageManagers
 }
 
 /*
@@ -58,7 +58,7 @@ func NewDiskGraphStorage(name string, readonly bool) (Storage, error) {
 
 		// Create the graph storage files
 
-		mainDB, err := datautil.NewPersistentMap(name + "/" + FilenameNameDB)
+		mainDB, err := datautil.NewPersistentStringMap(name + "/" + FilenameNameDB)
 		if err != nil {
 			return nil, &util.GraphError{Type: util.ErrOpening, Detail: err.Error()}
 		}
@@ -69,7 +69,7 @@ func NewDiskGraphStorage(name string, readonly bool) (Storage, error) {
 
 		// Load graph storage files
 
-		mainDB, err := datautil.LoadPersistentMap(name + "/" + FilenameNameDB)
+		mainDB, err := datautil.LoadPersistentStringMap(name + "/" + FilenameNameDB)
 		if err != nil {
 			return nil, &util.GraphError{Type: util.ErrOpening, Detail: err.Error()}
 		}
@@ -105,7 +105,7 @@ func (dgs *DiskGraphStorage) RollbackMain() error {
 		return &util.GraphError{Type: util.ErrReadOnly, Detail: "Cannot rollback main db"}
 	}
 
-	mainDB, err := datautil.LoadPersistentMap(dgs.name + "/" + FilenameNameDB)
+	mainDB, err := datautil.LoadPersistentStringMap(dgs.name + "/" + FilenameNameDB)
 	if err != nil {
 		return &util.GraphError{Type: util.ErrOpening, Detail: err.Error()}
 	}
@@ -152,6 +152,38 @@ func (dgs *DiskGraphStorage) StorageManager(smname string, create bool) storage.
 	}
 
 	return sm
+}
+
+/*
+FlushAll writes all pending changes to the storage.
+*/
+func (dgs *DiskGraphStorage) FlushAll() error {
+
+	if dgs.readonly {
+		return nil
+	}
+
+	var errors []string
+
+	err := dgs.mainDB.Flush()
+	if err != nil {
+		errors = append(errors, err.Error())
+	}
+
+	for _, sm := range dgs.storagemanagers {
+		err := sm.Flush()
+		if err != nil {
+			errors = append(errors, err.Error())
+		}
+	}
+
+	if len(errors) > 0 {
+		details := fmt.Sprint(dgs.name, " :", strings.Join(errors, "; "))
+
+		return &util.GraphError{Type: util.ErrFlushing, Detail: details}
+	}
+
+	return nil
 }
 
 /*
