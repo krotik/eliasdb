@@ -32,6 +32,13 @@ Operators can be combined. Expressions can be segregated using parentheses. Each
 
 To explicitly define if a value represents a literal or a name of a node or edge attribute it is possible to prefix it with either 'attr:' for a node attribute name, 'eattr:' for an edge attribute name or 'val:' for a literal. In the majority of cases however the query interpreter will determine the right meaning. The precedence is: node attribute, edge attribute, literal value.
 
+EQL supports nested object structures on node attributes. A node value of { l1 : { l2 : { l3 : 123 } } } can be queried as:
+
+<attr name>.l1.l2.l3 = 123
+
+If the actual attribute name contins a dot then the 'attr:' prefix must be used.
+
+
 Traversal blocks
 ----------------
 
