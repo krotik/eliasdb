@@ -230,12 +230,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := trans.Commit(); err != nil {
-		log.Fatal(err)
-	}
-
-	trans = graph.NewGraphTrans(gm)
-
 	// Store edge between nodes
 
 	edge := data.NewGraphEdge()
@@ -255,7 +249,7 @@ func main() {
 
 	edge.SetAttr(data.NodeName, "Edge1")
 
-	if err := gm.StoreEdge("main", edge); err != nil {
+	if err := trans.StoreEdge("main", edge); err != nil {
 		log.Fatal(err)
 	}
 

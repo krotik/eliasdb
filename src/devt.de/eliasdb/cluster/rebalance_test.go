@@ -79,12 +79,16 @@ func TestRebalancing(t *testing.T) {
 
 	sm.Flush()
 
+	time.Sleep(10 * time.Millisecond)
+
 	if loc, err := sm.Insert("test2"); loc != 3 || err != nil {
 		t.Error("Unexpected result:", loc, err)
 		return
 	}
 
 	sm.Flush()
+
+	time.Sleep(10 * time.Millisecond)
 
 	if loc, err := sm.Insert("test3"); loc != 6 || err != nil {
 		t.Error("Unexpected result:", loc, err)
@@ -111,12 +115,12 @@ cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
 cloc: 6 (v:1) - lloc: 2 - "\b\f\x00\x05test3"
 TestClusterMember-1 MemberStorageManager mgs2/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
-cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 6 (v:1) - lloc: 1 - "\b\f\x00\x05test3"
-cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 6 (v:1) - lloc: 2 - "\b\f\x00\x05test3"
 `[1:] {
 		t.Error("Unexpected cluster storage layout: ", res)
 		return
@@ -165,12 +169,12 @@ cloc: 6 (v:1) - lloc: 2 - "\b\f\x00\x05test3"
 cloc: 7 (v:1) - lloc: 3 - "\b\f\x00\x05test4"
 TestClusterMember-1 MemberStorageManager mgs2/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
-cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 6 (v:1) - lloc: 1 - "\b\f\x00\x05test3"
-cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 6 (v:1) - lloc: 2 - "\b\f\x00\x05test3"
 TestClusterMember-3 MemberStorageManager mgs4/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 7 (v:1) - lloc: 1 - "\b\f\x00\x05test4"
@@ -220,11 +224,11 @@ cloc: 6 (v:1) - lloc: 2 - "\b\f\x00\x05test3"
 cloc: 7 (v:1) - lloc: 3 - "\b\f\x00\x05test4"
 TestClusterMember-1 MemberStorageManager mgs2/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
-cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
 TestClusterMember-3 MemberStorageManager mgs4/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 7 (v:1) - lloc: 1 - "\b\f\x00\x05test4"
@@ -255,11 +259,11 @@ cloc: 6 (v:2) - lloc: 2 - "\x10\f\x00\rtest3_updated"
 cloc: 7 (v:1) - lloc: 3 - "\b\f\x00\x05test4"
 TestClusterMember-1 MemberStorageManager mgs2/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
-cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
 TestClusterMember-3 MemberStorageManager mgs4/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 7 (v:1) - lloc: 1 - "\b\f\x00\x05test4"
@@ -268,6 +272,13 @@ cloc: 6 (v:1) - lloc: 2 - "\b\f\x00\x05test3"
 		t.Error("Unexpected cluster storage layout: ", res)
 		return
 	}
+
+	manager.MemberErrors = make(map[string]error)
+	defer func() { manager.MemberErrors = nil }()
+
+	// Simulate an error on member 3
+
+	manager.MemberErrors[cluster3[3].MemberManager.Name()] = &testNetError{}
 
 	// Ensure the transfer worker is running on all members
 
@@ -283,11 +294,45 @@ cloc: 6 (v:2) - lloc: 2 - "\x10\f\x00\rtest3_updated"
 cloc: 7 (v:1) - lloc: 3 - "\b\f\x00\x05test4"
 TestClusterMember-1 MemberStorageManager mgs2/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
-cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+TestClusterMember-3 MemberStorageManager mgs4/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 7 (v:1) - lloc: 1 - "\b\f\x00\x05test4"
+cloc: 6 (v:1) - lloc: 2 - "\b\f\x00\x05test3"
+`[1:] {
+		t.Error("Unexpected cluster storage layout: ", res)
+		return
+	}
+
+	// Remove the error
+
+	delete(manager.MemberErrors, cluster3[3].MemberManager.Name())
+
+	// Ensure the transfer worker is running on all members
+
+	for _, m := range ms {
+		m.rebalanceWorker(true)
+	}
+
+	// Check that update has happened
+
+	if res := clusterLayout(ms, "test"); res != `
+TestClusterMember-0 MemberStorageManager mgs1/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 6 (v:2) - lloc: 2 - "\x10\f\x00\rtest3_updated"
+cloc: 7 (v:1) - lloc: 3 - "\b\f\x00\x05test4"
+TestClusterMember-1 MemberStorageManager mgs2/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
 cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+TestClusterMember-2 MemberStorageManager mgs3/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
 TestClusterMember-3 MemberStorageManager mgs4/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 7 (v:1) - lloc: 1 - "\b\f\x00\x05test4"

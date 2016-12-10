@@ -145,10 +145,8 @@ func (mat *memberAddressTable) NewClusterLoc(dsname string) (uint64, error) {
 
 			ok, err := dsm.Exists(candidate)
 
-			if err != nil {
-				return false, err
-			} else if ok {
-				return true, err
+			if err != nil || ok {
+				return err == nil && ok, err
 			}
 		}
 

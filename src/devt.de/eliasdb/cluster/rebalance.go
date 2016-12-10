@@ -46,18 +46,12 @@ when the configuration of the cluster changes or to autocorrect certain errors.
 */
 func (ms *memberStorage) rebalanceWorker(forceRun bool) {
 
-	// Check if the transfer worker should be running
-
-	if !runRebalanceWorker {
-		return
-	}
-
 	// Make sure only one transfer task is running at a time and that
 	// subsequent requests are not queued up
 
 	ms.rebalanceLock.Lock()
 
-	if ms.rebalanceRunning {
+	if !runRebalanceWorker || ms.rebalanceRunning {
 		ms.rebalanceLock.Unlock()
 		return
 	}
@@ -104,7 +98,7 @@ func (ms *memberStorage) rebalanceWorker(forceRun bool) {
 		maintVers := make([]uint64, 0, MaxSizeRebalanceLists)
 		maintMgmts := make([]string, 0, MaxSizeRebalanceLists)
 
-		for it.HasNext() {
+		for it.HasNext() || chunks <= 0 {
 			key, val := it.Next()
 
 			if tr, ok := val.(*translationRec); ok {
@@ -115,11 +109,6 @@ func (ms *memberStorage) rebalanceWorker(forceRun bool) {
 				maintMgmts = append(maintMgmts, smname)
 				maintLocs = append(maintLocs, cloc)
 				maintVers = append(maintVers, tr.ver)
-			}
-
-			if chunks--; chunks <= 0 {
-				chunks = MaxSizeRebalanceLists
-				break
 			}
 		}
 

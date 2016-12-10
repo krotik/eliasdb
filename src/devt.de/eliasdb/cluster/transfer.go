@@ -34,18 +34,12 @@ transferWorker is the background thread which handles various tasks to provide
 */
 func (ms *memberStorage) transferWorker() {
 
-	// Check if the transfer worker should be running
-
-	if !runTransferWorker {
-		return
-	}
-
 	// Make sure only one transfer task is running at a time and that
 	// subsequent requests are not queued up
 
 	ms.transferLock.Lock()
 
-	if ms.transferRunning {
+	if !runTransferWorker || ms.transferRunning {
 		ms.transferLock.Unlock()
 		return
 	}
@@ -101,7 +95,7 @@ func (ms *memberStorage) transferWorker() {
 				processed = append(processed, key)
 			} else if len(failedMembers) < len(tr.members) {
 				tr.members = failedMembers
-				ms.at.transfer.Put(key, failedMembers)
+				ms.at.transfer.Put(key, tr)
 			}
 		}
 	}

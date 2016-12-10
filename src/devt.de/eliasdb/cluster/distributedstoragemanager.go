@@ -15,6 +15,7 @@ import (
 	"encoding/gob"
 	"fmt"
 
+	"devt.de/common/errorutil"
 	"devt.de/eliasdb/storage"
 )
 
@@ -33,13 +34,14 @@ type DistributedStorageManager struct {
 Name returns the name of the StorageManager instance.
 */
 func (dsm *DistributedStorageManager) Name() string {
-	return fmt.Sprint("DistributedStorageManager:", dsm)
+	return fmt.Sprint("DistributedStorageManager: ", dsm.name)
 }
 
 /*
 Root returns a root value.
 */
 func (dsm *DistributedStorageManager) Root(root int) uint64 {
+	var ret uint64
 
 	// Do not do anything is the cluster is not operational
 
@@ -77,11 +79,11 @@ func (dsm *DistributedStorageManager) Root(root int) uint64 {
 
 	dsm.rootError = err
 
-	if res == nil {
-		return 0
+	if res != nil {
+		ret = res.(uint64)
 	}
 
-	return res.(uint64)
+	return ret
 }
 
 /*
@@ -148,6 +150,7 @@ func (dsm *DistributedStorageManager) insertOrUpdate(insert bool, loc uint64, o 
 	var member string
 	var replicatingMembers []string
 	var rtype RequestType
+	var ret uint64
 
 	// Do not do anything is the cluster is not operational
 
@@ -179,9 +182,7 @@ func (dsm *DistributedStorageManager) insertOrUpdate(insert bool, loc uint64, o 
 		storage.BufferPool.Put(bb)
 	}()
 
-	if err := gob.NewEncoder(bb).Encode(o); err != nil {
-		return 0, err
-	}
+	errorutil.AssertOk(gob.NewEncoder(bb).Encode(o))
 
 	request := &DataRequest{rtype, map[DataRequestArg]interface{}{
 		RPStoreName: dsm.name,
@@ -208,7 +209,9 @@ func (dsm *DistributedStorageManager) insertOrUpdate(insert bool, loc uint64, o 
 
 			cloc, nerr := dsm.ds.sendDataRequest(member, request)
 			if nerr == nil {
-				return cloc.(uint64), nerr
+				ret = cloc.(uint64)
+				err = nil
+				break
 			}
 		}
 
@@ -221,12 +224,14 @@ func (dsm *DistributedStorageManager) insertOrUpdate(insert bool, loc uint64, o 
 		for _, member := range replicatingMembers {
 			cloc, nerr := dsm.ds.sendDataRequest(member, request)
 			if nerr == nil {
-				return cloc.(uint64), nerr
+				ret = cloc.(uint64)
+				err = nil
+				break
 			}
 		}
 	}
 
-	return 0, err
+	return ret, err
 }
 
 /*
@@ -387,18 +392,8 @@ Close is not implemented for a DistributedStorageManager. Only the local storage
 be closed which is done when the DistributedStore is shut down.
 */
 func (dsm *DistributedStorageManager) Close() error {
-	return dsm.returnErrors()
-}
 
-/*
-returnErrors returns any errors which might have occured during execution of non-error
-returning functions (e.g. SetRoot, etc.).
-*/
-func (dsm *DistributedStorageManager) returnErrors() error {
-
-	_, distTableErr := dsm.ds.DistributionTable()
-
-	if distTableErr != nil {
+	if _, distTableErr := dsm.ds.DistributionTable(); distTableErr != nil {
 		return distTableErr
 	}
 

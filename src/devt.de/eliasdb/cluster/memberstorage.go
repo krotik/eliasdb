@@ -311,14 +311,18 @@ func (ms *memberStorage) handleUpdateRequest(distTable *DistributionTable, reque
 					err = sm.Update(transRec.loc, request.Value)
 
 				} else {
+
+					// Outdated update requests are simply ignored
+
 					err = fmt.Errorf("Received outdated update request (%v - Location: %v)",
 						ms.ds.MemberManager.Name(), cloc)
 
 					manager.LogDebug(ms.ds.MemberManager.Name(), err.Error())
 
-					// Outdated update requests are simply ignored
+					// Need to return no error so the transfer worker on the
+					// other side removes its entry
 
-					return nil
+					err = nil
 				}
 			}
 
@@ -326,7 +330,7 @@ func (ms *memberStorage) handleUpdateRequest(distTable *DistributionTable, reque
 
 				// Increase the version of the translation record
 
-				ms.at.SetTransClusterLoc(dsname, cloc, transRec.loc, newVersion)
+				_, _, err = ms.at.SetTransClusterLoc(dsname, cloc, transRec.loc, newVersion)
 
 				if err == nil {
 
@@ -560,9 +564,7 @@ func (ms *memberStorage) handleRebalanceRequest(distTable *DistributionTable, re
 
 					// Update the local storage
 
-					err = sm.Update(tr.loc, res)
-
-					if err == nil {
+					if err = sm.Update(tr.loc, res); err == nil {
 
 						// Update the translation
 
@@ -629,6 +631,8 @@ func (ms *memberStorage) handleRebalanceRequest(distTable *DistributionTable, re
 			}
 		}
 	}
+
+	handleError(err)
 
 	return nil
 }

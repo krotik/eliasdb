@@ -14,16 +14,105 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math"
-	"os"
 	"testing"
 
 	"devt.de/eliasdb/cluster/manager"
 	"devt.de/eliasdb/graph/graphstorage"
+	"devt.de/eliasdb/storage"
 )
+
+func TestDistributionStorageInitialisationError(t *testing.T) {
+
+	gs := graphstorage.NewMemoryGraphStorage("bla")
+
+	si := manager.NewMemStateInfo()
+
+	// Set an unreasonable replication factor
+
+	si.Put(manager.StateInfoREPFAC, 500)
+
+	conf := map[string]interface{}{
+		manager.ConfigClusterSecret: "",
+	}
+
+	// Make flush error at first
+
+	storage.MsmRetFlush = errors.New("testerror")
+
+	ds, err := NewDistributedStorage(gs, conf, si)
+	if err.Error() != "testerror" || ds != nil {
+		t.Error("Unexpected result:", ds, err)
+		return
+	}
+
+	storage.MsmRetFlush = nil
+
+	// Create a new DistributionStorage
+
+	ds, err = NewDistributedStorage(gs, conf, si)
+	if err != nil || ds == nil {
+		t.Error("Unexpected result:", ds, err)
+		return
+	}
+
+	// Test simple operations
+
+	if res := ds.LocalName(); res != "bla" {
+		t.Error("Unexpected local name:", res)
+		return
+	}
+
+	if ds.FlushAll() != nil {
+		t.Error(err)
+		return
+	}
+
+	if ds.IsOperational() {
+		t.Error("Cluster should not be operational at this point")
+		return
+	}
+
+	if len(ds.MainDB()) != 0 {
+		t.Error("MainDB should return an empty map at this point")
+		return
+	}
+
+	ds.RollbackMain()
+
+	// This returns the distTableErr
+
+	if err := ds.FlushMain(); err.Error() != "Not enough members (1) for given replication factor: 500" {
+		t.Error("Unexpected result:", err)
+		return
+	}
+
+	if res := ds.StorageManager("test", true); res != nil {
+		t.Error("StorageManager should return nil with missing distribution table")
+		return
+	}
+
+	if len(ds.MainDB()) != 0 {
+		t.Error("MainDB should return an empty map at this point")
+		return
+	}
+
+	// This returns the mainDBErr
+
+	if err := ds.FlushMain(); err.Error() != "Not enough members (1) for given replication factor: 500" {
+		t.Error("Unexpected result:", err)
+		return
+	}
+
+	if res := ds.StorageManager("test", true); res != nil {
+		t.Error("StorageManager should return nil when main db is not available")
+		return
+	}
+}
 
 func TestMainDBDistribution(t *testing.T) {
 
@@ -89,7 +178,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 	manager.FreqHousekeeping = 5
 	defer func() { manager.FreqHousekeeping = 1000 }()
 
-	cluster3, _ := createCluster(3, 2)
+	cluster3, ds := createCluster(3, 2)
 
 	// Debug output
 
@@ -129,6 +218,71 @@ func TestSimpleDataDistribution(t *testing.T) {
 	// Simple insert requests - data is stored on all members
 
 	sm := cluster3[0].StorageManager("test1", true)
+
+	if res := sm.Name(); res != "DistributedStorageManager: test1" {
+		t.Error("Unexpected name:", res)
+		return
+	}
+
+	// Test handling of distribution table errors with existing storage manager objects
+
+	cluster3[0].distributionTableError = errors.New("TestError")
+
+	sm.SetRoot(1, 5)
+
+	if sm.Root(1) != 0 {
+		t.Error("All root values should be returned as 0 with distribution table errors")
+		return
+	}
+
+	if _, err := sm.Insert("test"); err.Error() != "TestError" {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	if err := sm.Update(5, "test"); err.Error() != "TestError" {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	if err := sm.Free(5); err.Error() != "TestError" {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	if _, err := sm.FetchCached(5); err != storage.ErrNotInCache {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	if err := sm.Fetch(5, nil); err.Error() != "TestError" {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	if err := sm.Close(); err.Error() != "TestError" {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	if err := sm.Flush(); err.Error() != "TestError" {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	// No effect on NOP operations
+
+	if err := sm.Rollback(); err != nil {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	cluster3[0].distributionTableError = nil
+
+	if err := sm.Close(); err != nil {
+		t.Error("Unexpected response:", err)
+		return
+	}
 
 	// Even after the first creation call should the storage manage not exist
 
@@ -222,6 +376,53 @@ func TestSimpleDataDistribution(t *testing.T) {
 		return
 	}
 
+	// Test sending outdated request
+
+	request := &DataRequest{RTUpdate, map[DataRequestArg]interface{}{
+		RPStoreName: "test1",
+		RPLoc:       uint64(6),
+		RPVer:       uint64(1),
+	}, []byte("1111"), true}
+
+	_, err := ds[1].ds.sendDataRequest(cluster3[2].MemberManager.Name(), request)
+	if err != nil {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	// Check that the outdated transfer request was ignored
+
+	if err := sm.Fetch(6, &res); res != "test44" || err != nil {
+		t.Error("Unexpected result:", res, err)
+		return
+	}
+
+	// Try updating something which does not exist
+
+	request = &DataRequest{RTUpdate, map[DataRequestArg]interface{}{
+		RPStoreName: "test1",
+		RPLoc:       uint64(99),
+		RPVer:       uint64(1),
+	}, []byte("1111"), true}
+
+	_, err = ds[1].ds.sendDataRequest(cluster3[2].MemberManager.Name(), request)
+	if err.Error() != "ClusterError: Member error (Cluster slot not found (TestClusterMember-2 - Location: 99))" {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	lsm := ds[0].dataStorage("test1", false)
+
+	// Destroy the gob encoding in cluster slot 0 (local slot 1)
+
+	lsm.Update(1, "test11")
+
+	if err := sm.Fetch(0, &res); err.Error() !=
+		"gob: decoding into local type *[]uint8, received remote type string" {
+		t.Error("Unexpected result:", res, err)
+		return
+	}
+
 	// Delete some data
 
 	if err := sm.Free(0); err != nil {
@@ -274,9 +475,25 @@ func TestSimpleDataDistribution(t *testing.T) {
 		return
 	}
 
-	manager.LogDebug = manager.LogInfo
-	log.SetOutput(os.Stderr)
-	defer func() { log.SetOutput(ioutil.Discard) }()
+	// Test certain errors
+
+	var RPMyRequest RequestType = "RPMyRequest"
+
+	request = &DataRequest{RPMyRequest, map[DataRequestArg]interface{}{}, nil, false}
+
+	_, err = ds[1].ds.sendDataRequest(cluster3[0].MemberManager.Name(), request)
+	if err.Error() != "ClusterError: Member error (Unknown request type)" {
+		t.Error("Unexpected response:", err)
+		return
+	}
+
+	cluster3[0].distributionTableError = errors.New("testerror")
+
+	_, err = ds[1].ds.sendDataRequest(cluster3[0].MemberManager.Name(), request)
+	if err.Error() != "ClusterError: Member error (Storage is currently disabled on member: TestClusterMember-0 (testerror))" {
+		t.Error("Unexpected response:", err)
+		return
+	}
 }
 
 /*

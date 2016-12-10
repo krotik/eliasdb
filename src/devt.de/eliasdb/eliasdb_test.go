@@ -27,6 +27,7 @@ import (
 	"devt.de/common/fileutil"
 	"devt.de/common/httputil"
 	"devt.de/eliasdb/api"
+	"devt.de/eliasdb/cluster"
 	"devt.de/eliasdb/cluster/manager"
 	"devt.de/eliasdb/graph"
 	"devt.de/eliasdb/graph/data"
@@ -763,6 +764,26 @@ func TestMainErrorCases(t *testing.T) {
 		": bind: address already in use" && errorLog[0] != "listen tcp :9090"+
 		": bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.") ||
 		errorLog[1] != "Testerror" {
+		t.Error("Unexpected error:", errorLog)
+		return
+	}
+
+	// Set back logs
+
+	printLog = []string{}
+	errorLog = []string{}
+
+	Config[EnableCluster] = true
+
+	cluster.DSRetNew = errors.New("testerror")
+	defer func() {
+		cluster.DSRetNew = nil
+	}()
+
+	execMain(nil)
+
+	if len(errorLog) != 1 ||
+		!strings.Contains(errorLog[0], "testerror") {
 		t.Error("Unexpected error:", errorLog)
 		return
 	}

@@ -105,6 +105,12 @@ func NewDistributedStorage(gs graphstorage.Storage, config map[string]interface{
 }
 
 /*
+DSRetNew is the return value on successful creating a distributed storage
+(used for testing)
+*/
+var DSRetNew error
+
+/*
 newDistributedAndMemberStorage creates a new cluster graph storage but also returns a
 reference to the internal memberStorage object.
 */
@@ -116,6 +122,8 @@ func newDistributedAndMemberStorage(gs graphstorage.Storage, config map[string]i
 	// Merge given configuration with default configuration
 
 	clusterconfig := datautil.MergeMaps(manager.DefaultConfig, config)
+
+	// Make 100% sure there is a secret string
 
 	if clusterconfig[manager.ConfigClusterSecret] == "" {
 		clusterconfig[manager.ConfigClusterSecret] = manager.DefaultConfig[manager.ConfigClusterSecret]
@@ -205,26 +213,18 @@ func newDistributedAndMemberStorage(gs graphstorage.Storage, config map[string]i
 				numMembers != len(distTable.Members()) ||
 				rf != distTable.repFac {
 
-				// Renew the distribution table
+				// Try to renew the distribution table
 
-				dt, err := NewDistributionTable(mm.Members(), rf)
-
-				if err != nil {
-
-					mm.LogInfo("Storage disabled:", err.Error())
-
-					ds.SetDistributionTableError(err)
-
-					return
+				if dt, err := NewDistributionTable(mm.Members(), rf); err == nil {
+					ds.SetDistributionTable(dt)
 				}
 
-				ds.SetDistributionTable(dt)
 			}
 		}
 
 	}, memberStorage.transferWorker)
 
-	return ds, memberStorage, nil
+	return ds, memberStorage, DSRetNew
 }
 
 /*
@@ -249,7 +249,7 @@ func (ds *DistributedStorage) IsOperational() bool {
 	ds.distributionTableLock.Lock()
 	defer ds.distributionTableLock.Unlock()
 
-	return ds.distributionTableError != nil || ds.distributionTable == nil
+	return ds.distributionTableError == nil && ds.distributionTable != nil
 }
 
 /*
@@ -348,6 +348,7 @@ MainDB returns the main database. The main database is a quick
 lookup map for meta data which is always kept in memory.
 */
 func (ds *DistributedStorage) MainDB() map[string]string {
+	ret := make(map[string]string)
 
 	// Clear the current mainDB cache
 
@@ -359,7 +360,7 @@ func (ds *DistributedStorage) MainDB() map[string]string {
 
 	if distTableErr != nil {
 		ds.mainDBError = distTableErr
-		return make(map[string]string)
+		return ret
 	}
 
 	// Main db requests always go to member 1
@@ -389,12 +390,12 @@ func (ds *DistributedStorage) MainDB() map[string]string {
 
 	if mainDB != nil {
 		ds.mainDB = mainDB.(map[string]string)
-		return ds.mainDB
+		ret = ds.mainDB
 	}
 
 	// We failed to get the main db - any flush will fail.
 
-	return make(map[string]string)
+	return ret
 }
 
 /*
