@@ -159,7 +159,7 @@ func (ms *Server) StateInfoRequest(request map[RequestArgument]interface{},
 		return err
 	}
 
-	*response = manager.stateInfo.Map()
+	*response = mapToBytes(manager.stateInfo.Map())
 
 	return nil
 }
@@ -177,7 +177,7 @@ func (ms *Server) MemberInfoRequest(request map[RequestArgument]interface{},
 		return err
 	}
 
-	*response = manager.memberInfo
+	*response = mapToBytes(manager.memberInfo)
 
 	return nil
 }
@@ -207,7 +207,7 @@ func (ms *Server) JoinCluster(request map[RequestArgument]interface{},
 
 		// Return updated state info if there was no error
 
-		*response = manager.stateInfo.Map()
+		*response = mapToBytes(manager.stateInfo.Map())
 	}
 
 	return err
@@ -230,7 +230,7 @@ func (ms *Server) AddMember(request map[RequestArgument]interface{},
 
 	newMemberName := request[RequestMEMBERNAME].(string)
 	newMemberRPC := request[RequestMEMBERRPC].(string)
-	newStateInfo := *request[RequestSTATEINFOMAP].(*map[string]interface{})
+	newStateInfo := bytesToMap(request[RequestSTATEINFOMAP].([]byte))
 
 	return manager.addMember(newMemberName, newMemberRPC, newStateInfo)
 }
@@ -362,7 +362,7 @@ func (ms *Server) UpdateStateInfo(request map[RequestArgument]interface{},
 		return err
 	}
 
-	newStateInfo := *request[RequestSTATEINFOMAP].(*map[string]interface{})
+	newStateInfo := bytesToMap(request[RequestSTATEINFOMAP].([]byte))
 
 	return manager.applyStateInfo(newStateInfo)
 }

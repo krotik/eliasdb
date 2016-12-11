@@ -17,7 +17,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
+	"devt.de/common/datautil"
 	"devt.de/eliasdb/eql/parser"
 	"devt.de/eliasdb/graph/data"
 )
@@ -65,7 +67,8 @@ func whereCount(astNode *parser.ASTNode, rtp *eqlRuntimeProvider,
 Runtime map for show related functions
 */
 var showFunc = map[string]FuncShowInst{
-	"count": showCountInst,
+	"count":  showCountInst,
+	"objget": showObjgetInst,
 }
 
 /*
@@ -106,7 +109,7 @@ func showCountInst(astNode *parser.ASTNode, rtp *eqlRuntimeProvider) (FuncShow, 
 	// Check parameters
 
 	if len(astNode.Children) != 3 {
-		return nil, "", "", errors.New("Count function requires 2 parameters: data index, traversal spec")
+		return nil, "", "", errors.New("Count function requires 2 parameters: traversal step, traversal spec")
 	}
 
 	pos := astNode.Children[1].Token.Val
@@ -131,7 +134,7 @@ func (sc *showCount) name() string {
 }
 
 /*
-showCount counts reachable nodes via a given traversal.
+eval counts reachable nodes via a given traversal.
 */
 func (sc *showCount) eval(node data.Node, edge data.Edge) (interface{}, string, error) {
 
@@ -144,4 +147,56 @@ func (sc *showCount) eval(node data.Node, edge data.Edge) (interface{}, string, 
 		node.Kind(), strconv.Quote(node.Key()), sc.spec, data.NodeKey, data.NodeKind, data.NodeName)
 
 	return len(nodes), srcQuery, nil
+}
+
+// Show Objget
+// -----------
+
+/*
+showObjgetInst creates a new showObjget object.
+*/
+func showObjgetInst(astNode *parser.ASTNode, rtp *eqlRuntimeProvider) (FuncShow, string, string, error) {
+
+	// Check parameters
+
+	if len(astNode.Children) != 4 {
+		return nil, "", "", errors.New("Objget function requires 3 parameters: traversal step, attribute name, path to value")
+	}
+
+	pos := astNode.Children[1].Token.Val
+	attr := astNode.Children[2].Token.Val
+	path := astNode.Children[3].Token.Val
+
+	return &showObjget{rtp, attr, strings.Split(path, ".")}, pos + ":n:" + attr,
+		rtp.ni.AttributeDisplayString("", attr) + "." + path, nil
+}
+
+/*
+showObjget reaches into an object and extracts a value.
+*/
+type showObjget struct {
+	rtp  *eqlRuntimeProvider
+	attr string
+	path []string
+}
+
+/*
+name returns the name of the function.
+*/
+func (so *showObjget) name() string {
+	return "objget"
+}
+
+/*
+eval reaches into an object and extracts a value.
+*/
+func (so *showObjget) eval(node data.Node, edge data.Edge) (interface{}, string, error) {
+
+	val := node.Attr(so.attr)
+
+	if valMap, ok := val.(map[string]interface{}); ok {
+		val, _ = datautil.GetNestedValue(valMap, so.path)
+	}
+
+	return val, "n:" + node.Kind() + ":" + node.Key(), nil
 }

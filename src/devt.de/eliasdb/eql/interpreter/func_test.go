@@ -50,7 +50,7 @@ Mike, 4
 	}
 
 	if _, err := getResult("get group show key, @count(:::Author)", "", rt, true); err.Error() !=
-		"EQL error in test: Invalid construct (Count function requires 2 parameters: data index, traversal spec) (Line:1 Pos:21)" {
+		"EQL error in test: Invalid construct (Count function requires 2 parameters: traversal step, traversal spec) (Line:1 Pos:21)" {
 		t.Error(err)
 		return
 	}
@@ -94,6 +94,12 @@ Mike, 4
 
 	if _, err := getResult("get Author where @count(::Song) > 3", "", rt, true); err.Error() !=
 		"GraphError: Invalid data (Invalid spec: ::Song)" {
+		t.Error(err)
+		return
+	}
+
+	if _, err := getResult("get Author show @objget(1)", "", rt, true); err.Error() !=
+		"EQL error in test: Invalid construct (Objget function requires 3 parameters: traversal step, attribute name, path to value) (Line:1 Pos:17)" {
 		t.Error(err)
 		return
 	}

@@ -206,7 +206,7 @@ const TermSRC = `
         t.ajax = function (url, method, body, callbackOK, callbackError) {
             "use strict";
             var http = new XMLHttpRequest(),
-			    start;
+                start;
 
             if (method === undefined) {
                 method = "GET"
@@ -216,9 +216,9 @@ const TermSRC = `
             http.setRequestHeader("content-type", "application/json");
             http.setRequestHeader("accept", "application/json");
             http.onload = function () {
-				var rtime = Date.now() - start;
-				document.title = "Terminal (Last response time: "+ rtime +"ms)";
-				console.log("Response time:", rtime);
+                var rtime = Date.now() - start;
+                document.title = "Terminal (Last response time: "+ rtime +"ms)";
+                console.log("Response time:", rtime);
                 try {
                     if (http.status === 200) {
                         if (callbackOK) {
@@ -240,10 +240,11 @@ const TermSRC = `
                 }
             };
 
+            start = Date.now();
+
             if (body !== undefined) {
                 http.send(JSON.stringify(body));
             } else {
-                start = Date.now()
                 http.send();
             }
         };
@@ -292,11 +293,11 @@ const TermSRC = `
                 buttonClear = t.create("button", {
                     "class" : "t-button",
                 }),
-                stipText = function (t) {
+                stripText = function (t) {
 
                     // Strip out unwanted html tags
 
-                    t = t.replace(/<(?:.|\n)*?>/g, ' ');
+                    t = t.replace(/<(?:.|\n)*?>/g, '');
                     
                     // Convert sansitised html to text
                     
@@ -305,6 +306,7 @@ const TermSRC = `
                     t = t.replace(/&quot;/g, '"');
                     t = t.replace(/&apos;/g, "'");
                     t = t.replace(/&amp;/g, '&');
+                    t = t.replace(/&nbsp;/g, ' ');
 
                     return t
                 };
@@ -328,7 +330,7 @@ const TermSRC = `
 
                     if (e.shiftKey && e.keyCode === 13) {
                         t.stopBubbleEvent(e);
-                        t.main.exec(input, stipText(input.innerHTML));
+                        t.main.exec(input, stripText(input.innerHTML));
                     }
                 });
 
@@ -360,7 +362,7 @@ const TermSRC = `
                 });
 
                 t.addEvent(buttonOK, "click", function (e) {
-                    t.main.exec(input, stipText(input.innerHTML));
+                    t.main.exec(input, stripText(input.innerHTML));
                 });
 
                 t.addEvent(buttonClear, "click", function (e) {
@@ -373,8 +375,11 @@ const TermSRC = `
             exec : function (element, text) {
                 "use strict";
 
+                text = text.trim();
+                text = text.replace( /\n/g, " ");
+
                 var sp   = text.split(" ", 1),
-                    cmd  = sp[0],
+                    cmd  = sp[0].toLowerCase(),
                     rest = text.substring(sp[0].length);
 
                 console.log("Execute:", cmd, rest);
@@ -386,7 +391,7 @@ const TermSRC = `
                 if (cmdFunc !== undefined) {
                     cmdFunc(element, rest);
                 } else {
-                    t.main.addError(element, "Unknown command");
+                    t.main.addError(element, "Unknown command: '" + cmd + "'");
                 }
             },
 
@@ -483,6 +488,14 @@ const TermSRC = `
 
                     r.forEach(function (c) {
                         var cell = t.create("td");
+
+                        // Make sure nested structures are printed
+                        // in a human readable fashion
+
+                        if (typeof c === 'object') {
+                            c = JSON.stringify(c);
+                        }
+            
                         cell.innerHTML = c;
                         t.insert(row, cell);
                     });

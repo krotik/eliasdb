@@ -12,11 +12,19 @@ package graph
 
 import (
 	"encoding/binary"
+	"encoding/gob"
 
 	"devt.de/eliasdb/graph/data"
 	"devt.de/eliasdb/graph/util"
 	"devt.de/eliasdb/hash"
 )
+
+func init() {
+
+	// It is possible to store nested structures on nodes
+
+	gob.Register(make(map[string]interface{}))
+}
 
 /*
 NodeCount returns the node count for a given node kind.

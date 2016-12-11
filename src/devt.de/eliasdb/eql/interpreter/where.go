@@ -333,8 +333,15 @@ func (rt *whereRuntime) Validate() error {
 
 				// Check if we have a nested value
 
-				if valRuntime.isNodeAttrValue && strings.Contains(val, ".") {
-					valRuntime.nestedValuePath = strings.Split(val, ".")
+				if strings.Contains(val, ".") {
+
+					nestedValuePath := strings.Split(val, ".")
+
+					if rt.rtp.ni.IsValidAttr(nestedValuePath[0]) {
+						valRuntime.condVal = nestedValuePath[0]
+						valRuntime.nestedValuePath = nestedValuePath
+						valRuntime.isNodeAttrValue = true
+					}
 				}
 			}
 

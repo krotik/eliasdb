@@ -190,7 +190,7 @@ func (gm *Manager) mainStringList(name string) []string {
 }
 
 /*
-IsValidAttr checks if a given string can be a valid node attribute.t
+IsValidAttr checks if a given string can be a valid node attribute.
 */
 func (gm *Manager) IsValidAttr(attr string) bool {
 	return gm.nm.Encode32(attr, false) != "" ||

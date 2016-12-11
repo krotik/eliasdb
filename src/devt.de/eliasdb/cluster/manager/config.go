@@ -26,11 +26,15 @@ state of all its peers by sending ping requests to them on a regular schedule.
 package manager
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"sync"
 
 	"devt.de/common/datautil"
+	"devt.de/common/errorutil"
 	"devt.de/common/fileutil"
+	"devt.de/eliasdb/storage"
 )
 
 // Cluster config
@@ -250,4 +254,33 @@ Flush does not do anything :-)
 */
 func (msi *MemStateInfo) Flush() error {
 	return MsiRetFlush
+}
+
+// Helper functions to properly serialize maps
+// ===========================================
+
+/*
+mapToBytes converts a given map to bytes. This method panics on errors.
+*/
+func mapToBytes(m map[string]interface{}) []byte {
+	bb := storage.BufferPool.Get().(*bytes.Buffer)
+	defer func() {
+		bb.Reset()
+		storage.BufferPool.Put(bb)
+	}()
+
+	errorutil.AssertOk(gob.NewEncoder(bb).Encode(m))
+
+	return bb.Bytes()
+}
+
+/*
+bytesToMap tries to convert a given byte array into a map. This method panics on errors.
+*/
+func bytesToMap(b []byte) map[string]interface{} {
+	var ret map[string]interface{}
+
+	errorutil.AssertOk(gob.NewDecoder(bytes.NewReader(b)).Decode(&ret))
+
+	return ret
 }

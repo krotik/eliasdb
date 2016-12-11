@@ -28,7 +28,6 @@ func init() {
 	// Make sure we can use the relevant types in a gob operation
 
 	gob.Register(&MemberToken{})
-	gob.Register(&map[string]interface{}{})
 }
 
 /*
@@ -321,7 +320,7 @@ func (mc *Client) SendJoinCluster(targetMember string, targetMemberRPC string) (
 	})
 
 	if res != nil && err == nil {
-		return *res.(*map[string]interface{}), err
+		return bytesToMap(res.([]byte)), err
 	}
 
 	mc.maplock.Lock()
@@ -451,7 +450,7 @@ func (mc *Client) SendStateInfoRequest(member string) (map[string]interface{}, e
 	res, err := mc.SendRequest(member, RPCSIRequest, nil)
 
 	if res != nil {
-		return *res.(*map[string]interface{}), err
+		return bytesToMap(res.([]byte)), err
 	}
 
 	return nil, err
@@ -479,7 +478,7 @@ func (mc *Client) SendMemberInfoRequest(member string) (map[string]interface{}, 
 	res, err := mc.SendRequest(member, RPCMIRequest, nil)
 
 	if res != nil {
-		return *res.(*map[string]interface{}), err
+		return bytesToMap(res.([]byte)), err
 	}
 
 	return nil, err

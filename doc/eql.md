@@ -120,3 +120,7 @@ Functions for the show clause:
 ```
 @count(<traversal step>, <traversal spec>) - Counts how many nodes can be reached via a given spec from a given traversal step.
 ```
+
+```
+@objget(<traversal step>, <attribute name>, <path to value>) - Extracts a value from a nested object structure.
+```

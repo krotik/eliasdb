@@ -320,7 +320,7 @@ func (mm *MemberManager) JoinNewMember(newMemberName string, newMemberRPC string
 		mm.Client.SendRequest(p, RPCAddMember, map[RequestArgument]interface{}{
 			RequestMEMBERNAME:   newMemberName,
 			RequestMEMBERRPC:    newMemberRPC,
-			RequestSTATEINFOMAP: mm.stateInfo.Map(),
+			RequestSTATEINFOMAP: mapToBytes(mm.stateInfo.Map()),
 		})
 	}
 
@@ -377,7 +377,7 @@ func (mm *MemberManager) EjectMember(memberToEject string) error {
 
 		for _, k := range peers {
 			mm.Client.SendRequest(k, RPCUpdateStateInfo, map[RequestArgument]interface{}{
-				RequestSTATEINFOMAP: mm.stateInfo.Map(),
+				RequestSTATEINFOMAP: mapToBytes(mm.stateInfo.Map()),
 			})
 		}
 
@@ -449,7 +449,7 @@ func (mm *MemberManager) UpdateClusterStateInfo() error {
 
 	for _, k := range peers {
 		mm.Client.SendRequest(k, RPCUpdateStateInfo, map[RequestArgument]interface{}{
-			RequestSTATEINFOMAP: mm.stateInfo.Map(),
+			RequestSTATEINFOMAP: mapToBytes(mm.stateInfo.Map()),
 		})
 	}
 

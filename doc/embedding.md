@@ -30,13 +30,13 @@ src/devt.de/demo/demo.go
 Simple graph database setup
 ---------------------------
 The first step is to create a graph storage which will store the data. The following code will
-create a disk storage in the db/ subdirectory:
+create a disk storage in the db/ subdirectory (the false flag opens the store in read / write mode):
 ```
 func main() {
 
 	// Create a graph storage
 
-	gs, err := graphstorage.NewDiskGraphStorage("db")
+	gs, err := graphstorage.NewDiskGraphStorage("db", false)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -190,7 +190,7 @@ func main() {
 
 	// Create a graph storage
 
-	//gs, err := graphstorage.NewDiskGraphStorage("db")
+	//gs, err := graphstorage.NewDiskGraphStorage("db", false)
 	//if err != nil {
 	//		log.Fatal(err)
 	//		return
@@ -230,6 +230,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := trans.Commit(); err != nil {
+		log.Fatal(err)
+	}
+
+	trans = graph.NewGraphTrans(gm)
+
 	// Store edge between nodes
 
 	edge := data.NewGraphEdge()
@@ -249,7 +255,7 @@ func main() {
 
 	edge.SetAttr(data.NodeName, "Edge1")
 
-	if err := trans.StoreEdge("main", edge); err != nil {
+	if err := gm.StoreEdge("main", edge); err != nil {
 		log.Fatal(err)
 	}
 

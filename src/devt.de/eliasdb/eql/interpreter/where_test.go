@@ -65,6 +65,61 @@ Data: 1:n:key, 1:n:name, 1:n:nested, 1:n:nested.nest1.nest2.atom1, 1:n:type
 		t.Error(err)
 		return
 	}
+
+	// Test nested show clause
+
+	if err := runSearch("get mynode where nested.nest1.nest2.atom1 = 1.45 show @objget(1, nested, nest1)", `
+Labels: Nested.nest1
+Format: auto
+Data: 1:func:objget()
+map[nest2:map[atom1:1.45]]
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where nested.nest1.nest2.atom1 = 1.45 show @objget(1, nested, nest1.nest2.atom1)", `
+Labels: Nested.nest1.nest2.atom1
+Format: auto
+Data: 1:func:objget()
+1.45
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode show @objget(1, key, nest1.nest2.atom1)", `
+Labels: Key.nest1.nest2.atom1
+Format: auto
+Data: 1:func:objget()
+000
+123
+456
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where nested.nest1.nest2.atom1 = 1.45 show name", `
+Labels: Mynode Name
+Format: auto
+Data: 1:n:name
+Node2
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where nested.nest1.nest2.atom1 = 1.45 show key, @objget(1, key, nest1.nest2.atom1)", `
+Labels: Mynode Key, Key.nest1.nest2.atom1
+Format: auto, auto
+Data: 1:n:key, 1:func:objget()
+456, 456
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
 }
 
 func TestWhere(t *testing.T) {
