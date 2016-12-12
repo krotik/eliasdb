@@ -68,3 +68,14 @@ The GraphManager object stores its data in a graphstorage.Storage which is imple
 To further facilitate data segregation nodes and edges can be stored in different "partitions" of the database. By default the GraphManager will also maintain a full text search index which contains all data stored in the graph database. It is possible to search nodes by word, phrase or direct match.
 
 The graph database also supports transactions which should be used to queue multiple change requests. Unless commit is called no actual changes are done to the datastore. An automatic rollback is done if an error occurs during the commit stage.
+
+
+DistributedStorage
+------------------
+The distribution wrapper cluster.DistributedStorage provides a fully transparent abstraction layer to EliasDB's graphstorage.Storage to enable data distribution and replication. A new instance is created by wrapping an existing instance of graphstorage.Storage (e.g. graphstorage.MemoryGraphStorage or graphstorage.DiskGraphStorage). Multiple instances of cluster.DistributedStorage can be joined together via the network to form a cluster. All operations send to any of the wrapper instances are distributed to one or more cluster members. The cluster has a peer-to-peer character, all members are equal and there is no coordinator.
+
+The code tries to be as transparent as possible and will only involve client code during serious errors. Conflicts are usually solved by a simple "last one wins" policy. Availability is more important than 100% consistency. Background tasks ensure eventual consistency. The clustering code is split into two main parts: cluster management and data distribution.
+
+The cluster management code in cluster/manager provides client / server interfaces for the single cluster members. It provides automatic configuration distribution, communication security and failure detection. The cluster is secured by a shared secret string which is never directly transmitted via the network. A periodically housekeeping task is used to detect member failures and synchronizing member state.
+
+The data distribution code manages the actual distribution and replication of data. Depending on the configured replication factor each stored datum is replicated to multiple members in the cluster. The cluster size may expand or shrink (if replication factor > 1). With a replication factor of n the cluster becomes inoperable when more than n-1 members fail. Data is synchronized between members using simple Lamport timestamps. The cluster only provides eventual consistency. Recovering members are not updated immediately and may deliver outdated results for some time.
