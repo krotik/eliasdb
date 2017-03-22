@@ -35,6 +35,61 @@ type ASTNode struct {
 }
 
 /*
+ASTFromPlain creates an AST from a plain AST.
+A plain AST is a nested map structure like this:
+
+	{
+		name     : <name of node>
+		value    : <value of node>
+		children : [ <child nodes> ]
+	}
+*/
+func ASTFromPlain(plainAST map[string]interface{}) (*ASTNode, error) {
+	var astChildren []*ASTNode
+
+	name, ok := plainAST["name"]
+	if !ok {
+		return nil, fmt.Errorf("Found plain ast node without a name: %v", plainAST)
+	}
+
+	value, ok := plainAST["value"]
+	if !ok {
+		return nil, fmt.Errorf("Found plain ast node without a value: %v", plainAST)
+	}
+
+	// Create children
+
+	if children, ok := plainAST["children"]; ok {
+
+		if ic, ok := children.([]interface{}); ok {
+
+			// Do a list conversion if necessary - this is necessary when we parse
+			// JSON with map[string]interface{} this 
+
+			childrenList := make([]map[string]interface{}, len(ic))
+			for i := range ic {
+				childrenList[i] = ic[i].(map[string]interface{})
+			}
+
+			children = childrenList
+		}
+
+		for _, child := range children.([]map[string]interface{}) {
+
+			astChild, err := ASTFromPlain(child)
+			if err != nil {
+				return nil, err
+			}
+
+			astChildren = append(astChildren, astChild)
+		}
+	}
+
+	return &ASTNode{fmt.Sprint(name), &LexToken{TokenGeneral, 0,
+		fmt.Sprint(value), 0, 0}, astChildren, nil, 0, nil, nil}, nil
+}
+
+/*
 Create a new instance of this ASTNode which is connected to a concrete lexer token.
 */
 func (n *ASTNode) instance(p *parser, t *LexToken) *ASTNode {
@@ -42,6 +97,34 @@ func (n *ASTNode) instance(p *parser, t *LexToken) *ASTNode {
 	if p.rp != nil {
 		ret.Runtime = p.rp.Runtime(ret)
 	}
+	return ret
+}
+
+/*
+Plain returns this ASTNode and all its children as plain AST. A plain AST
+only contains map objects, lists and primitive types which can be serialized
+with JSON.
+*/
+func (n *ASTNode) Plain() map[string]interface{} {
+	ret := make(map[string]interface{})
+
+	ret["name"] = n.Name
+
+	lenChildren := len(n.Children)
+
+	if lenChildren > 0 {
+		children := make([]map[string]interface{}, lenChildren)
+		for i, child := range n.Children {
+			children[i] = child.Plain()
+		}
+
+		ret["children"] = children
+	}
+
+	// The value is what the lexer found in the source
+
+	ret["value"] = n.Token.Val
+
 	return ret
 }
 
@@ -63,7 +146,7 @@ func (n *ASTNode) levelString(indent int, buf *bytes.Buffer) {
 
 	buf.WriteString(stringutil.GenerateRollingString(" ", indent*2))
 
-	if n.Token.ID == TokenVALUE || n.Token.ID == TokenNODEKIND {
+	if n.Name == NodeVALUE || (n.Name == NodeSHOWTERM && n.Token.Val != "@") {
 		buf.WriteString(fmt.Sprintf(n.Name+": %v", n.Token))
 	} else {
 		buf.WriteString(n.Name)
@@ -79,7 +162,7 @@ func (n *ASTNode) levelString(indent int, buf *bytes.Buffer) {
 }
 
 /*
-Map of ast nodes corresponding to lexer tokens
+Map of AST nodes corresponding to lexer tokens
 */
 var astNodeMap map[LexTokenID]*ASTNode
 

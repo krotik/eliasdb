@@ -116,6 +116,10 @@ Functions for conditions:
 @count(<traversal spec>) - Counts how many nodes can be reached via a given spec from the traversal step of the condition.
 ```
 
+```
+@parseDate(<date string>, <opt. layout>) - Converts a given date string into an unix time integer. The optional second parameter is the parsing layout stated as reference time (Mon Jan 2 15:04:05 -0700 MST 2006) - e.g. '2006-01-02' interprets <year>-<month>-<day> strings. The default layout is RFC3339.
+```
+
 Functions for the show clause:
 ```
 @count(<traversal step>, <traversal spec>) - Counts how many nodes can be reached via a given spec from a given traversal step.

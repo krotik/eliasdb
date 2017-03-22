@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"devt.de/common/datautil"
 	"devt.de/eliasdb/eql/parser"
@@ -37,7 +38,8 @@ type FuncWhere func(astNode *parser.ASTNode, rtp *eqlRuntimeProvider,
 Runtime map for where related functions
 */
 var whereFunc = map[string]FuncWhere{
-	"count": whereCount,
+	"count":     whereCount,
+	"parseDate": whereParseDate,
 }
 
 /*
@@ -58,6 +60,49 @@ func whereCount(astNode *parser.ASTNode, rtp *eqlRuntimeProvider,
 	nodes, _, err := rtp.gm.TraverseMulti(rtp.part, node.Key(), node.Kind(), spec, false)
 
 	return len(nodes), err
+}
+
+/*
+whereParseDate converts a date string into a unix time value.
+*/
+func whereParseDate(astNode *parser.ASTNode, rtp *eqlRuntimeProvider,
+	node data.Node, edge data.Edge) (interface{}, error) {
+
+	var datestr interface{}
+	var t time.Time
+	var ret int64
+	var err error
+
+	// Define default layout
+
+	layout := time.RFC3339
+
+	// Check parameters
+
+	if len(astNode.Children) < 2 {
+		return nil, rtp.newRuntimeError(ErrInvalidConstruct,
+			"parseDate function requires 1 parameter: date string", astNode)
+	}
+
+	if len(astNode.Children) > 2 {
+		datestr, err = astNode.Children[2].Runtime.(CondRuntime).CondEval(node, edge)
+		layout = fmt.Sprint(datestr)
+	}
+
+	// Convert the date string
+
+	datestr, err = astNode.Children[1].Runtime.(CondRuntime).CondEval(node, edge)
+
+	if err == nil {
+
+		t, err = time.Parse(layout, fmt.Sprint(datestr))
+
+		if err == nil {
+			ret = t.Unix()
+		}
+	}
+
+	return ret, err
 }
 
 // Show related functions

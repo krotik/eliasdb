@@ -504,3 +504,29 @@ func songGraphGroups() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 
 	return gm, mgs
 }
+
+func dateGraph() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
+
+	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
+	gm := graph.NewGraphManager(mgs)
+
+	node0 := data.NewGraphNode()
+	node0.SetAttr("key", "000")
+	node0.SetAttr("kind", "datetest")
+	node0.SetAttr("name", "date1")
+	node0.SetAttr("unix", 1349809255)
+	node0.SetAttr("RFC3339_value", "2012-10-09T19:00:55Z")
+	node0.SetAttr("naive_value", "2012-10-09")
+	gm.StoreNode("main", node0)
+
+	node1 := data.NewGraphNode()
+	node1.SetAttr("key", "001")
+	node1.SetAttr("kind", "datetest")
+	node1.SetAttr("name", "date2")
+	node1.SetAttr("unix", 1350061255)
+	node1.SetAttr("RFC3339_value", "2012-10-12T19:00:55+02:00")
+	node1.SetAttr("naive_value", "2012-10-12")
+	gm.StoreNode("main", node1)
+
+	return gm, mgs.(*graphstorage.MemoryGraphStorage)
+}

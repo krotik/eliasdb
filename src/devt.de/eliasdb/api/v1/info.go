@@ -12,6 +12,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"devt.de/eliasdb/api"
@@ -43,29 +44,56 @@ func (ie *infoEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resour
 
 	data := make(map[string]interface{})
 
-	// Get information
+	if len(resources) > 0 {
 
-	data["partitions"] = api.GM.Partitions()
+		if resources[0] == "kind" {
 
-	nks := api.GM.NodeKinds()
-	data["node_kinds"] = nks
+			// Kind info is requested
 
-	ncs := make(map[string]uint64)
-	for _, nk := range nks {
-		ncs[nk] = api.GM.NodeCount(nk)
+			if len(resources) == 1 {
+				http.Error(w, "Missing node kind", http.StatusBadRequest)
+				return
+			}
+
+			na := api.GM.NodeAttrs(resources[1])
+			ea := api.GM.EdgeAttrs(resources[1])
+
+			if len(na) == 0 && len(ea) == 0 {
+				http.Error(w, fmt.Sprint("Unknown node kind ", resources[1]), http.StatusBadRequest)
+				return
+			}
+
+			data["node_attrs"] = na
+			data["node_edges"] = api.GM.NodeEdges(resources[1])
+			data["edge_attrs"] = ea
+		}
+
+	} else {
+
+		// Get general information
+
+		data["partitions"] = api.GM.Partitions()
+
+		nks := api.GM.NodeKinds()
+		data["node_kinds"] = nks
+
+		ncs := make(map[string]uint64)
+		for _, nk := range nks {
+			ncs[nk] = api.GM.NodeCount(nk)
+		}
+
+		data["node_counts"] = ncs
+
+		eks := api.GM.EdgeKinds()
+		data["edge_kinds"] = eks
+
+		ecs := make(map[string]uint64)
+		for _, ek := range eks {
+			ecs[ek] = api.GM.EdgeCount(ek)
+		}
+
+		data["edge_counts"] = ecs
 	}
-
-	data["node_counts"] = ncs
-
-	eks := api.GM.EdgeKinds()
-	data["edge_kinds"] = eks
-
-	ecs := make(map[string]uint64)
-	for _, ek := range eks {
-		ecs[ek] = api.GM.EdgeCount(ek)
-	}
-
-	data["edge_counts"] = ecs
 
 	// Write data
 
@@ -83,10 +111,41 @@ func (ie *infoEndpoint) SwaggerDefs(s map[string]interface{}) {
 	s["paths"].(map[string]interface{})["/v1/info"] = map[string]interface{}{
 		"get": map[string]interface{}{
 			"summary":     "Return general datastore information.",
-			"description": "The info endpoint returns general database information such as known node kinds, known attributes, etc .",
+			"description": "The info endpoint returns general database information such as known node kinds, known attributes, etc.",
 			"produces": []string{
 				"text/plain",
 				"application/json",
+			},
+			"responses": map[string]interface{}{
+				"200": map[string]interface{}{
+					"description": "A key-value map.",
+				},
+				"default": map[string]interface{}{
+					"description": "Error response",
+					"schema": map[string]interface{}{
+						"$ref": "#/definitions/Error",
+					},
+				},
+			},
+		},
+	}
+
+	s["paths"].(map[string]interface{})["/v1/info/kind/{kind}"] = map[string]interface{}{
+		"get": map[string]interface{}{
+			"summary":     "Return information on a given node or edge kind.",
+			"description": "The info kind endpoint returns information on a given node kind such as known attributes and edges.",
+			"produces": []string{
+				"text/plain",
+				"application/json",
+			},
+			"parameters": []map[string]interface{}{
+				map[string]interface{}{
+					"name":        "kind",
+					"in":          "path",
+					"description": "Node or edge kind to be queried.",
+					"required":    true,
+					"type":        "string",
+				},
 			},
 			"responses": map[string]interface{}{
 				"200": map[string]interface{}{

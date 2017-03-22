@@ -10,6 +10,10 @@
 
 /*
 Package eql contains the main API for EQL.
+
+Example EQL query:
+
+GET Person where name = "Marvin"
 */
 package eql
 

@@ -11,6 +11,8 @@
 package parser
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"testing"
 )
@@ -645,6 +647,261 @@ func TestParserErrorCases(t *testing.T) {
 	})
 	if err.Error() != "Parse error in special test: Unknown term (id:-5 (\"\")) (Line:1 Pos:1)" {
 		t.Error("Unexpected result", res, err)
+		return
+	}
+}
+
+func TestAstPlainRepresentation(t *testing.T) {
+
+	input := `
+get song where true // 'div' show bla wIth orderinG(ASCending aa,Descending bb), FILTERING(ISNOTNULL test2,UNIQUE test3, uniquecount test3), nulltraversal(true)`
+	expectedOutput := `
+get
+  value: "song"
+  where
+    divint
+      true
+      value: "div"
+  show
+    showterm: "bla"
+  with
+    ordering
+      asc
+        value: "aa"
+      desc
+        value: "bb"
+    filtering
+      isnotnull
+        value: "test2"
+      unique
+        value: "test3"
+      uniquecount
+        value: "test3"
+    nulltraversal
+      true
+`[1:]
+
+	res, err := Parse("mytest", input)
+
+	if err != nil || fmt.Sprint(res) != expectedOutput {
+		t.Error("Unexpected parser output:\n", res, "expected was:\n", expectedOutput, "Error:", err)
+		return
+	}
+
+	plainres := res.Plain()
+
+	jsonplainres, err := json.Marshal(plainres)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	out := bytes.Buffer{}
+	err = json.Indent(&out, []byte(jsonplainres), "", "  ")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if out.String() != `
+{
+  "children": [
+    {
+      "name": "value",
+      "value": "song"
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "name": "true",
+              "value": "true"
+            },
+            {
+              "name": "value",
+              "value": "div"
+            }
+          ],
+          "name": "divint",
+          "value": "//"
+        }
+      ],
+      "name": "where",
+      "value": "where"
+    },
+    {
+      "children": [
+        {
+          "name": "showterm",
+          "value": "bla"
+        }
+      ],
+      "name": "show",
+      "value": "show"
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "name": "value",
+                  "value": "aa"
+                }
+              ],
+              "name": "asc",
+              "value": "ASCending"
+            },
+            {
+              "children": [
+                {
+                  "name": "value",
+                  "value": "bb"
+                }
+              ],
+              "name": "desc",
+              "value": "Descending"
+            }
+          ],
+          "name": "ordering",
+          "value": "orderinG"
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "name": "value",
+                  "value": "test2"
+                }
+              ],
+              "name": "isnotnull",
+              "value": "ISNOTNULL"
+            },
+            {
+              "children": [
+                {
+                  "name": "value",
+                  "value": "test3"
+                }
+              ],
+              "name": "unique",
+              "value": "UNIQUE"
+            },
+            {
+              "children": [
+                {
+                  "name": "value",
+                  "value": "test3"
+                }
+              ],
+              "name": "uniquecount",
+              "value": "uniquecount"
+            }
+          ],
+          "name": "filtering",
+          "value": "FILTERING"
+        },
+        {
+          "children": [
+            {
+              "name": "true",
+              "value": "true"
+            }
+          ],
+          "name": "nulltraversal",
+          "value": "nulltraversal"
+        }
+      ],
+      "name": "with",
+      "value": "wIth"
+    }
+  ],
+  "name": "get",
+  "value": "get"
+}`[1:] {
+		t.Error("Unexpected result: ", out.String())
+		return
+	}
+
+	// Now convert the plain ast back into a normal AST and pretty print the result
+
+	astfromplain, err := ASTFromPlain(plainres)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	//  Check that the generated AST is equal to the expected output
+
+	if fmt.Sprint(astfromplain) != expectedOutput {
+		t.Error("Unexpected output:", astfromplain)
+		return
+	}
+
+	ppquery, err := PrettyPrint(astfromplain)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if ppquery != `
+get song where true // div
+show
+  bla 
+with
+  ordering(ascending aa, descending bb),
+  filtering(isnotnull test2, unique test3, uniquecount test3),
+  nulltraversal(true)`[1:] {
+		t.Error("Unexpected output:", ppquery)
+		return
+	}
+
+	// Test parsing from JSON (this will produce a []interface{} for children)
+
+	data := make(map[string]interface{})
+	json.NewDecoder(bytes.NewBufferString(`{
+		"name"     : "get",
+		"value"    : "get",
+		"children" : [{
+			"name"     : "value",
+			"value"    : "bla"
+		}]
+	}`)).Decode(&data)
+
+	astfromplain, err = ASTFromPlain(data)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if fmt.Sprint(astfromplain) != `
+get
+  value: "bla"
+`[1:] {
+		t.Error("Unexpected result:", astfromplain)
+		return
+	}
+
+	// Test error message
+
+	if _, err := ASTFromPlain(map[string]interface{}{
+		"name": "bla",
+	}); err.Error() != "Found plain ast node without a value: map[name:bla]" {
+		t.Error("Unexpected error:", err)
+		return
+	}
+
+	if _, err := ASTFromPlain(map[string]interface{}{
+		"name":  "bla",
+		"value": "",
+		"children": []map[string]interface{}{map[string]interface{}{
+			"fame": "bla",
+		}},
+	}); err.Error() != "Found plain ast node without a name: map[fame:bla]" {
+		t.Error("Unexpected error:", err)
 		return
 	}
 }

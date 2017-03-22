@@ -38,11 +38,12 @@ V1EndpointMap is a map of urls to endpoints for version 1 of the API
 */
 var V1EndpointMap = map[string]api.RestEndpointInst{
 	EndpointBlob:         BlobEndpointInst,
-	EndpointIndexQuery:   IndexEndpointInst,
-	EndpointQuery:        QueryEndpointInst,
-	EndpointGraph:        GraphEndpointInst,
-	EndpointInfoQuery:    InfoEndpointInst,
 	EndpointClusterQuery: ClusterEndpointInst,
+	EndpointEql:          EqlEndpointInst,
+	EndpointGraph:        GraphEndpointInst,
+	EndpointIndexQuery:   IndexEndpointInst,
+	EndpointInfoQuery:    InfoEndpointInst,
+	EndpointQuery:        QueryEndpointInst,
 }
 
 // Helper functions

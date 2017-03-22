@@ -89,11 +89,47 @@ info of every member as a key-value map:
 Returns the latest cluster related log messages. A DELETE call will clear
 the current log.
 
-Graph request enpoint
+
+EQL parser endpoint
+
+/eql
+
+The EQL endpoint provides direct access to the EQL parser. It can be used
+to parse a given EQL query into an Abstract Syntax Tree or pretty print a
+given Abstract Syntax Tree into an EQL query.
+
+A query can be parsed into an Abstract Syntax Tree by sending a POST request. The
+body should have the following format:
+
+	{
+		query : <Query to parse>
+	}
+
+Returns a JSON structure or an error message.
+
+	{
+		ast : <AST of the given query>
+	}
+
+An Abstract Syntax Tree can be pretty printed into a query by sending a POST request.
+The body should have the following format:
+
+	{
+		ast : <AST to pretty print>
+	}
+
+Returns a JSON structure or an error message.
+
+	{
+		query : <Pretty printed query>
+	}
+
+
+Graph request endpoint
 
 /graph
 
-The graph endpoint is the main entry point to send and request data.
+The graph endpoint is the main entry point to send and request graph data.
 
 Data can be send by using POST and PUT requests. POST will store
 data in the datastore and always overwrite any existing data. PUT requests on
@@ -207,6 +243,7 @@ The return data is a list of node keys:
 
 	[ <node key1>, <node key2>, ... ]
 
+
 General database information endpoint
 
 /info
@@ -220,6 +257,12 @@ The return data is a key-value map:
 	    <info name> : <info value>,
 	    ...
 	}
+
+/info/kind/<kind>
+
+The node kind info endpoint returns general information about a known node or
+edge kind such as known attributes or known edges.
+
 
 Query endpoint
 
@@ -290,7 +333,7 @@ func BlobEndpointInst() api.RestEndpointHandler {
 }
 
 /*
-Handler object for graph operations.
+Handler object for blob operations.
 */
 type blobEndpoint struct {
 	*api.DefaultEndpointHandler

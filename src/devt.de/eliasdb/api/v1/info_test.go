@@ -23,4 +23,67 @@ func TestInfoQuery(t *testing.T) {
 		t.Error("Unexpected response:", st, res)
 		return
 	}
+
+	queryURL = "http://localhost" + TESTPORT + EndpointInfoQuery + "kind"
+
+	_, _, res = sendTestRequest(queryURL, "GET", nil)
+	if res != "Missing node kind" {
+		t.Error("Unexpected response:", res)
+		return
+	}	
+	
+	queryURL = "http://localhost" + TESTPORT + EndpointInfoQuery + "kind/foobar"
+
+	_, _, res = sendTestRequest(queryURL, "GET", nil)
+	if res != "Unknown node kind foobar" {
+		t.Error("Unexpected response:", res)
+		return
+	}
+
+	queryURL = "http://localhost" + TESTPORT + EndpointInfoQuery + "kind/Song"
+
+	_, _, res = sendTestRequest(queryURL, "GET", nil)
+
+	if res != `
+{
+  "edge_attrs": null,
+  "node_attrs": [
+    "key",
+    "kind",
+    "name",
+    "ranking"
+  ],
+  "node_edges": [
+    "Song:Wrote:Author:Author"
+  ]
+}`[1:] {
+		t.Error("Unexpected response:", res)
+		return
+	}
+
+	queryURL = "http://localhost" + TESTPORT + EndpointInfoQuery + "kind/Wrote"
+
+	_, _, res = sendTestRequest(queryURL, "GET", nil)
+
+	if res != `
+{
+  "edge_attrs": [
+    "end1cascading",
+    "end1key",
+    "end1kind",
+    "end1role",
+    "end2cascading",
+    "end2key",
+    "end2kind",
+    "end2role",
+    "key",
+    "kind",
+    "number"
+  ],
+  "node_attrs": null,
+  "node_edges": null
+}`[1:] {
+		t.Error("Unexpected response:", res)
+		return
+	}
 }

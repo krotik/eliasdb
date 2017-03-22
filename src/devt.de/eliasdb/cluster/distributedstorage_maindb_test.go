@@ -172,4 +172,28 @@ TestClusterMember-2 MemberStorageManager MainDB
 		return
 	}
 
+	// Remove from main DB
+
+	main = cluster3[1].MainDB()
+
+	delete(main, "test1")
+
+	cluster3[1].FlushMain()
+
+	runTransferWorker = true
+	ms[0].transferWorker()
+	ms[1].transferWorker()
+	ms[2].transferWorker()
+	runTransferWorker = false
+
+	if res := clusterLayout(ms, ""); res != `
+TestClusterMember-0 MemberStorageManager MainDB
+test2 - "456"
+TestClusterMember-1 MemberStorageManager MainDB
+test2 - "456"
+TestClusterMember-2 MemberStorageManager MainDB
+`[1:] {
+		t.Error("Unexpected cluster storage layout: ", res)
+		return
+	}
 }

@@ -47,6 +47,8 @@ const (
 	TokenVALUE    // Simple value
 	TokenNODEKIND // Node kind value
 
+	TokenGeneral // General token used for plain ASTs
+
 	TOKENodeSYMBOLS // Used to separate symbols from other tokens in this list
 
 	TokenGEQ
