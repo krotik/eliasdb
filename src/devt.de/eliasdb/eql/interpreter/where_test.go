@@ -288,18 +288,59 @@ Data: 1:n:key, 1:n:name, 1:n:ranking
 		return
 	}
 
-	if err := testSimpleOperationErrors("get mynode where Name < Node1", rt); err != nil {
-		t.Error(err)
-	}
-
-	if err := runSearch("get mynode where ranking <  x", "", rt); err.Error() !=
-		"EQL error in test: Value of operand is not a number (x) (Line:1 Pos:29)" {
+	if err := runSearch("get mynode where name > 'Node0'", `
+Labels: Mynode Key, Mynode Name, Ranking
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:ranking
+123, Node1, 2.1
+456, Node1, 3.5
+`[1:], rt); err != nil {
 		t.Error(err)
 		return
 	}
 
-	if err := runSearch("get mynode where name < ranking", "", rt); err.Error() !=
-		"EQL error in test: Value of operand is not a number (name=Node1) (Line:1 Pos:18)" {
+	// TODO More tests on greater / less for strings
+
+	if err := runSearch("get mynode where name < Node1", `
+Labels: Mynode Key, Mynode Name, Ranking
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:ranking
+000, Node0, 1
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where name <= Node1", `
+Labels: Mynode Key, Mynode Name, Ranking
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:ranking
+000, Node0, 1
+123, Node1, 2.1
+456, Node1, 3.5
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where key > 055", `
+Labels: Mynode Key, Mynode Name, Ranking
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:ranking
+123, Node1, 2.1
+456, Node1, 3.5
+`[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where key >= 023test", `
+Labels: Mynode Key, Mynode Name, Ranking
+Format: auto, auto, auto
+Data: 1:n:key, 1:n:name, 1:n:ranking
+123, Node1, 2.1
+456, Node1, 3.5
+`[1:], rt); err != nil {
 		t.Error(err)
 		return
 	}
@@ -343,6 +384,23 @@ Format: auto, auto, auto
 Data: 1:n:key, 1:n:name, 1:n:ranking
 123, Node1, 2.1
 `[1:], rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := testSimpleOperationErrors("get mynode where Name + Node1", rt); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where ranking +  x", "", rt); err.Error() !=
+		"EQL error in test: Value of operand is not a number (x) (Line:1 Pos:29)" {
+		t.Error(err)
+		return
+	}
+
+	if err := runSearch("get mynode where name + ranking", "", rt); err.Error() !=
+		"EQL error in test: Value of operand is not a number (name=Node1) (Line:1 Pos:18)" {
 		t.Error(err)
 		return
 	}

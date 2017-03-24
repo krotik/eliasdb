@@ -43,7 +43,7 @@ Data: 1:n:key, 1:n:RFC3339_value, 1:n:naive_value, 1:n:name, 1:n:unix
 	// The format string '2006-01-02' interprets <year>-<month>-<day>
 	// The string 2012-10-12 is interpreted as 2012-10-12 00:00:00 +0000 UTC
 
-	if _, err := getResult("get datetest where @parseDate(naive_value, '2006-01-02') = 1350000000", `
+	if _, err := getResult("get datetest where @parseDate(naive_value, '2006-01-02') > @parseDate('2012-10-11', '2006-01-02')", `
 Labels: Datetest Key, Rfc3339 Value, Naive Value, Datetest Name, Unix
 Format: auto, auto, auto, auto, auto
 Data: 1:n:key, 1:n:RFC3339_value, 1:n:naive_value, 1:n:name, 1:n:unix

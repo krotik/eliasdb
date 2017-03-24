@@ -444,7 +444,16 @@ func lessThanRuntimeInst(rtp *eqlRuntimeProvider, node *parser.ASTNode) parser.R
 CondEval evaluates this condition runtime element.
 */
 func (rt *lessThanRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, error) {
-	return rt.numOp(node, edge, func(res1 float64, res2 float64) interface{} { return res1 < res2 })
+	ret, err := rt.numOp(node, edge, func(res1 float64, res2 float64) interface{} { return res1 < res2 })
+
+	if err != nil {
+
+		// Do a simple string ordering
+
+		ret, err = rt.valOp(node, edge, func(res1 interface{}, res2 interface{}) interface{} { return fmt.Sprint(res1) < fmt.Sprint(res2) })
+	}
+
+	return ret, err
 }
 
 /*
@@ -465,7 +474,16 @@ func lessThanEqualsRuntimeInst(rtp *eqlRuntimeProvider, node *parser.ASTNode) pa
 CondEval evaluates this condition runtime element.
 */
 func (rt *lessThanEqualsRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, error) {
-	return rt.numOp(node, edge, func(res1 float64, res2 float64) interface{} { return res1 <= res2 })
+	ret, err := rt.numOp(node, edge, func(res1 float64, res2 float64) interface{} { return res1 <= res2 })
+
+	if err != nil {
+
+		// Do a simple string ordering
+
+		ret, err = rt.valOp(node, edge, func(res1 interface{}, res2 interface{}) interface{} { return fmt.Sprint(res1) <= fmt.Sprint(res2) })
+	}
+
+	return ret, err
 }
 
 /*
@@ -486,7 +504,16 @@ func greaterThanRuntimeInst(rtp *eqlRuntimeProvider, node *parser.ASTNode) parse
 CondEval evaluates this condition runtime element.
 */
 func (rt *greaterThanRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, error) {
-	return rt.numOp(node, edge, func(res1 float64, res2 float64) interface{} { return res1 > res2 })
+	ret, err := rt.numOp(node, edge, func(res1 float64, res2 float64) interface{} { return res1 > res2 })
+
+	if err != nil {
+
+		// Do a simple string ordering
+
+		ret, err = rt.valOp(node, edge, func(res1 interface{}, res2 interface{}) interface{} { return fmt.Sprint(res1) > fmt.Sprint(res2) })
+	}
+
+	return ret, err
 }
 
 /*
@@ -507,7 +534,16 @@ func greaterThanEqualsRuntimeInst(rtp *eqlRuntimeProvider, node *parser.ASTNode)
 CondEval evaluates this condition runtime element.
 */
 func (rt *greaterThanEqualsRuntime) CondEval(node data.Node, edge data.Edge) (interface{}, error) {
-	return rt.numOp(node, edge, func(res1 float64, res2 float64) interface{} { return res1 >= res2 })
+	ret, err := rt.numOp(node, edge, func(res1 float64, res2 float64) interface{} { return res1 >= res2 })
+
+	if err != nil {
+
+		// Do a simple string ordering
+
+		ret, err = rt.valOp(node, edge, func(res1 interface{}, res2 interface{}) interface{} { return fmt.Sprint(res1) >= fmt.Sprint(res2) })
+	}
+
+	return ret, err
 }
 
 /*
