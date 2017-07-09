@@ -1,6 +1,6 @@
 EliasDB
 =======
-EliasDB is a graph based database which aims to provide a lightweight solution for projects which want to store their data as a graph. EliasDB does not require any third-party libraries.
+EliasDB is a graph-based database which aims to provide a lightweight solution for projects which want to store their data as a graph. EliasDB does not require any third-party libraries.
 
 <p>
 <a href="https://devt.de/build_status.html"><img src="https://devt.de/nightly/build.eliasdb.svg" alt="Build status"></a>
