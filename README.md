@@ -100,7 +100,7 @@ go install devt.de/eliasdb
 
 Create a directory, change into it and run:
 ```
-go get -d devt.de/common devt.de/eliasdb
+go get devt.de/common/... devt.de/eliasdb/...
 ```
 
 Assuming your GOPATH is set to the new directory you should be able to build the binary with:
