@@ -30,6 +30,15 @@ func TestMapCache(t *testing.T) {
 		return
 	}
 
+	// Test copy
+
+	cp := mc.GetAll()
+
+	if len(cp) != 3 {
+		t.Error("Unexpected copy result:", cp)
+		return
+	}
+
 	// Simulate different timings
 
 	mc.ts["k1"] = time.Now().Unix() - 6 // Expired

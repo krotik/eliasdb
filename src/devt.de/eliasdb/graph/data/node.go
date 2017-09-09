@@ -82,6 +82,17 @@ NodeKind is the kind attribute for a node
 const NodeKind = "kind"
 
 /*
+CopyNode returns a shallow copy of a given node.
+*/
+func CopyNode(node Node) Node {
+	ret := NewGraphNode()
+	for k, v := range node.Data() {
+		ret.SetAttr(k, v)
+	}
+	return ret
+}
+
+/*
 graphNode data structure.
 */
 type graphNode struct {

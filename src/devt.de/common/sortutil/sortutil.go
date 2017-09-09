@@ -12,7 +12,10 @@ Package sortutil contains common sorting definitions and utilities for sorting d
 */
 package sortutil
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+)
 
 /*
 Int64Slice is a special type implementing the sort interface for int64
@@ -41,3 +44,19 @@ func (p UInt64Slice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 UInt64s sorts a slice of uint64s in increasing order.
 */
 func UInt64s(a []uint64) { sort.Sort(UInt64Slice(a)) }
+
+/*
+AbstractSlice is a special type implementing the sort interface for interface{}
+(Sorting is by string value)
+*/
+type AbstractSlice []interface{}
+
+func (p AbstractSlice) Len() int           { return len(p) }
+func (p AbstractSlice) Less(i, j int) bool { return fmt.Sprint(p[i]) < fmt.Sprint(p[j]) }
+func (p AbstractSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+/*
+InterfaceStrings sorts a slice of interface{} in increasing order by their string
+values.
+*/
+func InterfaceStrings(a []interface{}) { sort.Sort(AbstractSlice(a)) }

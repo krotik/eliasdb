@@ -36,7 +36,6 @@ var prettyPrinterMap = map[string]*template.Template{
 
 	// Special tokens - always handled in a denotation function
 
-	NodeCOMMA:         template.Must(template.New(NodeCOMMA).Parse("comma")),
 	NodeGROUP + "_1":  template.Must(template.New(NodeGROUP).Parse("group {{.c1}}")),
 	NodeEND:           template.Must(template.New(NodeEND).Parse("end")),
 	NodeAS + "_1":     template.Must(template.New(NodeAS).Parse("as {{.c1}}")),
@@ -87,8 +86,18 @@ var prettyPrinterMap = map[string]*template.Template{
 	NodeMINUS + "_2":  template.Must(template.New(NodeMINUS).Parse("{{.c1}} - {{.c2}}")),
 	NodeTIMES + "_2":  template.Must(template.New(NodeTIMES).Parse("{{.c1}} * {{.c2}}")),
 	NodeDIV + "_2":    template.Must(template.New(NodeDIV).Parse("{{.c1}} / {{.c2}}")),
-	NodeMODINT:        template.Must(template.New(NodeMODINT).Parse("modint")),
+	NodeMODINT + "_2": template.Must(template.New(NodeMODINT).Parse("{{.c1}} % {{.c2}}")),
 	NodeDIVINT + "_2": template.Must(template.New(NodeDIVINT).Parse("{{.c1}} // {{.c2}}")),
+}
+
+/*
+Map of nodes where the precedence might have changed because of parentheses
+*/
+var bracketPrecedenceMap = map[string]bool{
+	NodePLUS:  true,
+	NodeMINUS: true,
+	NodeAND:   true,
+	NodeOR:    true,
 }
 
 /*
@@ -108,10 +117,13 @@ func PrettyPrint(ast *ASTNode) (string, error) {
 
 		if allowNonQuotation && (isNumber || isInlineString) {
 			return val
-		} else if strings.Contains(val, "\"") {
-			return fmt.Sprintf("'%v'", val)
+		} else if strings.ContainsRune(val, '"') {
+			if strings.ContainsRune(val, '\'') {
+				val = strings.Replace(val, "\"", "\\\"", -1)
+			} else {
+				return fmt.Sprintf("'%v'", val)
+			}
 		}
-
 		return fmt.Sprintf("\"%v\"", val)
 	}
 
@@ -137,7 +149,7 @@ func PrettyPrint(ast *ASTNode) (string, error) {
 					return "", err
 				}
 
-				if (child.Name == NodePLUS || child.Name == NodeMINUS) && ast.binding > child.binding {
+				if _, ok := bracketPrecedenceMap[child.Name]; ok && ast.binding > child.binding {
 					res = fmt.Sprintf("(%v)", res)
 				}
 

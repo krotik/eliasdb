@@ -24,6 +24,15 @@ func AssertOk(err error) {
 }
 
 /*
+AssertTrue will panic if the given condition is negative.
+*/
+func AssertTrue(condition bool, errString string) {
+	if !condition {
+		panic(errString)
+	}
+}
+
+/*
 CompositeError can collect multiple errors in a single error object.
 */
 type CompositeError struct {

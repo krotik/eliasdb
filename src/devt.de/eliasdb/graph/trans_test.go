@@ -132,6 +132,11 @@ func TestNormalTrans(t *testing.T) {
 		return
 	}
 
+	if res := fmt.Sprint(trans2.Counts()); res != "1 1 0 0" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
 	// This should fail since node 4 is not there
 
 	if err := trans2.Commit(); err.Error() != "GraphError: Invalid data (Can't find edge endpoint: abc (mynode))" {

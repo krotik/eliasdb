@@ -119,6 +119,21 @@ or
 		t.Error(err)
 		return
 	}
+
+	input = "a and (b or c)"
+	expectedOutput = `
+and
+  value: "a"
+  or
+    value: "b"
+    value: "c"
+`[1:]
+
+	if err := testPrettyPrinting(input, expectedOutput,
+		"a and (b or c)"); err != nil {
+		t.Error(err)
+		return
+	}
 }
 
 func TestQueryPrinting(t *testing.T) {
@@ -507,10 +522,7 @@ func TestSpecialCases(t *testing.T) {
 
 	// Test if a value contains a double quote
 
-	// BUG Cannot use double and single quotes in one string
-	//input = `get test where a = 'test 1: \" 2: \' '`
-
-	input = `get test where a = 'test \"'`
+	input = `get test where a = 'test "'`
 
 	astres, err = ParseWithRuntime("mytest", input, &TestRuntimeProvider{})
 	if err != nil {
@@ -521,6 +533,23 @@ func TestSpecialCases(t *testing.T) {
 	ppres, err := PrettyPrint(astres)
 
 	if ppres != `get test where a = 'test "'` {
+		t.Error("Unexpected result:", ppres)
+		return
+	}
+
+	// Test if value contains double and single quote
+
+	input = `get test where a = "test 1: \" 2: ' "`
+
+	astres, err = ParseWithRuntime("mytest", input, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	ppres, err = PrettyPrint(astres)
+
+	if ppres != `get test where a = "test 1: \" 2: ' "` {
 		t.Error("Unexpected result:", ppres)
 		return
 	}

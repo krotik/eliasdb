@@ -429,15 +429,18 @@ func lexValue(l *lexer) lexFunc {
 	}
 
 	r = l.next(false)
+	rprev := ' '
 	lLine := l.line
 	lLastnl := l.lastnl
 
-	for r != endToken {
+	for (!allowEscapes && r != endToken) ||
+		(allowEscapes && (r != endToken || rprev == '\\')) {
 
 		if r == '\n' {
 			lLine++
 			lLastnl = l.pos
 		}
+		rprev = r
 		r = l.next(false)
 
 		if r == RuneEOF {
@@ -450,6 +453,13 @@ func lexValue(l *lexer) lexFunc {
 		val := l.input[l.start+1 : l.pos-1]
 
 		// Interpret escape sequences right away
+
+		if endToken == '\'' {
+
+			// Escape double quotes in a single quoted string
+
+			val = strings.Replace(val, "\"", "\\\"", -1)
+		}
 
 		s, err := strconv.Unquote("\"" + val + "\"")
 		if err != nil {

@@ -108,10 +108,10 @@ func (rb *RingBuffer) Add(e interface{}) {
 Poll removes and returns the head of the ringbuffer.
 */
 func (rb *RingBuffer) Poll() interface{} {
-	rb.lock.RLock()
-	defer rb.lock.RUnlock()
+	rb.lock.Lock()
+	defer rb.lock.Unlock()
 
-	if rb.IsEmpty() {
+	if rb.size == 0 {
 		return nil
 	}
 
@@ -138,10 +138,30 @@ func (rb *RingBuffer) Log(v ...interface{}) {
 }
 
 /*
+Slice returns the contents of the buffer as a slice.
+*/
+func (rb *RingBuffer) Slice() []interface{} {
+	rb.lock.RLock()
+	defer rb.lock.RUnlock()
+
+	ld := len(rb.data)
+	ret := make([]interface{}, rb.size)
+
+	for i := 0; i < rb.size; i++ {
+		ret[i] = rb.data[(i+rb.first)%ld]
+	}
+
+	return ret
+}
+
+/*
 StringSlice returns the contents of the buffer as a slice of strings.
 Each item of the buffer is a separate string.
 */
 func (rb *RingBuffer) StringSlice() []string {
+	rb.lock.RLock()
+	defer rb.lock.RUnlock()
+
 	ld := len(rb.data)
 	ret := make([]string, rb.size)
 

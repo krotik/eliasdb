@@ -27,6 +27,11 @@ Based on an article by Douglas Crockford: Top Down Operator Precedence
 
 http://javascript.crockford.com/tdop/tdop.html
 
+which is based on the ideas of Vaughan Pratt and his paper: Top Down Operator Precedence
+
+http://portal.acm.org/citation.cfm?id=512931
+https://tdop.github.io/
+
 ParseWithRuntime() parses a given input and decorates the resulting parse tree
 with runtime components which can be used to interpret the parsed query.
 */

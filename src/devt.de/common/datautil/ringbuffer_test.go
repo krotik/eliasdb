@@ -9,7 +9,10 @@
 
 package datautil
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestRingBuffer(t *testing.T) {
 
@@ -54,7 +57,6 @@ CCC`[1:] {
 	}
 
 	rb.Log("DDD\nEEE")
-
 	if rb.Size() != 3 {
 		t.Error("Unexpected size:", rb.Size())
 		return
@@ -95,6 +97,11 @@ EEE`[1:] {
 	rb.Add("BBB")
 
 	if s := rb.String(); s != "AAA\nBBB" {
+		t.Error("Unexpected result:", s)
+		return
+	}
+
+	if s := rb.Slice(); fmt.Sprint(s) != "[AAA BBB]" {
 		t.Error("Unexpected result:", s)
 		return
 	}

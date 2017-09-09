@@ -193,8 +193,10 @@ func TestIsAlphaNumeric(t *testing.T) {
 }
 
 func TestCreateDisplayString(t *testing.T) {
-	testdata := []string{"this is a tEST", "_bla", "a_bla", "a__bla", "a__b_la", ""}
-	expected := []string{"This Is A Test", " Bla", "A Bla", "A  Bla", "A  B La", ""}
+	testdata := []string{"this is a tEST", "_bla", "a_bla", "a__bla", "a__b_la", "",
+		"a fool a to be to"}
+	expected := []string{"This Is a Test", "Bla", "A Bla", "A Bla", "A B La", "",
+		"A Fool a to Be To"}
 
 	for i, str := range testdata {
 		res := CreateDisplayString(str)

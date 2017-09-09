@@ -310,15 +310,55 @@ func IsAlphaNumeric(str string) bool {
 }
 
 /*
-CreateDisplayString changes all "_" characters into spaces and capitalizes
-every word.
+CreateDisplayString changes all "_" characters into spaces and properly capitalizes
+the resulting string.
 */
 func CreateDisplayString(str string) string {
 	if len(str) == 0 {
 		return ""
 	}
 
-	return strings.Title(strings.ToLower(strings.Replace(str, "_", " ", -1)))
+	return ProperTitle(strings.Replace(str, "_", " ", -1))
+}
+
+// The following words should not be capitalized
+//
+var notCapitalize = map[string]string{
+	"a":    "",
+	"an":   "",
+	"and":  "",
+	"at":   "",
+	"but":  "",
+	"by":   "",
+	"for":  "",
+	"from": "",
+	"in":   "",
+	"nor":  "",
+	"on":   "",
+	"of":   "",
+	"or":   "",
+	"the":  "",
+	"to":   "",
+	"with": "",
+}
+
+/*
+ProperTitle will properly capitalize a title string by capitalizing the first, last
+and any important words. Not capitalized are articles: a, an, the; coordinating
+conjunctions: and, but, or, for, nor; prepositions (fewer than five
+letters): on, at, to, from, by.
+*/
+func ProperTitle(input string) string {
+	words := strings.Fields(strings.ToLower(input))
+	size := len(words)
+
+	for index, word := range words {
+		if _, ok := notCapitalize[word]; !ok || index == 0 || index == size-1 {
+			words[index] = strings.Title(word)
+		}
+	}
+
+	return strings.Join(words, " ")
 }
 
 /*

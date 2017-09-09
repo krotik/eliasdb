@@ -21,6 +21,7 @@ func TestInt64s(t *testing.T) {
 
 	if !reflect.DeepEqual(testSlice, []int64{1, 2, 3, 5, 0xFFFFFFFF}) {
 		t.Error("Unexpected sorted order:", testSlice)
+		return
 	}
 }
 
@@ -31,5 +32,18 @@ func TestUInt64s(t *testing.T) {
 
 	if !reflect.DeepEqual(testSlice, []uint64{1, 2, 3, 5, 0xFFFFFFFF}) {
 		t.Error("Unexpected sorted order:", testSlice)
+		return
+	}
+}
+
+
+func TestAbstractSlice(t *testing.T) {
+	testSlice := []interface{}{5, 2, "bla", 0xFFFFFFFF, 1}
+
+	InterfaceStrings(testSlice)
+
+	if !reflect.DeepEqual(testSlice, []interface{}{1, 2, 0xFFFFFFFF, 5, "bla"}) {
+		t.Error("Unexpected sorted order:", testSlice)
+		return
 	}
 }

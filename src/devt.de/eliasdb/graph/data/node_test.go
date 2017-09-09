@@ -118,6 +118,8 @@ func TestGraphNode(t *testing.T) {
 		return
 	}
 
+	gn = CopyNode(gn)
+
 	gn.SetAttr("key", []int{1, 2, 3})
 
 	if res := gn.String(); res != "GraphNode:\n"+

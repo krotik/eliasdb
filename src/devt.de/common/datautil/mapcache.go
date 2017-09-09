@@ -137,9 +137,37 @@ func (mc *MapCache) Get(k string) (interface{}, bool) {
 }
 
 /*
+GetAll retrieves all items from the MapCache.
+*/
+func (mc *MapCache) GetAll() map[string]interface{} {
+
+	// Do cache maintenance
+
+	mc.maintainCache()
+
+	// Take reader lock
+
+	mc.mutex.RLock()
+	defer mc.mutex.RUnlock()
+
+	// Create return map
+
+	cp := make(map[string]interface{})
+
+	for k, v := range mc.data {
+		cp[k] = v
+	}
+
+	return cp
+}
+
+/*
 String returns a string representation of this MapCache.
 */
 func (mc *MapCache) String() string {
+
+	mc.mutex.RLock()
+	defer mc.mutex.RUnlock()
 
 	// Sort keys before printing the map
 

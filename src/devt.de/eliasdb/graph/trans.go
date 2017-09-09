@@ -48,6 +48,14 @@ func (gt *Trans) IsEmpty() bool {
 }
 
 /*
+Counts returns the transaction size in terms of objects. Returned values
+are nodes to store, edges to store, nodes to remove and edges to remove.
+*/
+func (gt *Trans) Counts() (int, int, int, int) {
+	return len(gt.storeNodes), len(gt.storeEdges), len(gt.removeNodes), len(gt.removeEdges)
+}
+
+/*
 Commit writes the transaction to the graph database. An automatic rollback is done if
 any non-fatal error occurs. Failed transactions cannot be committed again.
 Serious write errors which may corrupt the database will cause a panic.
