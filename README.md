@@ -47,17 +47,57 @@ To get an idea of what EliasDB is about have a look at the [tutorial](/examples/
 The terminal uses a REST API to communicate with the backend. The REST API can be browsed using a dynamically generated swagger.json definition (https://localhost:9090/db/swagger.json). You can browse the API of EliasDB's latest version [here](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json#/default).
 
 ### Command line options
-EliasDB has a few command line options. Using these runs the main executable like a normal command line tool: 
+The main EliasDB executable has two main tools:
 ```
-Usage of  ./eliasdb  [options]
-  -?	Show this help message
-  -dumpdb string
-    	Dump the contents of a partition to a JSON file and exit
+Usage of ./eliasdb <tool>
+
+EliasDB graph based database
+
+Available commands:
+
+    console   EliasDB server console
+    server    Start EliasDB server
+```
+The most important one is server which starts the database server. The server has several options:
+```
+Usage of ./eliasdb server [options]
+
+  -export string
+    	Export the current database to a zip file
+  -help
+    	Show this help message
   -import string
-    	Import a graph from a JSON file to a partition (exit if storing on disk)
-  -part string
-    	Partition to operate on when importing or dumping data
+    	Import a database from a zip file
+  -no-serv
+    	Do not start the server after initialization
 ```
+Once the server is started the console tool can be used to interact with the server. The options of the console tool are:
+```
+Usage of ./eliasdb console [options]
+
+  -exec string
+    	Execute a single line and exit
+  -file string
+    	Read commands from a file and exit
+  -help
+    	Show this help message
+  -host string
+    	Host of the EliasDB server (default "localhost")
+  -port string
+    	Port of the EliasDB server (default "9090")
+```
+On the console type 'q' to exit and 'help' to get an overview of available commands:
+```
+Command Description
+export  Exports the last output.
+find    Do a full-text search of the database.
+help    Display descriptions for all available commands.
+info    Returns general database information.
+part    Displays or sets the current partition.
+ver     Displays server version information.
+```
+It is also possible to directly run EQL queries on the console. Use the arrow keys to cycle through the command history.
+
 ### Configuration
 EliasDB uses a single configuration file called eliasdb.config.json. After starting EliasDB for the first time it should create a default configuration file. Available configurations are:
 
