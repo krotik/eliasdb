@@ -16,7 +16,7 @@ https://localhost:9090/db/term.html
 
 The generated default key and certificate for https are self-signed which should give a security warning in the browser. After accepting you should see a prompt.
 
-![](https://github.com/krotik/eliasdb/blob/master/examples/tutorial/tutorial1.png?raw=true)
+![](https://github.com/krotik/eliasdb/blob/master/examples/tutorial/doc/tutorial1.png?raw=true)
 
 You can get an overview of all available command by typing:
 ```
@@ -35,7 +35,7 @@ get Line
 ```
 The result should be a table of tube lines. Each line having a unique key and a name. 
 
-![](https://github.com/krotik/eliasdb/blob/master/examples/tutorial/tutorial2.png?raw=true)
+![](https://github.com/krotik/eliasdb/blob/master/examples/tutorial/doc/tutorial2.png?raw=true)
 
 We can easily order the table by name by writing:
 ```
@@ -75,4 +75,4 @@ find King's Cross
 ```
 The query should return the Station King's Cross. The index can efficiently lookup words, phrases (multiple consecutive words) and attribute values. Use the index endpoint in the REST API for more specific lookups.
 
-![](https://github.com/krotik/eliasdb/blob/master/doc/tutorial3.png?raw=true)
+![](https://github.com/krotik/eliasdb/blob/master/examples/tutorial/doc/tutorial3.png?raw=true)
