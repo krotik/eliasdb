@@ -48,30 +48,30 @@ func TestCopyObject(t *testing.T) {
 
 	var ret3 testutil.GobTestObject
 
-	gobtest := &testutil.GobTestObject{"test", true, false}
+	gobtest := &testutil.GobTestObject{Name: "test", EncErr: true, DecErr: false}
 
 	if err := CopyObject(gobtest, &ret3); err == nil || err.Error() != "Encode error" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	gobtest = &testutil.GobTestObject{"test", false, false}
-	ret3 = testutil.GobTestObject{"test", false, true}
+	gobtest = &testutil.GobTestObject{Name: "test", EncErr: false, DecErr: false}
+	ret3 = testutil.GobTestObject{Name: "test", EncErr: false, DecErr: true}
 
 	if err := CopyObject(gobtest, &ret3); err == nil || err.Error() != "Decode error" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	ret3 = testutil.GobTestObject{"test", true, false}
+	ret3 = testutil.GobTestObject{Name: "test", EncErr: true, DecErr: false}
 
 	if err := CopyObject(&ret3, gobtest); err == nil || err.Error() != "Encode error" {
 		t.Error("Unexpected result:", err)
 		return
 	}
 
-	ret3 = testutil.GobTestObject{"test", false, false}
-	gobtest = &testutil.GobTestObject{"test", false, true}
+	ret3 = testutil.GobTestObject{Name: "test", EncErr: false, DecErr: false}
+	gobtest = &testutil.GobTestObject{Name: "test", EncErr: false, DecErr: true}
 
 	if err := CopyObject(&ret3, gobtest); err == nil || err.Error() != "Decode error" {
 		t.Error("Unexpected result:", err)

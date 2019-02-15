@@ -67,7 +67,9 @@ func (lf *LockFile) watch() {
 
 		if res != lf.timestamp || err != nil {
 
-			lf.errorChan <- errors.New(fmt.Sprint("Could not write lockfile - read result after writing: ", res, err))
+			lf.errorChan <- errors.New(fmt.Sprint(
+				"Could not write lockfile - read result after writing: ", res,
+				"(expected: ", lf.timestamp, ")", err))
 			return
 		}
 	}

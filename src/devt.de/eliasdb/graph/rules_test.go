@@ -33,7 +33,7 @@ func (r *TestRule) Handles() []int {
 		EventEdgeCreated, EventEdgeUpdated, EventEdgeDeleted}
 }
 
-func (r *TestRule) Handle(gm *Manager, trans *Trans, event int, ed ...interface{}) error {
+func (r *TestRule) Handle(gm *Manager, trans Trans, event int, ed ...interface{}) error {
 	if r.handleError {
 		return &util.GraphError{Type: util.ErrAccessComponent, Detail: "Test error"}
 	}
@@ -61,6 +61,99 @@ func (r *TestRule) Handle(gm *Manager, trans *Trans, event int, ed ...interface{
 	}
 
 	return nil
+}
+
+func TestCascadingLastRules(t *testing.T) {
+
+	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
+	gm := NewGraphManager(mgs)
+
+	constructEdge := func(key string, node1 data.Node, node2 data.Node) data.Edge {
+		edge := data.NewGraphEdge()
+
+		edge.SetAttr("key", key)
+		edge.SetAttr("kind", "myedge")
+
+		edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+		edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+		edge.SetAttr(data.EdgeEnd1Role, "node1")
+		edge.SetAttr(data.EdgeEnd1Cascading, true)
+		edge.SetAttr(data.EdgeEnd1CascadingLast, true)
+
+		edge.SetAttr(data.EdgeEnd2Key, node2.Key())
+		edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
+		edge.SetAttr(data.EdgeEnd2Role, "node2")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
+
+		edge.SetAttr(data.NodeName, "Edge1"+key)
+
+		return edge
+	}
+
+	node1 := data.NewGraphNode()
+	node1.SetAttr("key", "123")
+	node1.SetAttr("kind", "Artist")
+	node1.SetAttr("Name", "Artist1")
+	gm.StoreNode("main", node1)
+
+	node2 := data.NewGraphNode()
+	node2.SetAttr("key", "456")
+	node2.SetAttr("kind", "Song")
+	node2.SetAttr("Name", "Song1")
+	gm.StoreNode("main", node2)
+
+	node3 := data.NewGraphNode()
+	node3.SetAttr("key", "789")
+	node3.SetAttr("kind", "Song")
+	node3.SetAttr("Name", "Song2")
+	gm.StoreNode("main", node3)
+
+	gm.StoreEdge("main", constructEdge("abc1", node2, node1))
+	gm.StoreEdge("main", constructEdge("abc2", node3, node1))
+
+	gm.RemoveNode("main", "456", "Song")
+
+	n, _ := gm.FetchNode("main", "123", "Artist")
+	if n == nil {
+		t.Error("Artist node should have not been deleted")
+		return
+	}
+
+	gm.RemoveNode("main", "789", "Song")
+
+	n, _ = gm.FetchNode("main", "123", "Artist")
+	if n != nil {
+		t.Error("Last removed Song node should have deleted the Artist node")
+		return
+	}
+
+	// Now again but with multiple relationships
+
+	mgs = graphstorage.NewMemoryGraphStorage("mystorage")
+	gm = NewGraphManager(mgs)
+
+	node1 = data.NewGraphNode()
+	node1.SetAttr("key", "123")
+	node1.SetAttr("kind", "Artist")
+	node1.SetAttr("Name", "Artist1")
+	gm.StoreNode("main", node1)
+
+	node2 = data.NewGraphNode()
+	node2.SetAttr("key", "456")
+	node2.SetAttr("kind", "Song")
+	node2.SetAttr("Name", "Song1")
+	gm.StoreNode("main", node2)
+
+	gm.StoreEdge("main", constructEdge("abc1", node2, node1))
+	gm.StoreEdge("main", constructEdge("abc2", node2, node1))
+
+	gm.RemoveNode("main", "456", "Song")
+
+	n, _ = gm.FetchNode("main", "123", "Artist")
+	if n != nil {
+		t.Error("Artist node should have been deleted")
+		return
+	}
 }
 
 func TestRules(t *testing.T) {
@@ -224,7 +317,7 @@ func TestRules(t *testing.T) {
 
 	// Finally test a rather esotheric error case
 
-	trans := NewGraphTrans(gm)
+	trans := NewConcurrentGraphTrans(gm)
 
 	err := gm.gr.graphEvent(trans, EventNodeDeleted, "test 1", node1)
 
@@ -319,7 +412,7 @@ func TestRulesTrans(t *testing.T) {
 		return
 	}
 
-	trans := NewGraphTrans(gm)
+	trans := NewConcurrentGraphTrans(gm)
 	trans.RemoveNode("main", "123", "mynode")
 
 	if err := trans.Commit(); err != nil {
@@ -496,7 +589,7 @@ func TestRulesErrors(t *testing.T) {
 
 	// Test transaction errors
 
-	trans := NewGraphTrans(gm)
+	trans := NewConcurrentGraphTrans(gm)
 
 	tr.handleError = true
 	tr.commitError = false

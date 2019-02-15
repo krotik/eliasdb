@@ -13,15 +13,156 @@ package graph
 import (
 	"fmt"
 	"strings"
+	"sync"
 
+	"devt.de/common/errorutil"
 	"devt.de/eliasdb/graph/data"
 	"devt.de/eliasdb/graph/util"
 )
 
 /*
-Trans data structure
+Trans is a transaction object which should be used to group node and edge operations.
 */
-type Trans struct {
+type Trans interface {
+
+	/*
+	   ID returns a unique transaction ID.
+	*/
+	ID() string
+
+	/*
+	   String returns a string representation of this transatction.
+	*/
+	String() string
+
+	/*
+	   Counts returns the transaction size in terms of objects. Returned values
+	   are nodes to store, edges to store, nodes to remove and edges to remove.
+	*/
+	Counts() (int, int, int, int)
+
+	/*
+	   IsEmpty returns if this transaction is empty.
+	*/
+	IsEmpty() bool
+
+	/*
+	   Commit writes the transaction to the graph database. An automatic rollback is done if
+	   any non-fatal error occurs. Failed transactions cannot be committed again.
+	   Serious write errors which may corrupt the database will cause a panic.
+	*/
+	Commit() error
+
+	/*
+	   StoreNode stores a single node in a partition of the graph. This function will
+	   overwrites any existing node.
+	*/
+	StoreNode(part string, node data.Node) error
+
+	/*
+	   UpdateNode updates a single node in a partition of the graph. This function will
+	   only update the given values of the node.
+	*/
+	UpdateNode(part string, node data.Node) error
+
+	/*
+	   RemoveNode removes a single node from a partition of the graph.
+	*/
+	RemoveNode(part string, nkey string, nkind string) error
+
+	/*
+	   StoreEdge stores a single edge in a partition of the graph. This function will
+	   overwrites any existing edge.
+	*/
+	StoreEdge(part string, edge data.Edge) error
+
+	/*
+	   RemoveEdge removes a single edge from a partition of the graph.
+	*/
+	RemoveEdge(part string, ekey string, ekind string) error
+}
+
+/*
+NewGraphTrans creates a new graph transaction. This object is not thread safe
+and should only be used for non-concurrent use cases; use NewConcurrentGraphTrans
+for concurrent use cases.
+*/
+func NewGraphTrans(gm *Manager) Trans {
+	return newInternalGraphTrans(gm)
+}
+
+/*
+NewConcurrentGraphTrans creates a new thread-safe graph transaction.
+*/
+func NewConcurrentGraphTrans(gm *Manager) Trans {
+	return &concurrentTrans{NewGraphTrans(gm), &sync.RWMutex{}}
+}
+
+/*
+NewRollingTrans wraps an existing transaction into a rolling transaction.
+Rolling transactions can be used for VERY large datasets and will commit
+themselves after n operations. Rolling transactions are always thread-safe.
+*/
+func NewRollingTrans(t Trans, n int, gm *Manager, newTrans func(*Manager) Trans) Trans {
+	idCounterLock.Lock()
+	defer idCounterLock.Unlock()
+
+	idCounter++
+
+	// Smallest commit threshold is 1
+
+	if n < 1 {
+		n = 1
+	}
+
+	return &rollingTrans{
+
+		id: fmt.Sprint(idCounter),
+		gm: gm,
+
+		currentTrans: t,
+		newTransFunc: newTrans,
+		transErrors:  errorutil.NewCompositeError(),
+
+		opThreshold:   n,
+		opCount:       0,
+		inFlightCount: 0,
+		wg:            &sync.WaitGroup{},
+
+		countNodeIns: 0,
+		countNodeRem: 0,
+		countEdgeIns: 0,
+		countEdgeRem: 0,
+
+		transLock: &sync.RWMutex{},
+	}
+}
+
+/*
+newInternalGraphTrans is used for internal transactions. The returned object
+contains extra fields which are only for internal use.
+*/
+func newInternalGraphTrans(gm *Manager) *baseTrans {
+	idCounterLock.Lock()
+	defer idCounterLock.Unlock()
+
+	idCounter++
+
+	return &baseTrans{fmt.Sprint(idCounter), gm, false, make(map[string]data.Node), make(map[string]data.Node),
+		make(map[string]data.Edge), make(map[string]data.Edge)}
+}
+
+/*
+idCounter is a simple counter for ids
+*/
+var idCounter uint64
+var idCounterLock = &sync.Mutex{}
+
+/*
+baseTrans is the main data structure for a graph transaction
+*/
+type baseTrans struct {
+	id       string   // Unique transaction ID - not used by EliasDB
 	gm       *Manager // Graph manager which created this transaction
 	subtrans bool     // Flag if the transaction is a subtransaction
 
@@ -32,27 +173,37 @@ type Trans struct {
 }
 
 /*
-NewGraphTrans creates a new graph transaction.
+ID returns a unique transaction ID.
 */
-func NewGraphTrans(gm *Manager) *Trans {
-	return &Trans{gm, false, make(map[string]data.Node), make(map[string]data.Node),
-		make(map[string]data.Edge), make(map[string]data.Edge)}
+func (gt *baseTrans) ID() string {
+	return gt.id
 }
 
 /*
 IsEmpty returns if this transaction is empty.
 */
-func (gt *Trans) IsEmpty() bool {
-	return len(gt.storeNodes) == 0 && len(gt.removeNodes) == 0 &&
-		len(gt.storeEdges) == 0 && len(gt.removeEdges) == 0
+func (gt *baseTrans) IsEmpty() bool {
+	sn, se, rn, re := gt.Counts()
+
+	return sn == 0 && se == 0 && rn == 0 && re == 0
 }
 
 /*
 Counts returns the transaction size in terms of objects. Returned values
 are nodes to store, edges to store, nodes to remove and edges to remove.
 */
-func (gt *Trans) Counts() (int, int, int, int) {
+func (gt *baseTrans) Counts() (int, int, int, int) {
 	return len(gt.storeNodes), len(gt.storeEdges), len(gt.removeNodes), len(gt.removeEdges)
+}
+
+/*
+String returns a string representation of this transatction.
+*/
+func (gt *baseTrans) String() string {
+	sn, se, rn, re := gt.Counts()
+
+	return fmt.Sprintf("Transaction %v - Nodes: I:%v R:%v - Edges: I:%v R:%v",
+		gt.id, sn, rn, se, re)
 }
 
 /*
@@ -60,7 +211,7 @@ Commit writes the transaction to the graph database. An automatic rollback is do
 any non-fatal error occurs. Failed transactions cannot be committed again.
 Serious write errors which may corrupt the database will cause a panic.
 */
-func (gt *Trans) Commit() error {
+func (gt *baseTrans) Commit() error {
 
 	// Take writer lock if we are not in a subtransaction
 
@@ -164,7 +315,7 @@ func (gt *Trans) Commit() error {
 /*
 commitNodes tries to commit all transaction nodes.
 */
-func (gt *Trans) commitNodes(nodePartsAndKinds map[string]string, edgePartsAndKinds map[string]string) error {
+func (gt *baseTrans) commitNodes(nodePartsAndKinds map[string]string, edgePartsAndKinds map[string]string) error {
 
 	// First insert nodes
 
@@ -185,7 +336,7 @@ func (gt *Trans) commitNodes(nodePartsAndKinds map[string]string, edgePartsAndKi
 		}
 
 		attht, valht, err := gt.gm.getNodeStorageHTree(part, node.Kind(), true)
-		if err != nil || attht == nil || valht == nil {
+		if err != nil {
 			return err
 		}
 
@@ -264,8 +415,16 @@ func (gt *Trans) commitNodes(nodePartsAndKinds map[string]string, edgePartsAndKi
 		}
 
 		attTree, valTree, err := gt.gm.getNodeStorageHTree(part, node.Kind(), false)
-		if err != nil || attTree == nil || valTree == nil {
+		if err != nil {
 			return err
+		}
+
+		if attTree == nil || valTree == nil {
+
+			// Kind does not exist - continue
+
+			delete(gt.removeNodes, tkey)
+			continue
 		}
 
 		// Delete the node from the datastore
@@ -308,7 +467,7 @@ func (gt *Trans) commitNodes(nodePartsAndKinds map[string]string, edgePartsAndKi
 /*
 commitEdges tries to commit all transaction edges.
 */
-func (gt *Trans) commitEdges(nodePartsAndKinds map[string]string, edgePartsAndKinds map[string]string) error {
+func (gt *baseTrans) commitEdges(nodePartsAndKinds map[string]string, edgePartsAndKinds map[string]string) error {
 
 	// First insert edges
 
@@ -514,7 +673,7 @@ func (gt *Trans) commitEdges(nodePartsAndKinds map[string]string, edgePartsAndKi
 StoreNode stores a single node in a partition of the graph. This function will
 overwrites any existing node.
 */
-func (gt *Trans) StoreNode(part string, node data.Node) error {
+func (gt *baseTrans) StoreNode(part string, node data.Node) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	} else if err := gt.gm.checkNode(node); err != nil {
@@ -536,7 +695,7 @@ func (gt *Trans) StoreNode(part string, node data.Node) error {
 UpdateNode updates a single node in a partition of the graph. This function will
 only update the given values of the node.
 */
-func (gt *Trans) UpdateNode(part string, node data.Node) error {
+func (gt *baseTrans) UpdateNode(part string, node data.Node) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	} else if err := gt.gm.checkNode(node); err != nil {
@@ -569,7 +728,7 @@ func (gt *Trans) UpdateNode(part string, node data.Node) error {
 /*
 RemoveNode removes a single node from a partition of the graph.
 */
-func (gt *Trans) RemoveNode(part string, nkey string, nkind string) error {
+func (gt *baseTrans) RemoveNode(part string, nkey string, nkind string) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	}
@@ -593,7 +752,7 @@ func (gt *Trans) RemoveNode(part string, nkey string, nkind string) error {
 StoreEdge stores a single edge in a partition of the graph. This function will
 overwrites any existing edge.
 */
-func (gt *Trans) StoreEdge(part string, edge data.Edge) error {
+func (gt *baseTrans) StoreEdge(part string, edge data.Edge) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	} else if err := gt.gm.checkEdge(edge); err != nil {
@@ -614,7 +773,7 @@ func (gt *Trans) StoreEdge(part string, edge data.Edge) error {
 /*
 RemoveEdge removes a single edge from a partition of the graph.
 */
-func (gt *Trans) RemoveEdge(part string, ekey string, ekind string) error {
+func (gt *baseTrans) RemoveEdge(part string, ekey string, ekind string) error {
 	if err := gt.gm.checkPartitionName(part); err != nil {
 		return err
 	}
@@ -637,6 +796,364 @@ func (gt *Trans) RemoveEdge(part string, ekey string, ekind string) error {
 /*
 Create a key for the transaction storage.
 */
-func (gt *Trans) createKey(part string, key string, kind string) string {
+func (gt *baseTrans) createKey(part string, key string, kind string) string {
 	return part + "#" + kind + "#" + key
+}
+
+/*
+concurrentTrans is a lock-wrapper around baseTrans which allows concurrent use.
+*/
+type concurrentTrans struct {
+	Trans
+	transLock *sync.RWMutex
+}
+
+/*
+ID returns a unique transaction ID.
+*/
+func (gt *concurrentTrans) ID() string {
+	gt.transLock.RLock()
+	defer gt.transLock.RUnlock()
+
+	return gt.Trans.ID()
+}
+
+/*
+String returns a string representation of this transatction.
+*/
+func (gt *concurrentTrans) String() string {
+	gt.transLock.RLock()
+	defer gt.transLock.RUnlock()
+
+	return gt.Trans.String()
+}
+
+/*
+Counts returns the transaction size in terms of objects. Returned values
+are nodes to store, edges to store, nodes to remove and edges to remove.
+*/
+func (gt *concurrentTrans) Counts() (int, int, int, int) {
+	gt.transLock.RLock()
+	defer gt.transLock.RUnlock()
+
+	return gt.Trans.Counts()
+}
+
+/*
+IsEmpty returns if this transaction is empty.
+*/
+func (gt *concurrentTrans) IsEmpty() bool {
+	gt.transLock.RLock()
+	defer gt.transLock.RUnlock()
+
+	return gt.Trans.IsEmpty()
+}
+
+/*
+Commit writes the transaction to the graph database. An automatic rollback is done if
+any non-fatal error occurs. Failed transactions cannot be committed again.
+Serious write errors which may corrupt the database will cause a panic.
+*/
+func (gt *concurrentTrans) Commit() error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	return gt.Trans.Commit()
+}
+
+/*
+StoreNode stores a single node in a partition of the graph. This function will
+overwrites any existing node.
+*/
+func (gt *concurrentTrans) StoreNode(part string, node data.Node) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	return gt.Trans.StoreNode(part, node)
+}
+
+/*
+UpdateNode updates a single node in a partition of the graph. This function will
+only update the given values of the node.
+*/
+func (gt *concurrentTrans) UpdateNode(part string, node data.Node) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	return gt.Trans.UpdateNode(part, node)
+}
+
+/*
+RemoveNode removes a single node from a partition of the graph.
+*/
+func (gt *concurrentTrans) RemoveNode(part string, nkey string, nkind string) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	return gt.Trans.RemoveNode(part, nkey, nkind)
+}
+
+/*
+StoreEdge stores a single edge in a partition of the graph. This function will
+overwrites any existing edge.
+*/
+func (gt *concurrentTrans) StoreEdge(part string, edge data.Edge) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	return gt.Trans.StoreEdge(part, edge)
+}
+
+/*
+RemoveEdge removes a single edge from a partition of the graph.
+*/
+func (gt *concurrentTrans) RemoveEdge(part string, ekey string, ekind string) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	return gt.Trans.RemoveEdge(part, ekey, ekind)
+}
+
+/*
+rollingTrans is a rolling transaction which will commit itself after
+n operations.
+*/
+type rollingTrans struct {
+	id string   // ID of this transaction
+	gm *Manager // Graph manager which created this transaction
+
+	currentTrans Trans                     // Current transaction which is build up
+	newTransFunc func(*Manager) Trans      // Function to create a new transaction
+	transErrors  *errorutil.CompositeError // Collected transaction errors
+
+	opThreshold   int             // Operation threshold
+	opCount       int             // Operation count
+	inFlightCount int             // Previous transactions which are still committing
+	wg            *sync.WaitGroup // WaitGroup which releases after all in-flight transactions
+
+	countNodeIns int // Count for inserted nodes
+	countNodeRem int // Count for removed nodes
+	countEdgeIns int // Count for inserted edges
+	countEdgeRem int // Count for removed edges
+
+	transLock *sync.RWMutex // Lock for this transaction
+}
+
+/*
+ID returns a unique transaction ID.
+*/
+func (gt *rollingTrans) ID() string {
+	gt.transLock.RLock()
+	defer gt.transLock.RUnlock()
+
+	return gt.id
+}
+
+/*
+IsEmpty returns if this transaction is empty.
+*/
+func (gt *rollingTrans) IsEmpty() bool {
+	sn, se, rn, re := gt.Counts()
+
+	return sn == 0 && se == 0 && rn == 0 && re == 0
+}
+
+/*
+Counts returns the transaction size in terms of objects. Returned values
+are nodes to store, edges to store, nodes to remove and edges to remove.
+*/
+func (gt *rollingTrans) Counts() (int, int, int, int) {
+	gt.transLock.RLock()
+	defer gt.transLock.RUnlock()
+
+	// Count current trans
+
+	ns, es, nr, er := gt.currentTrans.Counts()
+
+	return ns + gt.countNodeIns, es + gt.countEdgeIns,
+		nr + gt.countNodeRem, er + gt.countEdgeRem
+}
+
+/*
+String returns a string representation of this transatction.
+*/
+func (gt *rollingTrans) String() string {
+	gt.transLock.RLock()
+	defer gt.transLock.RUnlock()
+
+	ns, es, nr, er := gt.currentTrans.Counts()
+
+	return fmt.Sprintf("Rolling transaction %v - Nodes: I:%v R:%v - "+
+		"Edges: I:%v R:%v - Threshold: %v - In-flight: %v",
+		gt.id, ns+gt.countNodeIns, nr+gt.countNodeRem, es+gt.countEdgeIns,
+		er+gt.countEdgeRem, gt.opThreshold, gt.inFlightCount)
+}
+
+/*
+Commit writes the remaining operations of this rolling transaction to
+the graph database.
+*/
+func (gt *rollingTrans) Commit() error {
+
+	// Commit current transaction
+
+	gt.transLock.Lock()
+
+	if err := gt.currentTrans.Commit(); err != nil {
+		gt.transErrors.Add(err)
+	}
+
+	gt.transLock.Unlock()
+
+	// Wait for other transactions
+
+	gt.wg.Wait()
+
+	// Return any errors
+
+	if gt.transErrors.HasErrors() {
+		return gt.transErrors
+	}
+
+	return nil
+}
+
+/*
+checkNewSubTrans checks if a new sub-transaction should be started.
+*/
+func (gt *rollingTrans) checkNewSubTrans() {
+
+	if gt.opCount++; gt.opCount >= gt.opThreshold {
+
+		// Reset the op counter
+
+		gt.opCount = 0
+
+		// Start a new transaction and add the counts to the overall counts
+
+		cTrans := gt.currentTrans
+		gt.currentTrans = gt.newTransFunc(gt.gm)
+
+		ns, es, nr, er := cTrans.Counts()
+
+		gt.countNodeIns += ns
+		gt.countNodeRem += nr
+		gt.countEdgeIns += es
+		gt.countEdgeRem += er
+
+		// Start go routine which commits the current transaction
+
+		gt.wg.Add(1)       // Add to WaitGroup so we can wait for all in-flight transactions
+		gt.inFlightCount++ // Count the new in-flight transaction
+
+		go func() {
+			defer gt.wg.Done()
+
+			err := cTrans.Commit()
+
+			gt.transLock.Lock()
+
+			if err != nil {
+
+				// Store errors
+
+				gt.transErrors.Add(err)
+			}
+
+			// Reduce the counts (do this even if there were errors)
+
+			gt.countNodeIns -= ns
+			gt.countNodeRem -= nr
+			gt.countEdgeIns -= es
+			gt.countEdgeRem -= er
+
+			gt.inFlightCount--
+
+			gt.transLock.Unlock()
+
+		}()
+	}
+}
+
+/*
+StoreNode stores a single node in a partition of the graph. This function will
+overwrites any existing node.
+*/
+func (gt *rollingTrans) StoreNode(part string, node data.Node) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	err := gt.currentTrans.StoreNode(part, node)
+
+	if err == nil {
+		gt.checkNewSubTrans()
+	}
+
+	return err
+}
+
+/*
+UpdateNode updates a single node in a partition of the graph. This function will
+only update the given values of the node.
+*/
+func (gt *rollingTrans) UpdateNode(part string, node data.Node) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	err := gt.currentTrans.UpdateNode(part, node)
+
+	if err == nil {
+		gt.checkNewSubTrans()
+	}
+
+	return err
+}
+
+/*
+RemoveNode removes a single node from a partition of the graph.
+*/
+func (gt *rollingTrans) RemoveNode(part string, nkey string, nkind string) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	err := gt.currentTrans.RemoveNode(part, nkey, nkind)
+
+	if err == nil {
+		gt.checkNewSubTrans()
+	}
+
+	return err
+}
+
+/*
+StoreEdge stores a single edge in a partition of the graph. This function will
+overwrites any existing edge.
+*/
+func (gt *rollingTrans) StoreEdge(part string, edge data.Edge) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	err := gt.currentTrans.StoreEdge(part, edge)
+
+	if err == nil {
+		gt.checkNewSubTrans()
+	}
+
+	return err
+}
+
+/*
+RemoveEdge removes a single edge from a partition of the graph.
+*/
+func (gt *rollingTrans) RemoveEdge(part string, ekey string, ekind string) error {
+	gt.transLock.Lock()
+	defer gt.transLock.Unlock()
+
+	err := gt.currentTrans.RemoveEdge(part, ekey, ekind)
+
+	if err == nil {
+		gt.checkNewSubTrans()
+	}
+
+	return err
 }

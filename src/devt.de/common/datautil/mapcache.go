@@ -44,6 +44,22 @@ func NewMapCache(maxsize uint64, maxage int64) *MapCache {
 }
 
 /*
+Clear removes all entries.
+*/
+func (mc *MapCache) Clear() {
+
+	// Take writer lock
+
+	mc.mutex.Lock()
+	defer mc.mutex.Unlock()
+
+	mc.data = make(map[string]interface{})
+	mc.ts = make(map[string]int64)
+
+	mc.size = 0
+}
+
+/*
 Size returns the current size of the MapCache.
 */
 func (mc *MapCache) Size() uint64 {
@@ -192,7 +208,7 @@ func (mc *MapCache) maintainCache() string {
 
 	mc.mutex.RLock()
 
-	var oldestTS int64 = math.MaxInt64
+	oldestTS := int64(math.MaxInt64)
 	oldestK := ""
 
 	now := time.Now().Unix()

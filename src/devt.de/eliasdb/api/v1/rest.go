@@ -42,8 +42,10 @@ var V1EndpointMap = map[string]api.RestEndpointInst{
 	EndpointEql:          EqlEndpointInst,
 	EndpointGraph:        GraphEndpointInst,
 	EndpointIndexQuery:   IndexEndpointInst,
+	EndpointFindQuery:    FindEndpointInst,
 	EndpointInfoQuery:    InfoEndpointInst,
 	EndpointQuery:        QueryEndpointInst,
+	EndpointQueryResult:  QueryResultEndpointInst,
 }
 
 // Helper functions

@@ -17,8 +17,51 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"runtime"
 	"time"
 )
+
+/*
+GetCaller returns the calling function of the function which called it and the
+code location which called the calling function. Can optionally go further back
+depending on the level parameter.
+
+For example testfile.go:
+
+20: foo() {
+21:	  x := GetCaller(0)
+22: }
+23:
+24: bar() {
+25:	  foo()
+26: }
+
+In the example x would be set to "bar" and location would be testfile.go 25.
+*/
+func GetCaller(level int) (string, string) {
+	name := "n/a"
+	loc := "n/a"
+
+	// Get callers as uintptr
+
+	fpcs := make([]uintptr, 1)
+
+	// Skip 3 levels to get the caller's caller
+
+	if n := runtime.Callers(3+level, fpcs); n != 0 {
+
+		// Get the function info
+
+		if fc := runtime.FuncForPC(fpcs[0] - 1); fc != nil {
+
+			name = fc.Name()
+			file, line := fc.FileLine(fpcs[0] - 1)
+			loc = fmt.Sprintf("%v:%v", file, line)
+		}
+	}
+
+	return name, loc
+}
 
 /*
 ErrorTestingConnection testing object for connection errors.

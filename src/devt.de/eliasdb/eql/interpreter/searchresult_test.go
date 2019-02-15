@@ -22,6 +22,83 @@ import (
 	"devt.de/eliasdb/storage"
 )
 
+func TestSources(t *testing.T) {
+	gm, _ := filterGraph()
+
+	rt := NewGetRuntimeProvider("test", "main", gm, NewDefaultNodeInfo(gm))
+
+	res, err := getResult("get filtertest with ordering(ascending key)", `
+Labels: Filtertest Key, Val1, Val2, Val3
+Format: auto, auto, auto, auto
+Data: 1:n:key, 1:n:val1, 1:n:val2, 1:n:val3
+1, test, Hans, foo
+2, test1, Hans, foo
+3, test2, Hans, foo
+4, test3, Peter, foo
+5, test4, Peter, foo
+6, test5, Peter, foo
+7, test6, Anna, foo
+8, test7, Anna, foo
+9, test8, Steve, foo
+10, test9, Steve, foo
+11, test10, Franz, foo
+12, test11, Kevin, foo
+13, test12, Kevin, foo
+14, test13, Kevin, foo
+15, test14, X1, foo
+16, test15, X2, foo
+17, test16, X3, foo
+18, test17, X4, foo
+19, test17, X5, foo
+`[1:], rt, false)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if q := res.Query(); q != `
+get filtertest 
+with
+  ordering(ascending key)`[1:] {
+		t.Error("Unexpected result: ", q)
+		return
+	}
+
+	if r := fmt.Sprint(res.Rows()); r != "[[1 test Hans foo] [2 test1 Hans foo] [3 test2 Hans foo] [4 test3 Peter foo] [5 test4 Peter foo] [6 test5 Peter foo] [7 test6 Anna foo] [8 test7 Anna foo] [9 test8 Steve foo] [10 test9 Steve foo] [11 test10 Franz foo] [12 test11 Kevin foo] [13 test12 Kevin foo] [14 test13 Kevin foo] [15 test14 X1 foo] [16 test15 X2 foo] [17 test16 X3 foo] [18 test17 X4 foo] [19 test17 X5 foo]]" {
+		t.Error("Unexpected result: ", r)
+	}
+
+	if r := fmt.Sprint(res.RowSources()); r != "[[n:filtertest:1 n:filtertest:1 n:filtertest:1 n:filtertest:1] [n:filtertest:2 n:filtertest:2 n:filtertest:2 n:filtertest:2] [n:filtertest:3 n:filtertest:3 n:filtertest:3 n:filtertest:3] [n:filtertest:4 n:filtertest:4 n:filtertest:4 n:filtertest:4] [n:filtertest:5 n:filtertest:5 n:filtertest:5 n:filtertest:5] [n:filtertest:6 n:filtertest:6 n:filtertest:6 n:filtertest:6] [n:filtertest:7 n:filtertest:7 n:filtertest:7 n:filtertest:7] [n:filtertest:8 n:filtertest:8 n:filtertest:8 n:filtertest:8] [n:filtertest:9 n:filtertest:9 n:filtertest:9 n:filtertest:9] [n:filtertest:10 n:filtertest:10 n:filtertest:10 n:filtertest:10] [n:filtertest:11 n:filtertest:11 n:filtertest:11 n:filtertest:11] [n:filtertest:12 n:filtertest:12 n:filtertest:12 n:filtertest:12] [n:filtertest:13 n:filtertest:13 n:filtertest:13 n:filtertest:13] [n:filtertest:14 n:filtertest:14 n:filtertest:14 n:filtertest:14] [n:filtertest:15 n:filtertest:15 n:filtertest:15 n:filtertest:15] [n:filtertest:16 n:filtertest:16 n:filtertest:16 n:filtertest:16] [n:filtertest:17 n:filtertest:17 n:filtertest:17 n:filtertest:17] [n:filtertest:18 n:filtertest:18 n:filtertest:18 n:filtertest:18] [n:filtertest:19 n:filtertest:19 n:filtertest:19 n:filtertest:19]]" {
+		t.Error("Unexpected result: ", r)
+	}
+
+	if res := res.CSV(); res != `
+Filtertest Key,Val1,Val2,Val3
+1,test,Hans,foo
+2,test1,Hans,foo
+3,test2,Hans,foo
+4,test3,Peter,foo
+5,test4,Peter,foo
+6,test5,Peter,foo
+7,test6,Anna,foo
+8,test7,Anna,foo
+9,test8,Steve,foo
+10,test9,Steve,foo
+11,test10,Franz,foo
+12,test11,Kevin,foo
+13,test12,Kevin,foo
+14,test13,Kevin,foo
+15,test14,X1,foo
+16,test15,X2,foo
+17,test16,X3,foo
+18,test17,X4,foo
+19,test17,X5,foo
+`[1:] {
+		t.Error("Unexpected result: ", res)
+	}
+}
+
 func TestGrouping(t *testing.T) {
 	gm, mgs := songGraphGroups()
 	rt := NewGetRuntimeProvider("test", "main", gm, NewDefaultNodeInfo(gm))
@@ -42,13 +119,13 @@ Best, StrangeSong1, Song, StrangeSong1
 		return
 	}
 
-	if res.Rows() == nil {
-		t.Error("Unexpected result")
+	if r := res.Rows(); r == nil || fmt.Sprint(r) != "[[Best Aria3 Song Aria3] [Best LoveSong3 Song LoveSong3] [Best MyOnlySong3 Song MyOnlySong3] [Best StrangeSong1 Song StrangeSong1]]" {
+		t.Error("Unexpected result: ", r)
 		return
 	}
 
-	if res.RowSources() == nil {
-		t.Error("Unexpected result")
+	if r := res.RowSources(); r == nil || fmt.Sprint(r) != "[[n:group:Best n:Song:Aria3 n:Song:Aria3 n:Song:Aria3] [n:group:Best n:Song:LoveSong3 n:Song:LoveSong3 n:Song:LoveSong3] [n:group:Best n:Song:MyOnlySong3 n:Song:MyOnlySong3 n:Song:MyOnlySong3] [n:group:Best n:Song:StrangeSong1 n:Song:StrangeSong1 n:Song:StrangeSong1]]" {
+		t.Error("Unexpected result: ", r)
 		return
 	}
 
@@ -75,6 +152,11 @@ Best, StrangeSong1, Song, StrangeSong1
 	}
 
 	if res.Header().PrimaryKind() != res.SearchHeader.ResPrimaryKind {
+		t.Error("Unexpected result")
+		return
+	}
+
+	if res.Header().Partition() != res.SearchHeader.ResPartition {
 		t.Error("Unexpected result")
 		return
 	}
@@ -529,4 +611,41 @@ func dateGraph() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 	gm.StoreNode("main", node1)
 
 	return gm, mgs.(*graphstorage.MemoryGraphStorage)
+}
+
+func filterGraph() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
+	gm, mgs := songGraph()
+
+	constructNode := func(key, val1, val2, val3 string) data.Node {
+		node0 := data.NewGraphNode()
+		node0.SetAttr("key", key)
+		node0.SetAttr("kind", "filtertest")
+		node0.SetAttr("val1", val1)
+		node0.SetAttr("val2", val2)
+		node0.SetAttr("val3", val3)
+
+		return node0
+	}
+
+	gm.StoreNode("main", constructNode("1", "test", "Hans", "foo"))
+	gm.StoreNode("main", constructNode("2", "test1", "Hans", "foo"))
+	gm.StoreNode("main", constructNode("3", "test2", "Hans", "foo"))
+	gm.StoreNode("main", constructNode("4", "test3", "Peter", "foo"))
+	gm.StoreNode("main", constructNode("5", "test4", "Peter", "foo"))
+	gm.StoreNode("main", constructNode("6", "test5", "Peter", "foo"))
+	gm.StoreNode("main", constructNode("7", "test6", "Anna", "foo"))
+	gm.StoreNode("main", constructNode("8", "test7", "Anna", "foo"))
+	gm.StoreNode("main", constructNode("9", "test8", "Steve", "foo"))
+	gm.StoreNode("main", constructNode("10", "test9", "Steve", "foo"))
+	gm.StoreNode("main", constructNode("11", "test10", "Franz", "foo"))
+	gm.StoreNode("main", constructNode("12", "test11", "Kevin", "foo"))
+	gm.StoreNode("main", constructNode("13", "test12", "Kevin", "foo"))
+	gm.StoreNode("main", constructNode("14", "test13", "Kevin", "foo"))
+	gm.StoreNode("main", constructNode("15", "test14", "X1", "foo"))
+	gm.StoreNode("main", constructNode("16", "test15", "X2", "foo"))
+	gm.StoreNode("main", constructNode("17", "test16", "X3", "foo"))
+	gm.StoreNode("main", constructNode("18", "test17", "X4", "foo"))
+	gm.StoreNode("main", constructNode("19", "test17", "X5", "foo"))
+
+	return gm, mgs
 }

@@ -262,10 +262,10 @@ if they already exist.
 */
 func (ge *graphEndpoint) HandlePUT(w http.ResponseWriter, r *http.Request, resources []string) {
 	ge.handleGraphRequest(w, r, resources,
-		func(trans *graph.Trans, part string, node data.Node) error {
+		func(trans graph.Trans, part string, node data.Node) error {
 			return trans.UpdateNode(part, node)
 		},
-		func(trans *graph.Trans, part string, edge data.Edge) error {
+		func(trans graph.Trans, part string, edge data.Edge) error {
 			return trans.StoreEdge(part, edge)
 		})
 }
@@ -276,10 +276,10 @@ existing elements. Nodes and edges are replaced if they already exist.
 */
 func (ge *graphEndpoint) HandlePOST(w http.ResponseWriter, r *http.Request, resources []string) {
 	ge.handleGraphRequest(w, r, resources,
-		func(trans *graph.Trans, part string, node data.Node) error {
+		func(trans graph.Trans, part string, node data.Node) error {
 			return trans.StoreNode(part, node)
 		},
-		func(trans *graph.Trans, part string, edge data.Edge) error {
+		func(trans graph.Trans, part string, edge data.Edge) error {
 			return trans.StoreEdge(part, edge)
 		})
 }
@@ -289,10 +289,10 @@ HandleDELETE handles a REST call to delete elements from the graph.
 */
 func (ge *graphEndpoint) HandleDELETE(w http.ResponseWriter, r *http.Request, resources []string) {
 	ge.handleGraphRequest(w, r, resources,
-		func(trans *graph.Trans, part string, node data.Node) error {
+		func(trans graph.Trans, part string, node data.Node) error {
 			return trans.RemoveNode(part, node.Key(), node.Kind())
 		},
-		func(trans *graph.Trans, part string, edge data.Edge) error {
+		func(trans graph.Trans, part string, edge data.Edge) error {
 			return trans.RemoveEdge(part, edge.Key(), edge.Kind())
 		})
 }
@@ -301,8 +301,8 @@ func (ge *graphEndpoint) HandleDELETE(w http.ResponseWriter, r *http.Request, re
 handleGraphRequest handles a graph query REST call.
 */
 func (ge *graphEndpoint) handleGraphRequest(w http.ResponseWriter, r *http.Request, resources []string,
-	transFuncNode func(trans *graph.Trans, part string, node data.Node) error,
-	transFuncEdge func(trans *graph.Trans, part string, edge data.Edge) error) {
+	transFuncNode func(trans graph.Trans, part string, node data.Node) error,
+	transFuncEdge func(trans graph.Trans, part string, edge data.Edge) error) {
 
 	var nDataList []map[string]interface{}
 	var eDataList []map[string]interface{}

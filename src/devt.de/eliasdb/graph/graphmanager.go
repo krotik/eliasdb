@@ -25,11 +25,12 @@ import (
 Manager data structure
 */
 type Manager struct {
-	gs       graphstorage.Storage         // Graph storage of this graph manager
-	gr       *graphRulesManager           // Manager for graph rules
-	nm       *util.NamesManager           // Manager object which manages name encodings
-	mapCache map[string]map[string]string // Cache which caches maps stored in the main database
-	mutex    *sync.RWMutex                // Mutex to protect atomic graph operations
+	gs           graphstorage.Storage         // Graph storage of this graph manager
+	gr           *graphRulesManager           // Manager for graph rules
+	nm           *util.NamesManager           // Manager object which manages name encodings
+	mapCache     map[string]map[string]string // Cache which caches maps stored in the main database
+	mutex        *sync.RWMutex                // Mutex to protect atomic graph operations
+	storageMutex *sync.Mutex                  // Special mutex for storage object access
 }
 
 /*
@@ -76,7 +77,7 @@ func createGraphManager(gs graphstorage.Storage) *Manager {
 
 	gm := &Manager{gs, &graphRulesManager{nil, make(map[string]Rule),
 		make(map[int]map[string]Rule)}, util.NewNamesManager(mdb),
-		make(map[string]map[string]string), &sync.RWMutex{}}
+		make(map[string]map[string]string), &sync.RWMutex{}, &sync.Mutex{}}
 
 	gm.gr.gm = gm
 

@@ -30,6 +30,22 @@ func TestMapCache(t *testing.T) {
 		return
 	}
 
+	mc.Clear()
+
+	if s := mc.Size(); s != 0 {
+		t.Error("Unexpected size:", s)
+		return
+	}
+
+	mc.Put("k1", "aaa")
+	mc.Put("k2", "bbb")
+	mc.Put("k3", "ccc")
+
+	if s := mc.Size(); s != 3 {
+		t.Error("Unexpected size:", s)
+		return
+	}
+
 	// Test copy
 
 	cp := mc.GetAll()

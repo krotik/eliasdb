@@ -179,5 +179,5 @@ func (rt *lookupRuntime) Eval() (interface{}, error) {
 		return nil, err
 	}
 
-	return rt.getRuntime.gaterResult()
+	return rt.getRuntime.gaterResult(rt.node)
 }

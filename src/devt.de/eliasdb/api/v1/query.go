@@ -14,12 +14,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"devt.de/common/datautil"
 	"devt.de/common/stringutil"
 	"devt.de/eliasdb/api"
 	"devt.de/eliasdb/eql"
+	"devt.de/eliasdb/graph/data"
 )
 
 /*
@@ -72,12 +74,17 @@ type queryEndpoint struct {
 HandleGET handles a search query REST call.
 */
 func (eq *queryEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
+	var err error
 
 	// Check parameters
 
 	if !checkResources(w, resources, 1, 1, "Need a partition") {
 		return
 	}
+
+	// Get partition
+
+	part := resources[0]
 
 	// Get limit parameter; -1 if not set
 
@@ -93,53 +100,71 @@ func (eq *queryEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resou
 		return
 	}
 
-	// See if a result id was given
+	// Get groups parameter
+
+	gs := r.URL.Query().Get("groups")
+	showGroups := gs != ""
+
+	// See if a result ID was given
 
 	resID := r.URL.Query().Get("rid")
 	if resID != "" {
 
 		res, ok := ResultCache.Get(resID)
 		if !ok {
-			http.Error(w, "Unknown result id (rid parameter)", http.StatusBadRequest)
+			http.Error(w, "Unknown result ID (rid parameter)", http.StatusBadRequest)
 			return
 		}
 
-		eq.writeResultData(w, res.(eql.SearchResult), resID, offset, limit)
-		return
+		err = eq.writeResultData(w, res.(*APISearchResult), part, resID, offset, limit, showGroups)
+
+	} else {
+		var res eql.SearchResult
+
+		// Run the query
+
+		query := r.URL.Query().Get("q")
+
+		if query == "" {
+			http.Error(w, "Missing query (q parameter)", http.StatusBadRequest)
+			return
+		}
+
+		res, err = eql.RunQuery(stringutil.CreateDisplayString(part)+" query",
+			part, query, api.GM)
+
+		if err == nil {
+			sres := &APISearchResult{res, nil}
+
+			// Make sure the result has a primary node column
+
+			_, err = sres.GetPrimaryNodeColumn()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			// Store the result in the cache
+
+			resID = genID()
+
+			ResultCache.Put(resID, sres)
+
+			err = eq.writeResultData(w, sres, part, resID, offset, limit, showGroups)
+		}
 	}
-
-	// Run the query
-
-	query := r.URL.Query().Get("q")
-	part := resources[0]
-
-	if query == "" {
-		http.Error(w, "Missing query (q parameter)", http.StatusBadRequest)
-		return
-	}
-
-	res, err := eql.RunQuery(stringutil.CreateDisplayString(part)+" query",
-		part, query, api.GM)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
-
-	// Store the result in the cache
-
-	resID = genID()
-
-	ResultCache.Put(resID, res)
-
-	eq.writeResultData(w, res, resID, offset, limit)
 }
 
 /*
 writeResultData writes result data for the client.
 */
-func (eq *queryEndpoint) writeResultData(w http.ResponseWriter, res eql.SearchResult,
-	resID string, offset int, limit int) {
+func (eq *queryEndpoint) writeResultData(w http.ResponseWriter, res *APISearchResult,
+	part string, resID string, offset int, limit int, showGroups bool) error {
+	var err error
 
 	// Write out the data
 
@@ -147,56 +172,116 @@ func (eq *queryEndpoint) writeResultData(w http.ResponseWriter, res eql.SearchRe
 
 	ret := json.NewEncoder(w)
 
-	data := make(map[string]interface{})
+	resdata := make(map[string]interface{})
+
+	// Count total selections
+
+	sels := res.Selections()
+	totalSels := 0
+	for _, s := range sels {
+		if s {
+			totalSels++
+		}
+	}
+
+	resdata["total_selections"] = totalSels
+
+	rows := res.Rows()
+	srcs := res.RowSources()
 
 	if limit == -1 && offset == -1 {
-		data["rows"] = res.Rows()
-		data["sources"] = res.RowSources()
+		resdata["rows"] = rows
+		resdata["sources"] = srcs
+		resdata["selections"] = sels
 
 	} else {
-
-		rows := res.Rows()
-		srcs := res.RowSources()
 
 		if offset > 0 {
 
 			if offset >= len(rows) {
-				http.Error(w, "Offset exceeds available rows", http.StatusInternalServerError)
-				return
+				return fmt.Errorf("Offset exceeds available rows")
 			}
 
 			rows = rows[offset:]
 			srcs = srcs[offset:]
+			sels = sels[offset:]
 		}
 
 		if limit != -1 && limit < len(rows) {
 			rows = rows[:limit]
 			srcs = srcs[:limit]
+			sels = sels[:limit]
 		}
 
-		data["rows"] = rows
-		data["sources"] = srcs
+		resdata["rows"] = rows
+		resdata["sources"] = srcs
+		resdata["selections"] = sels
 	}
 
 	// Write out result header
 
-	dataHeader := make(map[string]interface{})
+	resdataHeader := make(map[string]interface{})
 
-	data["header"] = dataHeader
+	resdata["header"] = resdataHeader
 
-	dataHeader["labels"] = header.Labels()
-	dataHeader["format"] = header.Format()
-	dataHeader["data"] = header.Data()
-	dataHeader["primary_kind"] = header.PrimaryKind()
+	resdataHeader["labels"] = header.Labels()
+	resdataHeader["format"] = header.Format()
+	resdataHeader["data"] = header.Data()
 
-	// Set response header values
+	pk := header.PrimaryKind()
 
-	w.Header().Add(HTTPHeaderTotalCount, fmt.Sprint(res.RowCount()))
-	w.Header().Add(HTTPHeaderCacheID, resID)
+	resdataHeader["primary_kind"] = pk
 
-	w.Header().Set("content-type", "application/json; charset=utf-8")
+	if showGroups {
+		groupList := make([][]string, 0, len(srcs))
 
-	ret.Encode(data)
+		if len(srcs) > 0 {
+			var col int
+
+			// Get column for primary kind
+
+			col, err = res.GetPrimaryNodeColumn()
+
+			// Lookup groups for nodes
+
+			for _, s := range resdata["sources"].([][]string) {
+
+				if err == nil {
+					var nodes []data.Node
+
+					groups := make([]string, 0, 3)
+					key := strings.Split(s[col], ":")[2]
+
+					nodes, _, err = api.GM.TraverseMulti(part, key, pk,
+						":::"+eql.GroupNodeKind, false)
+
+					if err == nil {
+						for _, n := range nodes {
+							groups = append(groups, n.Key())
+						}
+					}
+
+					groupList = append(groupList, groups)
+				}
+			}
+		}
+
+		resdata["groups"] = groupList
+	}
+
+	if err == nil {
+
+		// Set response header values
+
+		w.Header().Add(HTTPHeaderTotalCount, fmt.Sprint(res.RowCount()))
+		w.Header().Add(HTTPHeaderCacheID, resID)
+
+		w.Header().Set("content-type", "application/json; charset=utf-8")
+
+		ret.Encode(resdata)
+	}
+
+	return err
 }
 
 /*
@@ -208,8 +293,12 @@ func (eq *queryEndpoint) SwaggerDefs(s map[string]interface{}) {
 
 	s["paths"].(map[string]interface{})["/v1/query/{partition}"] = map[string]interface{}{
 		"get": map[string]interface{}{
-			"summary":     "Run EQL queries to query the EliasDB datastore.",
-			"description": "The query endpoint should be used to run EQL search queries against partitions. The return value is always a list (even if there is only a single entry). A query result gets an ID and is stored in a cache. The id is returned in the X-Cache-Id header. Subsequent requests for the same result can use the id instead of a query.",
+			"summary": "Run EQL queries to query the EliasDB datastore.",
+			"description": "The query endpoint should be used to run EQL search " +
+				"queries against partitions. The return value is always a list " +
+				"(even if there is only a single entry). A query result gets an " +
+				"ID and is stored in a cache. The ID is returned in the X-Cache-Id " +
+				"header. Subsequent requests for the same result can use the ID instead of a query.",
 			"produces": []string{
 				"text/plain",
 				"application/json",
@@ -232,7 +321,7 @@ func (eq *queryEndpoint) SwaggerDefs(s map[string]interface{}) {
 				map[string]interface{}{
 					"name":        "rid",
 					"in":          "query",
-					"description": "Result id to retrieve from the result cache.",
+					"description": "Result ID to retrieve from the result cache.",
 					"required":    false,
 					"type":        "number",
 					"format":      "integer",
@@ -249,6 +338,14 @@ func (eq *queryEndpoint) SwaggerDefs(s map[string]interface{}) {
 					"name":        "offset",
 					"in":          "query",
 					"description": "Offset in the dataset.",
+					"required":    false,
+					"type":        "number",
+					"format":      "integer",
+				},
+				map[string]interface{}{
+					"name":        "groups",
+					"in":          "query",
+					"description": "Include group information in the result if set to any value.",
 					"required":    false,
 					"type":        "number",
 					"format":      "integer",
@@ -313,11 +410,8 @@ func (eq *queryEndpoint) SwaggerDefs(s map[string]interface{}) {
 					"description": "Columns of a row of the query result.",
 					"type":        "array",
 					"items": map[string]interface{}{
-						"description": "A single cell of the query result.",
-						"type": []string{
-							"integer",
-							"string",
-						},
+						"description": "A single cell of the query result (string, integer or null).",
+						"type":        "object",
 					},
 				},
 			},
@@ -329,12 +423,34 @@ func (eq *queryEndpoint) SwaggerDefs(s map[string]interface{}) {
 					"type":        "array",
 					"items": map[string]interface{}{
 						"description": "Data source of a single cell of the query result.",
-						"type": []string{
-							"integer",
-							"string",
-						},
+						"type":        "string",
 					},
 				},
+			},
+			"groups": map[string]interface{}{
+				"description": "Group names for each row.",
+				"type":        "array",
+				"items": map[string]interface{}{
+					"description": " Groups of the primary kind node.",
+					"type":        "array",
+					"items": map[string]interface{}{
+						"description": "Group name.",
+						"type":        "string",
+					},
+				},
+			},
+			"selections": map[string]interface{}{
+				"description": "List of row selections.",
+				"type":        "array",
+				"items": map[string]interface{}{
+					"description": "Row selection.",
+					"type":        "boolean",
+				},
+			},
+			"total_selections": map[string]interface{}{
+				"description": "Number of total selections.",
+				"type":        "number",
+				"format":      "integer",
 			},
 		},
 	}
@@ -353,4 +469,109 @@ genID generates a unique ID.
 func genID() string {
 	idCount++
 	return fmt.Sprint(idCount)
+}
+
+/*
+APISearchResult is a search result maintained by the API. It embeds
+*/
+type APISearchResult struct {
+	eql.SearchResult        // Normal eql search result
+	selections       []bool // Selections of the result
+}
+
+/*
+GetPrimaryNodeColumn determines the first primary node column.
+*/
+func (r *APISearchResult) GetPrimaryNodeColumn() (int, error) {
+	var err error
+
+	pk := r.Header().PrimaryKind()
+	col := -1
+	rs := r.RowSources()
+
+	if len(rs) > 0 {
+		for i, scol := range rs[0] {
+			scolParts := strings.Split(scol, ":")
+			if len(scolParts) > 1 && pk == scolParts[1] {
+				col = i
+			}
+		}
+	}
+
+	if col == -1 {
+		err = fmt.Errorf("Could not determine key of primary node - query needs a primary expression")
+	}
+
+	return col, err
+}
+
+/*
+Selections returns all current selections.
+*/
+func (r *APISearchResult) Selections() []bool {
+	r.refreshSelection()
+	return r.selections
+}
+
+/*
+SetSelection sets a new selection.
+*/
+func (r *APISearchResult) SetSelection(line int, selection bool) {
+	r.refreshSelection()
+	if line < len(r.selections) {
+		r.selections[line] = selection
+	}
+}
+
+/*
+AllSelection selects all rows.
+*/
+func (r *APISearchResult) AllSelection() {
+	r.refreshSelection()
+	for i := 0; i < len(r.selections); i++ {
+		r.selections[i] = true
+	}
+}
+
+/*
+NoneSelection selects none rows.
+*/
+func (r *APISearchResult) NoneSelection() {
+	r.refreshSelection()
+	for i := 0; i < len(r.selections); i++ {
+		r.selections[i] = false
+	}
+}
+
+/*
+InvertSelection inverts the current selection.
+*/
+func (r *APISearchResult) InvertSelection() {
+	r.refreshSelection()
+	for i := 0; i < len(r.selections); i++ {
+		r.selections[i] = !r.selections[i]
+	}
+}
+
+/*
+refreshSelection reallocates the selection array if necessary.
+*/
+func (r *APISearchResult) refreshSelection() {
+	l := r.SearchResult.RowCount()
+
+	if len(r.selections) != l {
+
+		origSelections := r.selections
+
+		// There is a difference between the selections array and the row
+		// count we need to resize
+
+		r.selections = make([]bool, l)
+
+		for i, s := range origSelections {
+			if i < l {
+				r.selections[i] = s
+			}
+		}
+	}
 }

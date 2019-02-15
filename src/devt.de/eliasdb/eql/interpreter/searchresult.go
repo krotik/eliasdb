@@ -12,6 +12,7 @@ package interpreter
 
 import (
 	"bytes"
+	"encoding/csv"
 	"fmt"
 	"sort"
 	"strconv"
@@ -25,9 +26,17 @@ SearchHeader is the header of a search result.
 */
 type SearchHeader struct {
 	ResPrimaryKind string   // Primary node kind
+	ResPartition   string   // Partition of result
 	ColLabels      []string // Labels for columns
 	ColFormat      []string // Format for columns
 	ColData        []string // Data which should be displayed in the columns
+}
+
+/*
+Partition returns the partition of a search result.
+*/
+func (sh *SearchHeader) Partition() string {
+	return sh.ResPartition
 }
 
 /*
@@ -65,6 +74,7 @@ SearchResult data structure. A search result represents the result of an EQL que
 */
 type SearchResult struct {
 	name      string     // Name to identify the result
+	query     string     // Query which produced the search result
 	withFlags *withFlags // With flags which should be applied to the result
 
 	SearchHeader            // Embedded search header
@@ -77,7 +87,7 @@ type SearchResult struct {
 /*
 newSearchResult creates a new search result object.
 */
-func newSearchResult(rtp *eqlRuntimeProvider) *SearchResult {
+func newSearchResult(rtp *eqlRuntimeProvider, query string) *SearchResult {
 
 	cdl := make([]string, 0, len(rtp.colData))
 	for i, cd := range rtp.colData {
@@ -89,7 +99,7 @@ func newSearchResult(rtp *eqlRuntimeProvider) *SearchResult {
 		}
 	}
 
-	return &SearchResult{rtp.name, rtp.withFlags, SearchHeader{rtp.primaryKind, rtp.colLabels, rtp.colFormat,
+	return &SearchResult{rtp.name, query, rtp.withFlags, SearchHeader{rtp.primaryKind, rtp.part, rtp.colLabels, rtp.colFormat,
 		cdl}, rtp.colFunc, make([][]string, 0), make([][]interface{}, 0)}
 }
 
@@ -257,9 +267,8 @@ func (sr *SearchResult) finish() {
 	// Apply ordering
 
 	for i, ordering := range sr.withFlags.ordering {
-
 		sort.Stable(&SearchResultRowComparator{ordering == withOrderingAscending,
-			sr.withFlags.orderingCol[i], sr.Data})
+			sr.withFlags.orderingCol[i], sr.Data, sr.Source})
 	}
 
 }
@@ -269,6 +278,13 @@ Header returns all column headers.
 */
 func (sr *SearchResult) Header() *SearchHeader {
 	return &sr.SearchHeader
+}
+
+/*
+Query returns the query which produced this result.
+*/
+func (sr *SearchResult) Query() string {
+	return sr.query
 }
 
 /*
@@ -345,6 +361,37 @@ func (sr *SearchResult) String() string {
 	return buf.String()
 }
 
+/*
+CSV returns this search result as comma-separated strings.
+*/
+func (sr *SearchResult) CSV() string {
+	var buf bytes.Buffer
+
+	labels := sr.Header().ColLabels
+	strData := make([][]string, len(sr.Data)+1)
+
+	// Prepare string data
+
+	strData[0] = make([]string, len(labels))
+	for i, s := range labels {
+		strData[0][i] = s
+	}
+	for i, row := range sr.Data {
+		strData[i+1] = make([]string, len(row))
+		for j, s := range row {
+			strData[i+1][j] = fmt.Sprint(s)
+		}
+	}
+
+	// Write CSV data into buffer
+
+	w := csv.NewWriter(&buf)
+
+	w.WriteAll(strData)
+
+	return buf.String()
+}
+
 // Util functions
 // ==============
 
@@ -355,6 +402,7 @@ type SearchResultRowComparator struct {
 	Ascening bool            // Sort should be ascending
 	Column   int             // Column to sort
 	Data     [][]interface{} // Data to sort
+	Source   [][]string      // Source entries which follow the data
 }
 
 func (c SearchResultRowComparator) Len() int {
@@ -385,6 +433,7 @@ func (c SearchResultRowComparator) Less(i, j int) bool {
 
 func (c SearchResultRowComparator) Swap(i, j int) {
 	c.Data[i], c.Data[j] = c.Data[j], c.Data[i]
+	c.Source[i], c.Source[j] = c.Source[j], c.Source[i]
 }
 
 // Testing functions

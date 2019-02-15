@@ -12,12 +12,15 @@ Package flowutil contains utilities to manage control flow.
 */
 package flowutil
 
+import "sync"
+
 /*
 EventPump implements the observer pattern. Observers can subscribe to receive
 notifications on certain events. Observed objects can send notifications.
 */
 type EventPump struct {
-	eventsObservers map[string]map[interface{}][]EventCallback
+	eventsObservers     map[string]map[interface{}][]EventCallback
+	eventsObserversLock *sync.Mutex
 }
 
 /*
@@ -29,7 +32,7 @@ type EventCallback func(event string, eventSource interface{})
 NewEventPump creates a new event pump.
 */
 func NewEventPump() *EventPump {
-	return &EventPump{make(map[string]map[interface{}][]EventCallback)}
+	return &EventPump{make(map[string]map[interface{}][]EventCallback), &sync.Mutex{}}
 }
 
 /*
@@ -45,6 +48,9 @@ func (ep *EventPump) AddObserver(event string, eventSource interface{}, callback
 	if callback == nil {
 		return
 	}
+
+	ep.eventsObserversLock.Lock()
+	defer ep.eventsObserversLock.Unlock()
 
 	sources, ok := ep.eventsObservers[event]
 	if !ok {
@@ -69,13 +75,18 @@ func (ep *EventPump) PostEvent(event string, eventSource interface{}) {
 		panic("Posting an event requires the event and its source")
 	}
 
+	ep.eventsObserversLock.Lock()
+	defer ep.eventsObserversLock.Unlock()
+
 	postEvent := func(event string, eventSource interface{}) {
 
 		if sources, ok := ep.eventsObservers[event]; ok {
 			for source, callbacks := range sources {
 				if source == eventSource || source == nil {
 					for _, callback := range callbacks {
+						ep.eventsObserversLock.Unlock()
 						callback(event, eventSource)
+						ep.eventsObserversLock.Lock()
 					}
 				}
 			}
@@ -92,6 +103,8 @@ empty string then the observer is removed from all events. If the
 eventSource is nil then all observers of the event are dropped.
 */
 func (ep *EventPump) RemoveObservers(event string, eventSource interface{}) {
+	ep.eventsObserversLock.Lock()
+	defer ep.eventsObserversLock.Unlock()
 
 	// Clear everything
 

@@ -266,7 +266,7 @@ func (gm *Manager) storeOrUpdateNode(part string, node data.Node, onlyUpdate boo
 
 	// Execute rules
 
-	trans := NewGraphTrans(gm)
+	trans := newInternalGraphTrans(gm)
 	trans.subtrans = true
 
 	var event int
@@ -483,7 +483,7 @@ func (gm *Manager) RemoveNode(part string, key string, kind string) (data.Node, 
 
 		// Execute rules
 
-		trans := NewGraphTrans(gm)
+		trans := newInternalGraphTrans(gm)
 		trans.subtrans = true
 
 		if err := gm.gr.graphEvent(trans, EventNodeDeleted, part, node); err != nil {

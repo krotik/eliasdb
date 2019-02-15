@@ -17,7 +17,10 @@ const (
 )
 
 /*
-MurMurHashData hashes a given array of bytes.
+MurMurHashData hashes a given array of bytes. This is an implementation
+of Austin Appleby's MurmurHash3 (32bit) function.
+
+Reference implementation: http://code.google.com/p/smhasher/wiki/MurmurHash3
 */
 func MurMurHashData(data []byte, offset int, size int, seed int) (uint32, error) {
 

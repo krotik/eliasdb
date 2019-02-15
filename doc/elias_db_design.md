@@ -61,7 +61,7 @@ The API to the actual graph database structure is provided by a GraphManager obj
 
 <ROLE of "source end"> <KIND of edge> <ROLE of "target end"> <KIND of "target end">
 
-Using these specs it is possible to traverse the graph from one node to another. The specs are also called traversal specs since they describe a traversal from one node to another. Each end has furthermore a cascading flag attribute. If the flag is set then all delete operations on the end will be cascaded to the other end.
+Using these specs it is possible to traverse the graph from one node to another. The specs are also called traversal specs since they describe a traversal from one node to another. Each end has furthermore a cascading and a cascading last flag attribute. If the cascading flag is set then all delete operations on the end will be cascaded to the other end. If additionally the cascading last flag is set then the other end is only deleted iff all other edges with the same spec to this node have been deleted (i.e. only the last removed edge with actually remove the node).
 
 The GraphManager object stores its data in a graphstorage.Storage which is implemented as a DiskGraphStorage using a StorageManager and as a MemoryGraphStorage using just memory storage.
 

@@ -22,12 +22,12 @@ A new binary blob can be stored by sending a POST request. The body should
 be the binary data to store. The response should have the following structure:
 
 	{
-		id : <Id of the stored binary blob>
+		id : <ID of the stored binary blob>
 	}
 
 /blob/<id>
 
-GET requests can be used to retrieve a binary blobs with a specific id. Binary blobs
+GET requests can be used to retrieve a binary blobs with a specific ID. Binary blobs
 can be updated by sending a PUT request and removed by sending a DELETE request.
 
 
@@ -244,6 +244,31 @@ The return data is a list of node keys:
 	[ <node key1>, <node key2>, ... ]
 
 
+Find query endpoint
+
+/find
+
+The find query endpoint is a simplified index query which looks up nodes
+in all partitions which do not start with a _ character. It either searches
+for a word / phrase or an exact value on all available attributes.
+
+A phrase query finds all nodes/edges where an attribute contains a
+certain phrase. A request url should be of the following form:
+
+/find?text=<word or phrase value>
+/find?value=<exact value>
+
+The return data is a map of partitions to node kinds to a list of nodes:
+
+	{
+	    <partition> : {
+			<kind> : [ { node1 }, { node2 }, ... ]
+			...
+		}
+	    ...
+	}
+
+
 General database information endpoint
 
 /info
@@ -271,14 +296,16 @@ Query endpoint
 The query endpoint should be used to run EQL search queries against partitions.
 The return value is always a list (even if there is only a single entry).
 
-A query result gets an ID and is stored in a cache. The id is returned in the
-X-Cache-Id header. Subsequent requests for the same result can use the id
+A query result gets an ID and is stored in a cache. The ID is returned in the
+X-Cache-Id header. Subsequent requests for the same result can use the ID
 instead of a query.
 
-The endpoint supports the optional limit and offset parameter:
+The endpoint supports the optional limit, offset and groups parameter:
 
 	limit  - How many list items to return
 	offset - Offset in the dataset
+	groups - If set then group information are included in the result
+	         (depending on the result size this can be an expensive call)
 
 The total number of entries in the result is returned in the X-Total-Count header.
 A request url which runs a new query should be of the following form:
@@ -298,9 +325,75 @@ The return data is a result object:
 	                             3:e:key  - Key of edge traversed in the second traversal)
 	        primary_kind : The primary kind of the search result.
 	    },
-	    rows    : [ [ <col1>, <col2>, ... ] ],
-	    sources : [ [ <src col1>, <src col2>, ... ] ],
+	    rows             : [ [ <col0>, <col1>, ... ] ],
+	    sources          : [ [ <src col0>, <src col1>, ... ] ],
+	    selections       : [ <row selected> ],
+	    total_selections : <number of total selections>
+	    groups           : [ [ <groups of row0> ], [ <groups of row1> ] ... ]
 	}
+
+Query result endpoint
+
+/queryresult
+
+The query result endpoint is used to run operations on query results.
+
+The quickfilter endpoint (GET) is used to determine the most frequent used values
+in a particular result column.
+
+/queryresult/<rid>/quickfilter/<column>?limit=<max result items>
+
+The optional limit parameter can be used to limit the result items. The return
+data is a simple object:
+
+	{
+	    values      : [ <value1>, ... ],
+	    frequencies : [ <frequency1>, ... ]
+	}
+
+/queryresult/<rid>/select
+
+The select endpoint (GET) returns the (primary) nodes which are currently
+selected. The primary node of each row is usually the node from which
+the query started, when constructing the row of the result (unless the
+primary keyword was used). The return data is a simple object:
+
+	{
+	    keys   : [ <key of selected node1>, ... ],
+	    kinds  : [ <kind of selected node1>, ... ]
+	}
+
+/queryresult/<rid>/select/<row>
+
+The select endpoint with the row parameter (PUT) is used to select
+single or multiple rows of a query result. The row parameter can either
+be a positive number or 'all', 'none' or 'invert'. Returns the new
+number of total selections.
+
+/queryresult/<rid>/groupselected
+
+The groupselected endpoint returns the groups which contain the selected
+(primary) nodes based on the currently selected rows. The primary node
+of each row is usually the node from which the query started, when
+constructing the row of the result (unless the primary keyword was used).
+The return data is a simple object:
+
+	{
+	    groups : [ <group1>, ... ],
+	    keys   : [ [ <keys of selected nodes in group1> ], ... ],
+		kinds  : [ [ <kinds of selected nodes in group1> ], ... ]
+	}
+
+The state can be set by sending it to the endpoint via a POST request.
+
+/queryresult/<rid>/groupselected/<name>
+
+The groupselected endpoint with a group name adds (PUT) or removes (DELETE) all
+selected nodes to/from the given (existing) group.
+
+/queryresult/<rid>/csv
+
+The csv endpoint returns the search result as CSV string.
 */
 package v1
 
@@ -348,13 +441,13 @@ func (be *blobEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resour
 
 	// Check parameters
 
-	if !checkResources(w, resources, 2, 2, "Need a partition and a specific data id") {
+	if !checkResources(w, resources, 2, 2, "Need a partition and a specific data ID") {
 		return
 	}
 
 	loc, err := strconv.ParseUint(resources[1], 10, 64)
 	if err != nil {
-		http.Error(w, fmt.Sprint("Could not decode data id: ", err.Error()),
+		http.Error(w, fmt.Sprint("Could not decode data ID: ", err.Error()),
 			http.StatusBadRequest)
 		return
 	}
@@ -423,14 +516,14 @@ func (be *blobEndpoint) HandlePUT(w http.ResponseWriter, r *http.Request, resour
 
 	// Check parameters
 
-	if !checkResources(w, resources, 2, 2, "Need a partition and a specific data id") {
+	if !checkResources(w, resources, 2, 2, "Need a partition and a specific data ID") {
 		return
 	}
 
 	loc, err := strconv.ParseUint(resources[1], 10, 64)
 
 	if err != nil {
-		http.Error(w, fmt.Sprint("Could not decode data id: ", err.Error()), http.StatusBadRequest)
+		http.Error(w, fmt.Sprint("Could not decode data ID: ", err.Error()), http.StatusBadRequest)
 		return
 	}
 
@@ -458,14 +551,14 @@ func (be *blobEndpoint) HandleDELETE(w http.ResponseWriter, r *http.Request, res
 
 	// Check parameters
 
-	if !checkResources(w, resources, 2, 2, "Need a partition and a specific data id") {
+	if !checkResources(w, resources, 2, 2, "Need a partition and a specific data ID") {
 		return
 	}
 
 	loc, err := strconv.ParseUint(resources[1], 10, 64)
 
 	if err != nil {
-		http.Error(w, fmt.Sprint("Could not decode data id: ", err.Error()), http.StatusBadRequest)
+		http.Error(w, fmt.Sprint("Could not decode data ID: ", err.Error()), http.StatusBadRequest)
 		return
 	}
 
@@ -491,7 +584,7 @@ func (be *blobEndpoint) SwaggerDefs(s map[string]interface{}) {
 		map[string]interface{}{
 			"name":        "id",
 			"in":          "path",
-			"description": "Id of the binary blob.",
+			"description": "ID of the binary blob.",
 			"required":    true,
 			"type":        "string",
 		},
@@ -538,7 +631,7 @@ func (be *blobEndpoint) SwaggerDefs(s map[string]interface{}) {
 						"type": "object",
 						"properties": map[string]interface{}{
 							"id": map[string]interface{}{
-								"description": "The data id which can be used to lookup the data.",
+								"description": "The data ID which can be used to lookup the data.",
 								"type":        "number",
 							},
 						},

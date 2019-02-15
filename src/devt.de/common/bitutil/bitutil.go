@@ -74,7 +74,7 @@ func ByteSizeString(size int64, useISU bool) string {
 		return fmt.Sprintf("%d B", int(byteSize))
 	}
 
-	exp := math.Floor(math.Log(byteSize)/math.Log(unit) + 0.5)
+	exp := math.Floor(math.Log(byteSize) / math.Log(unit))
 
 	if useISU {
 		pre = string("kMGTPE"[int(exp-1)])

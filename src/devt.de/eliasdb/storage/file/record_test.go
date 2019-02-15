@@ -215,7 +215,7 @@ func TestMarshalBinary(t *testing.T) {
 
 	// Test errors of writing
 	for i := 0; i < len(data); i++ {
-		buf := &testutil.ErrorTestingBuffer{i, 0}
+		buf := &testutil.ErrorTestingBuffer{RemainingSize: i, WrittenSize: 0}
 		err := r.WriteRecord(buf)
 		if _, ok := err.(testutil.ErrorTestingBuffer); !ok {
 			t.Error("Unexpected error return:", err)
@@ -224,7 +224,7 @@ func TestMarshalBinary(t *testing.T) {
 
 	r.ClearDirty()
 	data, _ = r.MarshalBinary()
-	buf := &testutil.ErrorTestingBuffer{8, 0}
+	buf := &testutil.ErrorTestingBuffer{RemainingSize: 8, WrittenSize: 0}
 	err = r.WriteRecord(buf)
 	if _, ok := err.(testutil.ErrorTestingBuffer); !ok {
 		t.Error("Unexpected error return:", err)

@@ -9,7 +9,9 @@
 
 package bitutil
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCompareByteArray(t *testing.T) {
 	testdata1 := []byte("Test")
@@ -37,25 +39,27 @@ func TestCompareByteArray(t *testing.T) {
 
 func TestByteSizeString(t *testing.T) {
 	// Test byte sizes
-	testdata := []int64{10000, 1024, 500, 1233456, 5000000000}
+	testdata := []int64{10000, 1024, 500, 1233456, 44166037, 84166037, 5000000000}
 
 	// non-ISU values
-	expected1 := []string{"9.8 KiB", "1.0 KiB", "500 B", "1.2 MiB", "4.7 GiB"}
+	expected1 := []string{"9.8 KiB", "1.0 KiB", "500 B", "1.2 MiB", "42.1 MiB", "80.3 MiB", "4.7 GiB"}
 
 	// ISU values
-	expected2 := []string{"10.0 kB", "1.0 kB", "500 B", "1.2 MB", "5.0 GB"}
+	expected2 := []string{"10.0 kB", "1.0 kB", "500 B", "1.2 MB", "44.2 MB", "84.2 MB", "5.0 GB"}
 
 	for i, test := range testdata {
 		res := ByteSizeString(test, false)
 		if res != expected1[i] {
 			t.Error("Unexpected value for non-isu value:", test,
 				"got:", res, "expected:", expected1[i])
+			return
 		}
 
 		res = ByteSizeString(test, true)
 		if res != expected2[i] {
 			t.Error("Unexpected value for isu value:", test,
 				"got:", res, "expected:", expected2[i])
+			return
 		}
 	}
 }

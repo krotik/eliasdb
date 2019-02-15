@@ -55,6 +55,9 @@ func TestEndpointHandling(t *testing.T) {
 	if hs == nil {
 		return
 	}
+	defer func() {
+		stopServer(hs, wg)
+	}()
 
 	queryURL := "http://localhost" + TESTPORT
 
@@ -199,14 +202,20 @@ func TestEndpointHandling(t *testing.T) {
 		t.Error("Unexpected response:", res)
 		return
 	}
-
-	stopServer(hs, wg)
 }
 
 /*
 Send a request to a HTTP test server
 */
 func sendTestRequest(url string, method string, content []byte) string {
+	body, _ := sendTestRequestResponse(url, method, content)
+	return body
+}
+
+/*
+Send a request to a HTTP test server
+*/
+func sendTestRequestResponse(url string, method string, content []byte) (string, *http.Response) {
 	var req *http.Request
 	var err error
 
@@ -232,12 +241,12 @@ func sendTestRequest(url string, method string, content []byte) string {
 	out := bytes.Buffer{}
 	err = json.Indent(&out, []byte(bodyStr), "", "  ")
 	if err == nil {
-		return out.String()
+		return out.String(), resp
 	}
 
 	// Just return the body
 
-	return bodyStr
+	return bodyStr, resp
 }
 
 /*

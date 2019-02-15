@@ -33,3 +33,24 @@ func TestByteBufferPool(t *testing.T) {
 
 	pool.Put(buf1)
 }
+
+func TestByteSlicePool(t *testing.T) {
+
+	pool := NewByteSlicePool(5)
+
+	buf1 := pool.Get().([]byte)
+	buf2 := pool.Get()
+	buf3 := pool.Get()
+
+	if buf1 == nil || buf2 == nil || buf3 == nil {
+		t.Error("Initialisation didn't work")
+		return
+	}
+
+	if s := len(buf1); s != 5 {
+		t.Error("Unexpected size:", s)
+		return
+	}
+
+	pool.Put(buf1)
+}

@@ -168,6 +168,9 @@ This function ensures that depending entries in other datastructures do exist.
 func (gm *Manager) getNodeStorageHTree(part string, kind string,
 	create bool) (*hash.HTree, *hash.HTree, error) {
 
+	gm.storageMutex.Lock()
+	defer gm.storageMutex.Unlock()
+
 	// Check if the partition name is valid
 
 	if err := gm.checkPartitionName(part); err != nil {
@@ -231,6 +234,9 @@ entries in other datastructures do exist.
 */
 func (gm *Manager) getEdgeStorageHTree(part string, kind string, create bool) (*hash.HTree, error) {
 
+	gm.storageMutex.Lock()
+	defer gm.storageMutex.Unlock()
+
 	// Check if the partition name is valid
 
 	if err := gm.checkPartitionName(part); err != nil {
@@ -288,6 +294,9 @@ func (gm *Manager) getEdgeIndexHTree(part string, kind string, create bool) (*ha
 getIndexHTree gets a HTree which can be used to index items.
 */
 func (gm *Manager) getIndexHTree(part string, kind string, create bool, name string, suffix string) (*hash.HTree, error) {
+
+	gm.storageMutex.Lock()
+	defer gm.storageMutex.Unlock()
 
 	// Check if the partition name is valid
 

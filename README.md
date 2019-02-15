@@ -40,7 +40,7 @@ After accepting the self-signed certificate from the server you should see a web
 
 ### Tutorial:
 
-To get an idea of what EliasDB is about have a look at the [tutorial](/doc/tutorial.md).
+To get an idea of what EliasDB is about have a look at the [tutorial](/examples/tutorial/doc/tutorial.md).
 
 ### REST API:
 
@@ -63,6 +63,13 @@ EliasDB uses a single configuration file called eliasdb.config.json. After start
 
 | Configuration Option | Description |
 | --- | --- |
+| ClusterConfigFile | Cluster configuration file. |
+| ClusterLogHistory | File which is used to store the console history. |
+| ClusterStateInfoFile | File which is used to store the cluster state. |
+| CookieMaxAgeSeconds | Lifetime for cookies used by EliasDB. |
+| EnableAccessControl | Flag if access control for EliasDB should be enabled. This provides user authentication and authorization features. |
+| EnableCluster | Flag if EliasDB clustering support should be enabled. EXPERIMENTAL! |
+| EnableClusterTerminal | Flag if the cluster terminal file /web/db/cluster.html should be created. |
 | EnableReadOnly | Flag if the datastore should be open read-only. |
 | EnableWebFolder | Flag if the files in the webfolder /web should be served up by the webserver. If false only the REST API is accessible. |
 | EnableWebTerminal | Flag if the web terminal file /web/db/term.html should be created. |
@@ -70,8 +77,10 @@ EliasDB uses a single configuration file called eliasdb.config.json. After start
 | HTTPSHost | Hostname the webserver should listen to. This host is also used in the dynamically generated swagger definition. |
 | HTTPSKey | Name of the webserver private key which should be used. A new one is created if it does not exist. |
 | HTTPSPort | Port on which the webserver should listen on. |
+| LocationAccessDB | File which is used to store access control information. This file can be edited while the server is running and changes will be picked up immediately. |
 | LocationDatastore | Directory for datastore files. |
 | LocationHTTPS | Directory for the webserver's SSL related files. |
+| LocationUserDB | File which is used to store (hashed) user passwords. |
 | LocationWebFolder | Directory of the webserver's webfolder. |
 | LockFile | Lockfile for the webserver which will be watched duing runtime. Replacing the content of this file with a single character will shutdown the webserver gracefully. |
 | MemoryOnlyStorage | Flag if the datastore should only be kept in memory. |
@@ -93,7 +102,7 @@ git clone https://github.com/krotik/eliasdb/ .
 
 Assuming your GOPATH is set to the new directory you should be able to build the binary with:
 ```
-go install devt.de/eliasdb
+go install devt.de/eliasdb/cli
 ```
 
 ### Using go get (use this method if you want to embed EliasDB in your project):
@@ -105,7 +114,7 @@ go get devt.de/common/... devt.de/eliasdb/...
 
 Assuming your GOPATH is set to the new directory you should be able to build the binary with:
 ```
-go build devt.de/eliasdb
+go build devt.de/eliasdb/cli
 ```
 
 Further Reading

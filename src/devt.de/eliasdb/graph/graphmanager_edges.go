@@ -26,10 +26,12 @@ import (
 edgeTargetInfo is an internal structure which stores edge information
 */
 type edgeTargetInfo struct {
-	CascadeToTarget   bool   // Flag if delete operations should be cascaded to the target
-	CascadeFromTarget bool   // Flag if delete operations should be cascaded from the target
-	TargetNodeKey     string // Key of the target node
-	TargetNodeKind    string // Kind of the target ndoe
+	CascadeToTarget       bool   // Flag if delete operations should be cascaded to the target
+	CascadeLastToTarget   bool   // Flag if delete operations should be cascaded to the target after the last edge was deleted
+	CascadeFromTarget     bool   // Flag if delete operations should be cascaded from the target after the last edge was deleted
+	CascadeLastFromTarget bool   // Flag if delete operations should be cascaded from the target
+	TargetNodeKey         string // Key of the target node
+	TargetNodeKind        string // Kind of the target ndoe
 }
 
 func init() {
@@ -218,11 +220,13 @@ func (gm *Manager) Traverse(part string, key string, kind string,
 			edge.SetAttr(data.EdgeEnd1Kind, kind)
 			edge.SetAttr(data.EdgeEnd1Role, sspec[0])
 			edge.SetAttr(data.EdgeEnd1Cascading, v.CascadeToTarget)
+			edge.SetAttr(data.EdgeEnd1CascadingLast, v.CascadeLastToTarget)
 
 			edge.SetAttr(data.EdgeEnd2Key, v.TargetNodeKey)
 			edge.SetAttr(data.EdgeEnd2Kind, v.TargetNodeKind)
 			edge.SetAttr(data.EdgeEnd2Role, sspec[2])
 			edge.SetAttr(data.EdgeEnd2Cascading, v.CascadeFromTarget)
+			edge.SetAttr(data.EdgeEnd2CascadingLast, v.CascadeLastFromTarget)
 
 			edges = append(edges, edge)
 
@@ -292,7 +296,7 @@ func (gm *Manager) Traverse(part string, key string, kind string,
 /*
 FetchEdge fetches a single edge from a partition of the graph.
 */
-func (gm *Manager) FetchEdge(part string, key string, kind string) (data.Node, error) {
+func (gm *Manager) FetchEdge(part string, key string, kind string) (data.Edge, error) {
 	return gm.FetchEdgePart(part, key, kind, nil)
 }
 
@@ -433,7 +437,7 @@ func (gm *Manager) StoreEdge(part string, edge data.Edge) error {
 
 	// Execute rules
 
-	trans := NewGraphTrans(gm)
+	trans := newInternalGraphTrans(gm)
 	trans.subtrans = true
 
 	var event int
@@ -513,7 +517,7 @@ func (gm *Manager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 	// Function to update the edgeTargetInfo entry
 
 	updateTargetInfo := func(key string, endkey string, endkind string,
-		cascadeToTarget bool, cascadeFromTarget bool, tree *hash.HTree) error {
+		cascadeToTarget bool, cascadeLastToTarget bool, cascadeFromTarget bool, cascadeLastFromTarget bool, tree *hash.HTree) error {
 
 		var targetMap map[string]*edgeTargetInfo
 
@@ -529,8 +533,8 @@ func (gm *Manager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 
 		// Update the target info
 
-		targetMap[edge.Key()] = &edgeTargetInfo{cascadeToTarget,
-			cascadeFromTarget, endkey, endkind}
+		targetMap[edge.Key()] = &edgeTargetInfo{cascadeToTarget, cascadeLastToTarget,
+			cascadeFromTarget, cascadeLastFromTarget, endkey, endkind}
 
 		if _, err = tree.Put([]byte(key), targetMap); err != nil {
 			return err
@@ -582,12 +586,14 @@ func (gm *Manager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 	// Create / update the edgeInfo entries
 
 	if err := updateTargetInfo(edgeInfo1Key, edge.End2Key(), edge.End2Kind(),
-		edge.End1IsCascading(), edge.End2IsCascading(), end1Tree); err != nil {
+		edge.End1IsCascading(), edge.End1IsCascadingLast(), edge.End2IsCascading(),
+		edge.End2IsCascadingLast(), end1Tree); err != nil {
 		return nil, err
 	}
 
 	if err := updateTargetInfo(edgeInfo2Key, edge.End1Key(), edge.End1Kind(),
-		edge.End2IsCascading(), edge.End1IsCascading(), end2Tree); err != nil {
+		edge.End2IsCascading(), edge.End2IsCascadingLast(),
+		edge.End1IsCascading(), edge.End1IsCascadingLast(), end2Tree); err != nil {
 		return nil, err
 	}
 
@@ -660,7 +666,7 @@ func (gm *Manager) RemoveEdge(part string, key string, kind string) (data.Edge, 
 
 		// Execute rules
 
-		trans := NewGraphTrans(gm)
+		trans := newInternalGraphTrans(gm)
 		trans.subtrans = true
 
 		if err := gm.gr.graphEvent(trans, EventEdgeDeleted, part, edge); err != nil {

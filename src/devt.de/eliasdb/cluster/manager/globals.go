@@ -27,13 +27,13 @@ type Logger func(v ...interface{})
 /*
 LogInfo is called if an info message is logged in the cluster code
 */
-var LogInfo Logger = log.Print
+var LogInfo = Logger(log.Print)
 
 /*
 LogDebug is called if a debug message is logged in the cluster code
 (by default disabled)
 */
-var LogDebug Logger = LogNull
+var LogDebug = Logger(LogNull)
 
 /*
 LogNull is a discarding logger to be used for disabling loggers

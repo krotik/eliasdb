@@ -12,9 +12,33 @@ package testutil
 import (
 	"bytes"
 	"encoding/gob"
+	"strings"
 	"testing"
 	"time"
 )
+
+func TestGetCaller(t *testing.T) {
+	var name, loc string
+
+	foo := func() {
+
+		// Foo asks who called me?
+
+		name, loc = GetCaller(0)
+	}
+
+	foo()
+
+	// Answer should be TestGetCaller in file testutil_test.go line 30
+
+	if !strings.Contains(name, "devt.de/common/testutil.TestGetCaller") {
+		t.Error("Unexpected result:", name)
+	}
+
+	if !strings.Contains(loc, "testutil_test.go:30") {
+		t.Error("Unexpected result:", loc)
+	}
+}
 
 func TestErrorTestingConnection(t *testing.T) {
 	c := &ErrorTestingConnection{}

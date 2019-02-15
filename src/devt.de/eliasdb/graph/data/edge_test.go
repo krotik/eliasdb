@@ -25,11 +25,13 @@ func TestGraphEdge(t *testing.T) {
 	ge.SetAttr(EdgeEnd1Kind, "mynodekind1")
 	ge.SetAttr(EdgeEnd1Role, "role1")
 	ge.SetAttr(EdgeEnd1Cascading, true)
+	ge.SetAttr(EdgeEnd1CascadingLast, true)
 
 	ge.SetAttr(EdgeEnd2Key, "789")
 	ge.SetAttr(EdgeEnd2Kind, "mynodekind2")
 	ge.SetAttr(EdgeEnd2Role, "role2")
 	ge.SetAttr(EdgeEnd2Cascading, false)
+	ge.SetAttr(EdgeEnd2CascadingLast, false)
 
 	ge.SetAttr("name", "test")
 
@@ -49,6 +51,10 @@ func TestGraphEdge(t *testing.T) {
 		t.Error("Unexpected result")
 		return
 	}
+	if ge.End1IsCascadingLast() != true {
+		t.Error("Unexpected result")
+		return
+	}
 
 	if ge.End2Key() != "789" {
 		t.Error("Unexpected result")
@@ -63,6 +69,10 @@ func TestGraphEdge(t *testing.T) {
 		return
 	}
 	if ge.End2IsCascading() != false {
+		t.Error("Unexpected result")
+		return
+	}
+	if ge.End2IsCascadingLast() != false {
 		t.Error("Unexpected result")
 		return
 	}
@@ -106,8 +116,8 @@ func TestGraphEdge(t *testing.T) {
 		return
 	}
 
-	if fmt.Sprint(ge.IndexMap()) != "map[name:test]" {
-		t.Error("Unexpected result")
+	if res := fmt.Sprint(ge.IndexMap()); res != "map[name:test]" {
+		t.Error("Unexpected result:", res)
 		return
 	}
 
@@ -126,18 +136,21 @@ func TestGraphEdge(t *testing.T) {
 		return
 	}
 
-	if newEdge.String() != "GraphEdge:\n"+
-		"              key : 123\n"+
-		"             kind : myedgekind\n"+
-		"    end1cascading : true\n"+
-		"          end1key : 456\n"+
-		"         end1kind : mynodekind1\n"+
-		"         end1role : role1\n"+
-		"    end2cascading : false\n"+
-		"          end2key : 789\n"+
-		"         end2kind : mynodekind2\n"+
-		"         end2role : role2\n"+
-		"             name : test\n" {
+	if newEdge.String() != `GraphEdge:
+                  key : 123
+                 kind : myedgekind
+        end1cascading : true
+    end1cascadinglast : true
+              end1key : 456
+             end1kind : mynodekind1
+             end1role : role1
+        end2cascading : false
+    end2cascadinglast : false
+              end2key : 789
+             end2kind : mynodekind2
+             end2role : role2
+                 name : test
+` {
 		t.Error("Unexpected edge string output:", newEdge)
 		return
 	}

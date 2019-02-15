@@ -25,7 +25,7 @@ Parse() is a parser which produces a parse tree from a given set of lexer tokens
 
 Based on an article by Douglas Crockford: Top Down Operator Precedence
 
-http://javascript.crockford.com/tdop/tdop.html
+http://crockford.com/javascript/tdop/tdop.html
 
 which is based on the ideas of Vaughan Pratt and his paper: Top Down Operator Precedence
 
@@ -75,7 +75,7 @@ const (
 	TokenDIVINT
 	TokenMODINT
 
-	// The colon '' has a context specific meaning and is checked by the parser
+	// The colon ':' has a context specific meaning and is not processed by the parser
 
 	TOKENodeKEYWORDS // Used to separate keywords from other tokens in this list
 

@@ -200,7 +200,7 @@ func TestErrors(t *testing.T) {
 	}
 
 	if err := runSearch("get mynode show a:n:bla", "", rt); err.Error() !=
-		"EQL error in test: Invalid construct (Invalid data index: a:n:bla (strconv.ParseInt: parsing \"a\": invalid syntax)) (Line:1 Pos:17)" {
+		"EQL error in test: Invalid construct (Invalid data index: a:n:bla (strconv.Atoi: parsing \"a\": invalid syntax)) (Line:1 Pos:17)" {
 		t.Error(err)
 		return
 	}
@@ -361,7 +361,7 @@ func TestErrors(t *testing.T) {
 	}
 
 	ast.Runtime.(*getRuntime).rtp.colData[0] = "uu"
-	res := newSearchResult(ast.Runtime.(*getRuntime).rtp.eqlRuntimeProvider)
+	res := newSearchResult(ast.Runtime.(*getRuntime).rtp.eqlRuntimeProvider, "")
 
 	if err = res.addRow([]data.Node{data.NewGraphNode()}, nil); err.Error() !=
 		"EQL result error in test: Invalid column data spec (Column data spec must have 3 items: uu)" {
@@ -370,7 +370,7 @@ func TestErrors(t *testing.T) {
 	}
 
 	ast.Runtime.(*getRuntime).rtp.colData[0] = "0:p:test"
-	res = newSearchResult(ast.Runtime.(*getRuntime).rtp.eqlRuntimeProvider)
+	res = newSearchResult(ast.Runtime.(*getRuntime).rtp.eqlRuntimeProvider, "")
 
 	if err = res.addRow([]data.Node{data.NewGraphNode()}, nil); err.Error() !=
 		"EQL result error in test: Invalid column data spec (Invalid data source 'p' (either n - Node or e - Edge))" {

@@ -10,7 +10,10 @@
 
 package data
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestNodeCompare(t *testing.T) {
 	gn1 := NewGraphNode()
@@ -81,6 +84,54 @@ func TestNodeMerge(t *testing.T) {
 
 	if gn2.Attr("Test2") != gn3.Attr("Test2") {
 		t.Error("Nodes should have been merged")
+		return
+	}
+}
+
+func TestNodeSort(t *testing.T) {
+	nodes := []Node{
+		NewGraphNodeFromMap(map[string]interface{}{
+			"key":  "aaa",
+			"kind": "bbb",
+		}),
+		NewGraphNodeFromMap(map[string]interface{}{
+			"key":  "ddd",
+			"kind": "bbb",
+		}),
+		NewGraphNodeFromMap(map[string]interface{}{
+			"key":  "ggg",
+			"kind": "bbb",
+		}),
+		NewGraphNodeFromMap(map[string]interface{}{
+			"key":  "aaa",
+			"kind": "ccc",
+		}),
+		NewGraphNodeFromMap(map[string]interface{}{
+			"key":  "aaa",
+			"kind": "000",
+		}),
+	}
+
+	NodeSort(nodes)
+
+	if res := fmt.Sprint(nodes); res != `
+[GraphNode:
+     key : aaa
+    kind : 000
+ GraphNode:
+     key : aaa
+    kind : bbb
+ GraphNode:
+     key : ddd
+    kind : bbb
+ GraphNode:
+     key : ggg
+    kind : bbb
+ GraphNode:
+     key : aaa
+    kind : ccc
+]`[1:] {
+		t.Error("Unexpected result: ", res)
 		return
 	}
 }

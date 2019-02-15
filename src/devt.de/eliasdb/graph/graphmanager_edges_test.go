@@ -977,6 +977,7 @@ func TestEdgeOperations(t *testing.T) {
 		edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
 		edge.SetAttr(data.EdgeEnd1Role, "node1")
 		edge.SetAttr(data.EdgeEnd1Cascading, true)
+		edge.SetAttr(data.EdgeEnd1CascadingLast, true)
 
 		edge.SetAttr(data.EdgeEnd2Key, node2.Key())
 		edge.SetAttr(data.EdgeEnd2Kind, node2.Kind())
@@ -1112,6 +1113,9 @@ func TestEdgeOperations(t *testing.T) {
 	} else if edges2[0].End1IsCascading() != false {
 		t.Error("Unexpected value in traversed edge")
 		return
+	} else if edges2[0].End1IsCascadingLast() != false {
+		t.Error("Unexpected value in traversed edge")
+		return
 	}
 
 	if edges2[0].End2Key() != node1.Key() {
@@ -1124,6 +1128,9 @@ func TestEdgeOperations(t *testing.T) {
 		t.Error("Unexpected value in traversed edge")
 		return
 	} else if edges2[0].End2IsCascading() != true {
+		t.Error("Unexpected value in traversed edge")
+		return
+	} else if edges2[0].End2IsCascadingLast() != true {
 		t.Error("Unexpected value in traversed edge")
 		return
 	}

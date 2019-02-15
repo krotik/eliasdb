@@ -30,8 +30,8 @@ func TestInfoQuery(t *testing.T) {
 	if res != "Missing node kind" {
 		t.Error("Unexpected response:", res)
 		return
-	}	
-	
+	}
+
 	queryURL = "http://localhost" + TESTPORT + EndpointInfoQuery + "kind/foobar"
 
 	_, _, res = sendTestRequest(queryURL, "GET", nil)
@@ -54,6 +54,7 @@ func TestInfoQuery(t *testing.T) {
     "ranking"
   ],
   "node_edges": [
+    "Song:Contains:group:group",
     "Song:Wrote:Author:Author"
   ]
 }`[1:] {

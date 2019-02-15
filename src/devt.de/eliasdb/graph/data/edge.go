@@ -51,10 +51,18 @@ type Edge interface {
 	End1Role() string
 
 	/*
-		Flag to indicate that delete operations from this end are cascaded
-		to the other end.
+		End1IsCascading is a flag to indicate that delete operations from this
+		end are cascaded to the other end.
 	*/
 	End1IsCascading() bool
+
+	/*
+		End1IsCascadingLast is a flag to indicate that cascading delete
+		operations are only executed if this is the last/only edge of
+		this kind to the other end. The flag is ignored if End1IsCascading is
+		false.
+	*/
+	End1IsCascadingLast() bool
 
 	/*
 		End2Key returns the key of the second end of this edge.
@@ -72,10 +80,18 @@ type Edge interface {
 	End2Role() string
 
 	/*
-		Flag to indicate that delete operations from this end are cascaded
-		to the other end.
+		End2IsCascading is a flag to indicate that delete operations from this
+		end are cascaded to the other end.
 	*/
 	End2IsCascading() bool
+
+	/*
+		End2IsCascadingLast is a flag to indicate that cascading delete
+		operations are only executed if this is the last/only edge of
+		this kind to the other end. The flag is ignored if End2IsCascading is
+		false.
+	*/
+	End2IsCascadingLast() bool
 
 	/*
 		Spec returns the spec for this edge from the view of a specified endpoint.
@@ -117,6 +133,13 @@ EdgeEnd1Cascading is the flag to cascade delete operations from the first end
 const EdgeEnd1Cascading = "end1cascading"
 
 /*
+EdgeEnd1CascadingLast is a flag to indicate that cascading delete
+operations are only executed on the last/only edge of
+a kind
+*/
+const EdgeEnd1CascadingLast = "end1cascadinglast"
+
+/*
 EdgeEnd2Key is the key of the second end
 */
 const EdgeEnd2Key = "end2key"
@@ -135,6 +158,13 @@ const EdgeEnd2Role = "end2role"
 EdgeEnd2Cascading is the flag to cascade delete operations from the second end
 */
 const EdgeEnd2Cascading = "end2cascading"
+
+/*
+EdgeEnd2CascadingLast is a flag to indicate that cascading delete
+operations are only executed on the last/only edge of
+a kind
+*/
+const EdgeEnd2CascadingLast = "end2cascadinglast"
 
 /*
 graphEdge data structure.
@@ -168,54 +198,76 @@ func (ge *graphEdge) End1Key() string {
 }
 
 /*
-	End1Kind returns the kind of the first end of this edge.
+End1Kind returns the kind of the first end of this edge.
 */
 func (ge *graphEdge) End1Kind() string {
 	return ge.stringAttr(EdgeEnd1Kind)
 }
 
 /*
-	End1Role returns the role of the first end of this edge.
+End1Role returns the role of the first end of this edge.
 */
 func (ge *graphEdge) End1Role() string {
 	return ge.stringAttr(EdgeEnd1Role)
 }
 
 /*
-	Flag to indicate that delete operations from this end are cascaded
-	to the other end.
+End1IsCascading is a flag to indicate that delete operations from this
+end are cascaded to the other end.
 */
 func (ge *graphEdge) End1IsCascading() bool {
 	return ge.Attr(EdgeEnd1Cascading).(bool)
 }
 
 /*
-	End2Key returns the key of the second end of this edge.
+End1IsCascadingLast is a flag to indicate that cascading delete
+operations are only executed if this is the last/only edge of
+this kind to the other end. The flag is ignored if End1IsCascading is
+false.
+*/
+func (ge *graphEdge) End1IsCascadingLast() bool {
+	a := ge.Attr(EdgeEnd1CascadingLast)
+	return a != nil && a.(bool)
+}
+
+/*
+End2Key returns the key of the second end of this edge.
 */
 func (ge *graphEdge) End2Key() string {
 	return ge.stringAttr(EdgeEnd2Key)
 }
 
 /*
-	End2Kind returns the kind of the second end of this edge.
+End2Kind returns the kind of the second end of this edge.
 */
 func (ge *graphEdge) End2Kind() string {
 	return ge.stringAttr(EdgeEnd2Kind)
 }
 
 /*
-	End2Role returns the role of the second end of this edge.
+End2Role returns the role of the second end of this edge.
 */
 func (ge *graphEdge) End2Role() string {
 	return ge.stringAttr(EdgeEnd2Role)
 }
 
 /*
-	Flag to indicate that delete operations from this end are cascaded
-	to the other end.
+End2IsCascading is a flag to indicate that delete operations from this
+end are cascaded to the other end.
 */
 func (ge *graphEdge) End2IsCascading() bool {
 	return ge.Attr(EdgeEnd2Cascading).(bool)
+}
+
+/*
+End2IsCascadingLast is a flag to indicate that cascading delete
+operations are only executed if this is the last/only edge of
+this kind to the other end. The flag is ignored if End2IsCascading is
+false.
+*/
+func (ge *graphEdge) End2IsCascadingLast() bool {
+	a := ge.Attr(EdgeEnd2CascadingLast)
+	return a != nil && a.(bool)
 }
 
 /*
@@ -264,9 +316,10 @@ can be used to provide a full-text search.
 func (ge *graphEdge) IndexMap() map[string]string {
 	return createIndexMap(ge.graphNode, func(attr string) bool {
 		return attr == NodeKey || attr == NodeKind || attr == EdgeEnd1Key ||
-			attr == EdgeEnd1Kind || attr == EdgeEnd1Role || attr == EdgeEnd1Cascading ||
+			attr == EdgeEnd1Kind || attr == EdgeEnd1Role ||
+			attr == EdgeEnd1Cascading || attr == EdgeEnd1CascadingLast ||
 			attr == EdgeEnd2Key || attr == EdgeEnd2Kind || attr == EdgeEnd2Role ||
-			attr == EdgeEnd2Cascading
+			attr == EdgeEnd2Cascading || attr == EdgeEnd2CascadingLast
 	})
 }
 

@@ -24,7 +24,7 @@ func TestBlob(t *testing.T) {
 
 	_, _, res := sendTestRequest(queryURL, "GET", nil)
 
-	if res != "Need a partition and a specific data id" {
+	if res != "Need a partition and a specific data ID" {
 		t.Error("Unexpected response:", res)
 		return
 	}
@@ -38,14 +38,14 @@ func TestBlob(t *testing.T) {
 
 	_, _, res = sendTestRequest(queryURL, "PUT", nil)
 
-	if res != "Need a partition and a specific data id" {
+	if res != "Need a partition and a specific data ID" {
 		t.Error("Unexpected response:", res)
 		return
 	}
 
 	_, _, res = sendTestRequest(queryURL, "DELETE", nil)
 
-	if res != "Need a partition and a specific data id" {
+	if res != "Need a partition and a specific data ID" {
 		t.Error("Unexpected response:", res)
 		return
 	}
@@ -54,21 +54,21 @@ func TestBlob(t *testing.T) {
 
 	_, _, res = sendTestRequest(queryURL+"a", "GET", nil)
 
-	if res != "Could not decode data id: strconv.ParseUint: parsing \"a\": invalid syntax" {
+	if res != "Could not decode data ID: strconv.ParseUint: parsing \"a\": invalid syntax" {
 		t.Error("Unexpected response:", res)
 		return
 	}
 
 	_, _, res = sendTestRequest(queryURL+"a", "PUT", nil)
 
-	if res != "Could not decode data id: strconv.ParseUint: parsing \"a\": invalid syntax" {
+	if res != "Could not decode data ID: strconv.ParseUint: parsing \"a\": invalid syntax" {
 		t.Error("Unexpected response:", res)
 		return
 	}
 
 	_, _, res = sendTestRequest(queryURL+"a", "DELETE", nil)
 
-	if res != "Could not decode data id: strconv.ParseUint: parsing \"a\": invalid syntax" {
+	if res != "Could not decode data ID: strconv.ParseUint: parsing \"a\": invalid syntax" {
 		t.Error("Unexpected response:", res)
 		return
 	}

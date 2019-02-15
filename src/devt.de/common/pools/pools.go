@@ -24,3 +24,11 @@ new ones if it runs empty.
 func NewByteBufferPool() *sync.Pool {
 	return &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }}
 }
+
+/*
+NewByteSlicePool creates a new pool of []byte objects of a certain size. The
+pool creates new ones if it runs empty.
+*/
+func NewByteSlicePool(size int) *sync.Pool {
+	return &sync.Pool{New: func() interface{} { return make([]byte, size) }}
+}

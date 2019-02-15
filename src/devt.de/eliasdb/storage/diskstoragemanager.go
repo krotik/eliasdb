@@ -651,9 +651,10 @@ func initByteDiskStorageManager(bdsm *ByteDiskStorageManager) error {
 	// Kick off the lockfile watcher
 
 	if bdsm.lockfile != nil {
-		err := bdsm.lockfile.Start()
-		if err != nil {
-			panic("Could not take ownership of lockfile")
+
+		if err := bdsm.lockfile.Start(); err != nil {
+			panic(fmt.Sprintf("Could not take ownership of lockfile %v: %v",
+				bdsm.filename, err))
 		}
 	}
 

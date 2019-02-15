@@ -14,12 +14,203 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 
 	"devt.de/eliasdb/graph/data"
 	"devt.de/eliasdb/graph/graphstorage"
 	"devt.de/eliasdb/storage"
 )
+
+/*
+lockTrans is a special transaction for testing which can lock on commit.
+*/
+type lockTrans struct {
+	Trans
+	Lock *sync.Mutex
+}
+
+func (gt *lockTrans) Commit() error {
+	gt.Lock.Lock()
+	defer gt.Lock.Unlock()
+
+	return gt.Trans.Commit()
+}
+
+func newLockTrans(gm *Manager) Trans {
+	return &lockTrans{NewConcurrentGraphTrans(gm), &sync.Mutex{}}
+}
+
+func TestRollingTrans(t *testing.T) {
+	var err error
+
+	constructNode := func(key string) data.Node {
+		node := data.NewGraphNode()
+
+		node.SetAttr("key", key)
+		node.SetAttr("kind", "testnode")
+		node.SetAttr(data.NodeName, key)
+
+		return node
+	}
+
+	constructEdge := func(key1, key2 string) data.Edge {
+		edge := data.NewGraphEdge()
+
+		edge.SetAttr("key", key1+key2)
+		edge.SetAttr("kind", "testedge")
+
+		edge.SetAttr(data.NodeName, "testedge")
+
+		edge.SetAttr(data.EdgeEnd1Key, key1)
+		edge.SetAttr(data.EdgeEnd1Kind, "testnode")
+		edge.SetAttr(data.EdgeEnd1Role, "node1")
+		edge.SetAttr(data.EdgeEnd1Cascading, false)
+
+		edge.SetAttr(data.EdgeEnd2Key, key2)
+		edge.SetAttr(data.EdgeEnd2Kind, "testnode")
+		edge.SetAttr(data.EdgeEnd2Role, "node2")
+		edge.SetAttr(data.EdgeEnd2Cascading, false)
+
+		return edge
+	}
+
+	// Creeate storage and insert test nodes
+
+	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
+	gm := newGraphManagerNoRules(mgs)
+
+	var trans Trans
+
+	// Create a new Rolling Trans which rolls over after 3 operations
+
+	trans = NewRollingTrans(newLockTrans(gm), 3, gm, newLockTrans)
+	trans.(*rollingTrans).id = "42"
+
+	if trans.ID() != "42" {
+		t.Error("Unexpected result:", trans.ID())
+		return
+	}
+
+	if !trans.IsEmpty() {
+		t.Error("Unexpected result")
+		return
+	}
+
+	trans.StoreNode("main", constructNode("1"))
+	trans.StoreNode("main", constructNode("2"))
+
+	if res := trans.String(); res != "Rolling transaction 42 - Nodes: I:2 R:0 - Edges: I:0 R:0 - Threshold: 3 - In-flight: 0" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	// Straight case - we commit an operation over the threshold; the current
+	// transaction is committed and a new one is put in place.
+
+	trans.StoreEdge("main", constructEdge("1", "2"))
+	trans.(*rollingTrans).wg.Wait() // The wait here ensures that wewait until the transaction was committed
+
+	// The output should show a clean transaction since all changes
+	// have been committed to the datastore
+
+	if res := trans.String(); res != "Rolling transaction 42 - Nodes: I:0 R:0 - Edges: I:0 R:0 - Threshold: 3 - In-flight: 0" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	trans.StoreNode("main", constructNode("1"))
+	trans.StoreNode("main", constructNode("2"))
+
+	// Lock the commit of the current transaction - this lets us examine
+	// what happens duing the commit of the current transaction
+
+	currentTransLock := trans.(*rollingTrans).currentTrans.(*lockTrans).Lock
+	currentTransLock.Lock()
+	trans.StoreEdge("main", constructEdge("1", "2"))
+
+	// The committing go routine hangs now on the commit lock and we'll see that one transaction is in flight
+
+	if res := trans.String(); res != "Rolling transaction 42 - Nodes: I:2 R:0 - Edges: I:1 R:0 - Threshold: 3 - In-flight: 1" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := fmt.Sprint(trans.Counts()); res != "2 1 0 0" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	// Release the lock and wait until the commit has finished
+
+	currentTransLock.Unlock()
+	trans.(*rollingTrans).wg.Wait() // The wait here ensures that wewait until the transaction was committed
+
+	// The transaction should be empty again
+
+	if res := trans.String(); res != "Rolling transaction 42 - Nodes: I:0 R:0 - Edges: I:0 R:0 - Threshold: 3 - In-flight: 0" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	// Do now some proper operations
+
+	if err = trans.StoreNode("main", constructNode("test")); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err = trans.UpdateNode("main", constructNode("test")); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err = trans.RemoveNode("main", "test", "testnode"); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err = trans.StoreEdge("main", constructEdge("1", "3")); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err = trans.RemoveEdge("main", "13", "testedge"); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err = trans.Commit(); err != nil {
+		t.Error(err)
+		return
+	}
+
+	// Test error cases
+
+	trans = NewRollingTrans(newLockTrans(gm), 5, gm, newLockTrans)
+
+	if err = trans.StoreEdge("main", constructEdge("1", "13")); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err = trans.Commit(); err == nil || err.Error() != "GraphError: Invalid data (Can't find edge endpoint: 13 (testnode))" {
+		t.Error(err)
+		return
+	}
+
+	trans = NewRollingTrans(newLockTrans(gm), 0, gm, newLockTrans)
+
+	if err = trans.StoreEdge("main", constructEdge("1", "13")); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err = trans.Commit(); err == nil || err.Error() != "GraphError: Invalid data (Can't find edge endpoint: 13 (testnode))" {
+		t.Error(err)
+		return
+	}
+}
 
 func TestNormalTrans(t *testing.T) {
 	if !RunDiskStorageTests {
@@ -66,7 +257,24 @@ func TestNormalTrans(t *testing.T) {
 	node2.SetAttr("kind", "mynewnode")
 	node2.SetAttr("Name", "Node2")
 
-	trans := NewGraphTrans(gm)
+	trans := NewConcurrentGraphTrans(gm)
+
+	// Trivial functions
+
+	if trans.ID() == "" {
+		t.Error("ID should not be empty")
+		return
+	}
+
+	if err := trans.UpdateNode("", data.NewGraphNode()); err == nil || err.Error() != "GraphError: Invalid data (Node is missing a key value)" {
+		t.Error(err)
+		return
+	}
+
+	if !trans.IsEmpty() {
+		t.Error("New transaction should be empty")
+		return
+	}
 
 	// Store some nodes
 
@@ -106,8 +314,8 @@ func TestNormalTrans(t *testing.T) {
 		return
 	}
 
-	trans2 := NewGraphTrans(gm)
-	trans3 := NewGraphTrans(gm)
+	trans2 := NewConcurrentGraphTrans(gm)
+	trans3 := NewConcurrentGraphTrans(gm)
 
 	node3 := data.NewGraphNode()
 	node3.SetAttr("key", "789")
@@ -133,6 +341,12 @@ func TestNormalTrans(t *testing.T) {
 	}
 
 	if res := fmt.Sprint(trans2.Counts()); res != "1 1 0 0" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	trans2.(*concurrentTrans).Trans.(*baseTrans).id = "1"
+	if res := fmt.Sprint(trans2); res != "Transaction 1 - Nodes: I:1 R:0 - Edges: I:1 R:0" {
 		t.Error("Unexpected result:", res)
 		return
 	}
@@ -209,7 +423,7 @@ func TestNormalTrans(t *testing.T) {
 	// Check that we commit the transactions again - the inserts become
 	// updates but the numbers won't change
 
-	transUpdate := NewGraphTrans(gm)
+	transUpdate := NewConcurrentGraphTrans(gm)
 
 	transUpdate.StoreNode("main", node1)
 	transUpdate.StoreNode("main", node2)
@@ -226,7 +440,7 @@ func TestNormalTrans(t *testing.T) {
 
 	// Test commit of empty transaction
 
-	if err := NewGraphTrans(gm).Commit(); err != nil {
+	if err := NewConcurrentGraphTrans(gm).Commit(); err != nil {
 		t.Error(err)
 		return
 	}
@@ -255,7 +469,7 @@ func TestNormalTrans(t *testing.T) {
 
 	// Test removal of stuff
 
-	trans4 := NewGraphTrans(gm)
+	trans4 := NewConcurrentGraphTrans(gm)
 
 	trans4.RemoveEdge("main", "abc789abc", "myedge")
 	trans4.RemoveNode("main", node4.Key(), node4.Kind())
@@ -331,7 +545,7 @@ func TestTransBuilding(t *testing.T) {
 	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
 	gm := newGraphManagerNoRules(mgs)
 
-	trans := NewGraphTrans(gm)
+	trans := newInternalGraphTrans(gm)
 
 	if err := trans.StoreNode("main", node1); err != nil {
 		t.Error(err)
@@ -539,7 +753,7 @@ func TestTransBuilding(t *testing.T) {
 	}
 }
 
-func checkMaps(t *testing.T, trans *Trans, part string, ikey string, ikind string,
+func checkMaps(t *testing.T, trans *baseTrans, part string, ikey string, ikind string,
 	nodeStore bool, nodeRemove bool, edgeStore bool, edgeRemove bool) {
 
 	key := trans.createKey(part, ikey, ikind)
@@ -558,7 +772,7 @@ func checkMaps(t *testing.T, trans *Trans, part string, ikey string, ikind strin
 	}
 }
 
-func countMaps(t *testing.T, trans *Trans, nodeStore int, nodeRemove int,
+func countMaps(t *testing.T, trans *baseTrans, nodeStore int, nodeRemove int,
 	edgeStore int, edgeRemove int) {
 
 	if c := len(trans.storeNodes); c != nodeStore {
@@ -604,10 +818,10 @@ func TestTransErrors(t *testing.T) {
 
 	gm := newGraphManagerNoRules(mgs)
 
-	trans := NewGraphTrans(gm)
+	trans := NewConcurrentGraphTrans(gm)
 
 	resetTrans := func(namesuffix string) {
-		trans = NewGraphTrans(gm)
+		trans = NewConcurrentGraphTrans(gm)
 
 		node1 := data.NewGraphNode()
 		node1.SetAttr("key", "123")
@@ -715,7 +929,7 @@ func TestTransErrors(t *testing.T) {
 	}
 	delete(sm.AccessMap, 2)
 
-	trans2 := NewGraphTrans(gm)
+	trans2 := NewConcurrentGraphTrans(gm)
 	trans2.RemoveNode("main", "123", "mynode")
 
 	sm = mgs.StorageManager("main"+"mynode"+StorageSuffixNodesIndex, false).(*storage.MemoryStorageManager)
@@ -731,7 +945,7 @@ func TestTransErrors(t *testing.T) {
 		t.Error(err)
 	}
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	trans2.RemoveNode("main", "123", "mynode")
 
 	sm = mgs.StorageManager("main"+"mynode"+StorageSuffixNodesIndex, false).(*storage.MemoryStorageManager)
@@ -749,7 +963,7 @@ func TestTransErrors(t *testing.T) {
 		t.Error(err)
 	}
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	trans2.RemoveNode("main", "123", "mynode")
 
 	sm = mgs.StorageManager("main"+"mynode"+StorageSuffixNodes, false).(*storage.MemoryStorageManager)
@@ -873,7 +1087,7 @@ func TestTransErrors(t *testing.T) {
 	resetTransAndStorage()
 	trans.Commit()
 
-	trans = NewGraphTrans(gm)
+	trans = NewConcurrentGraphTrans(gm)
 	if err := trans.StoreEdge("main", constructEdge(node1, "myedge", node2)); err != nil {
 		t.Error(err)
 		return
@@ -890,7 +1104,7 @@ func TestTransErrors(t *testing.T) {
 	resetTransAndStorage()
 	trans.Commit()
 
-	trans = NewGraphTrans(gm)
+	trans = NewConcurrentGraphTrans(gm)
 	if err := trans.StoreEdge("main", constructEdge(node1, "myedge", node2)); err != nil {
 		t.Error(err)
 		return
@@ -907,7 +1121,7 @@ func TestTransErrors(t *testing.T) {
 	resetTransAndStorage()
 	trans.Commit()
 
-	trans = NewGraphTrans(gm)
+	trans = NewConcurrentGraphTrans(gm)
 	if err := trans.StoreEdge("main", constructEdge(node1, "myedge", node2)); err != nil {
 		t.Error(err)
 		return
@@ -928,7 +1142,7 @@ func TestTransErrors(t *testing.T) {
 	resetTransAndStorage()
 	trans.Commit()
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	if err := trans2.RemoveEdge("main", deleteEdge.Key(), deleteEdge.Kind()); err != nil {
 		t.Error(err)
 		return
@@ -945,7 +1159,7 @@ func TestTransErrors(t *testing.T) {
 	resetTransAndStorage()
 	trans.Commit()
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	if err := trans2.RemoveEdge("main", deleteEdge.Key(), deleteEdge.Kind()); err != nil {
 		t.Error(err)
 		return
@@ -959,7 +1173,7 @@ func TestTransErrors(t *testing.T) {
 	}
 	delete(sm.AccessMap, 1)
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	if err := trans2.RemoveEdge("main", deleteEdge.Key(), deleteEdge.Kind()); err != nil {
 		t.Error(err)
 		return
@@ -973,7 +1187,7 @@ func TestTransErrors(t *testing.T) {
 	}
 	delete(sm.AccessMap, 1)
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	if err := trans2.RemoveEdge("main", deleteEdge.Key(), deleteEdge.Kind()); err != nil {
 		t.Error(err)
 		return
@@ -990,7 +1204,7 @@ func TestTransErrors(t *testing.T) {
 	resetTransAndStorage()
 	trans.Commit()
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	if err := trans2.RemoveEdge("main", deleteEdge.Key(), deleteEdge.Kind()); err != nil {
 		t.Error(err)
 		return
@@ -1007,7 +1221,7 @@ func TestTransErrors(t *testing.T) {
 	resetTransAndStorage()
 	trans.Commit()
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	if err := trans2.RemoveEdge("main", deleteEdge.Key(), deleteEdge.Kind()); err != nil {
 		t.Error(err)
 		return
@@ -1024,7 +1238,7 @@ func TestTransErrors(t *testing.T) {
 	resetTransAndStorage()
 	trans.Commit()
 
-	trans2 = NewGraphTrans(gm)
+	trans2 = NewConcurrentGraphTrans(gm)
 	if err := trans2.RemoveEdge("main", deleteEdge.Key(), deleteEdge.Kind()); err != nil {
 		t.Error(err)
 		return
@@ -1037,6 +1251,20 @@ func TestTransErrors(t *testing.T) {
 		return
 	}
 	delete(sm.AccessMap, 5)
+
+	resetTransAndStorage()
+
+	// Delete non-existing node
+
+	if err := trans.RemoveNode("main", "nonexist", "nonexist"); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err := trans.Commit(); err != nil {
+		t.Error(err)
+		return
+	}
 }
 
 func testTransPanic(t *testing.T) {
@@ -1054,7 +1282,7 @@ func testTransPanic(t *testing.T) {
 
 	gm.getNodeStorageHTree("main", "mynode", true)
 
-	trans := NewGraphTrans(gm)
+	trans := NewConcurrentGraphTrans(gm)
 
 	node1 := data.NewGraphNode()
 	node1.SetAttr("key", "123")

@@ -10,17 +10,100 @@
 package stringutil
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
+	"sync"
 	"testing"
 )
+
+func TestLongestCommonPrefix(t *testing.T) {
+
+	if res := LongestCommonPrefix([]string{}); res != "" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := LongestCommonPrefix([]string{"test"}); res != "test" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := LongestCommonPrefix([]string{"tester", "test"}); res != "test" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := LongestCommonPrefix([]string{"foo", "test"}); res != "" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := LongestCommonPrefix([]string{"foo", "test"}); res != "" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := LongestCommonPrefix([]string{"foo2", "foo1", "footest"}); res != "foo" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+}
+
+func TestPrintStringTable(t *testing.T) {
+
+	if res := PrintStringTable(nil, 0); res != "" {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	test1 := []string{"foo", "bar", "tester", "1", "xxx", "test", "te"}
+
+	if res := PrintStringTable(test1, 4); res != `
+foo bar  tester 1
+xxx test te
+`[1:] {
+		t.Error("Unexpected result:\n", "#"+res+"#")
+		return
+	}
+
+	if res := PrintStringTable(test1, 3); res != `
+foo bar tester
+1   xxx test
+te
+`[1:] {
+		t.Error("Unexpected result:\n", "#"+res+"#")
+		return
+	}
+}
+
+func TestRuneSlice(t *testing.T) {
+	sl := StringToRuneSlice("test")
+
+	if fmt.Sprint(sl) != "[116 101 115 116]" {
+		t.Error("Unexpected result:", sl)
+		return
+	}
+
+	if RuneSliceToString(sl) != "test" {
+		t.Error("Unexpected result:", sl)
+		return
+	}
+}
 
 func TestPluralCompareByteArray(t *testing.T) {
 	if fmt.Sprintf("There are 2 test%s", Plural(2)) != "There are 2 tests" {
 		t.Error("2 items should have an 's'")
+		return
 	}
 	if fmt.Sprintf("There is 1 test%s", Plural(1)) != "There is 1 test" {
 		t.Error("1 item should have no 's'")
+		return
+	}
+
+	if fmt.Sprintf("There are 0 test%s", Plural(0)) != "There are 0 tests" {
+		t.Error("0 items should have an 's'")
+		return
 	}
 }
 func TestStripCStyleComments(t *testing.T) {
@@ -98,13 +181,12 @@ func TestGlobToRegex(t *testing.T) {
 		}
 	}
 
-	str, err := GlobToRegex("[][]")
-
-	if err != nil {
-		t.Error("Unecpected glob parsing error:", err)
+	if str, err := GlobToRegex("[][]"); str != "[][]" || err != nil {
+		t.Error("Unecpected glob parsing result:", str, err)
 	}
-	if str != "[][]" {
-		t.Error("Unexpected glob parsing result:", str)
+
+	if str, err := GlobToRegex(")"); str != "\\)" || err != nil {
+		t.Error("Unecpected glob parsing result:", str, err)
 	}
 }
 
@@ -192,6 +274,51 @@ func TestIsAlphaNumeric(t *testing.T) {
 	}
 }
 
+func TestIsTrueValue(t *testing.T) {
+	testdata := []string{"1", "ok", "1", "FaLse", "0"}
+	expected := []bool{true, true, true, false, false}
+
+	for i, str := range testdata {
+		if IsTrueValue(str) != expected[i] {
+			t.Error("Unexpected result for alphanumeric test:", str)
+		}
+	}
+}
+
+func TestIndexOf(t *testing.T) {
+	slice := []string{"foo", "bar", "test"}
+
+	if res := IndexOf("foo", slice); res != 0 {
+		t.Error("Unexpected result", res)
+		return
+	}
+	if res := IndexOf("bar", slice); res != 1 {
+		t.Error("Unexpected result", res)
+		return
+	}
+	if res := IndexOf("test", slice); res != 2 {
+		t.Error("Unexpected result", res)
+		return
+	}
+	if res := IndexOf("hans", slice); res != -1 {
+		t.Error("Unexpected result", res)
+		return
+	}
+}
+
+func TestMapKeys(t *testing.T) {
+	testMap := map[string]interface{}{
+		"1": "2",
+		"3": "4",
+		"5": "6",
+	}
+
+	if res := MapKeys(testMap); fmt.Sprint(res) != "[1 3 5]" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+}
+
 func TestCreateDisplayString(t *testing.T) {
 	testdata := []string{"this is a tEST", "_bla", "a_bla", "a__bla", "a__b_la", "",
 		"a fool a to be to"}
@@ -221,10 +348,283 @@ func TestGenerateRollingString(t *testing.T) {
 	}
 }
 
+func TestConvertToString(t *testing.T) {
+
+	if res := ConvertToString(""); res != "" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString("test"); res != "test" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString(4.123); res != "4.123" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString(6); res != "6" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString(map[string]int{"z": 1, "d": 2, "a": 4}); res != `{"a":4,"d":2,"z":1}` {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString([]int{1, 2, 3}); res != "[1,2,3]" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString(map[interface{}]interface{}{"z": 1, "d": 2, "a": 4}); res != `{"a":4,"d":2,"z":1}` {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString(map[interface{}]interface{}{"z": []interface{}{1, 2, 3}, "d": 2, "a": 4}); res != `{"a":4,"d":2,"z":[1,2,3]}` {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString([]interface{}{1, sync.Mutex{}, 3}); res != `[1,{},3]` {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString([]interface{}{1, map[interface{}]interface{}{1: 2}, 3}); res != `[1,{"1":2},3]` {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConvertToString(&bytes.Buffer{}); res != "" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	// Not much to do with such a construct but we shouldn't fail!
+
+	type foo struct{ i int }
+
+	x := make(map[foo]foo)
+	x[foo{1}] = foo{2}
+
+	if res := ConvertToString(x); res != "map[{1}:{2}]" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+}
+
 func TestMD5HexString(t *testing.T) {
 	res := MD5HexString("This is a test")
 	if res != "ce114e4501d2f4e2dcea3e17b546f339" {
 		t.Error("Unexpected md5 hex result", res)
 
 	}
+}
+
+func TestLengthConstantEquals(t *testing.T) {
+
+	if !LengthConstantEquals([]byte("test1"), []byte("test1")) {
+		t.Error("Unexpected result")
+		return
+	}
+
+	if LengthConstantEquals([]byte("test1"), []byte("test2")) {
+		t.Error("Unexpected result")
+		return
+	}
+
+	if LengthConstantEquals([]byte("test1"), []byte("test2test123")) {
+		t.Error("Unexpected result")
+		return
+	}
+}
+
+func TestPrintGraphicStringTable(t *testing.T) {
+
+	if res := PrintGraphicStringTable(nil, 0, 5, nil); res != "" {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	if res := PrintGraphicStringTable([]string{}, 4, 5, SingleLineTable); res != `
+┌┐
+└┘
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	if res := PrintCSVTable([]string{}, 4); res != "" {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	test1 := []string{"foo", "bar", "tester", "1", "xxx", "test", "te", "foo",
+		"bar", "tester", "1"}
+
+	if res := PrintGraphicStringTable(test1, 4, 5, SingleLineTable); res != `
+┌────┬───────┬───────┬────┐
+│foo │bar    │tester │1   │
+│xxx │test   │te     │foo │
+│bar │tester │1      │    │
+└────┴───────┴───────┴────┘
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	if res := PrintCSVTable(test1, 4); res != `
+foo, bar, tester, 1
+xxx, test, te, foo
+bar, tester, 1
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	test1 = []string{"foo", "bar", "tester", "1", "xxx", "test", "te", "foo",
+		"bar"}
+
+	if res := PrintGraphicStringTable(test1, 4, 5, nil); res != `
+#########################
+#foo #bar  #tester #1   #
+#xxx #test #te     #foo #
+#bar #     #       #    #
+#########################
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	test1 = []string{"foo", "bar", "tester", "1", "xxx", "test", "te", "foo"}
+
+	if res := PrintGraphicStringTable(test1, 4, 5, nil); res != `
+#########################
+#foo #bar  #tester #1   #
+#xxx #test #te     #foo #
+#########################
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+	test1 = []string{"foo", "bar", "tester", "1", "xxx", "test", "te", "foo"}
+
+	if res := PrintGraphicStringTable(test1, 1, 2, SingleLineTable); res != `
+┌───────┐
+│foo    │
+│bar    │
+├───────┤
+│tester │
+│1      │
+│xxx    │
+│test   │
+│te     │
+│foo    │
+└───────┘
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	if res := PrintCSVTable(test1, 1); res != `
+foo
+bar
+tester
+1
+xxx
+test
+te
+foo
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	if res := PrintGraphicStringTable(test1, 100, 0, nil); res != `
+##########################################
+#foo #bar #tester #1 #xxx #test #te #foo #
+##########################################
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	test1 = []string{"foo", "bar", "tester", "1", "xxx", "test", "te", "foo"}
+
+	if res := PrintGraphicStringTable(test1, 4, 5, SingleLineTable); res != `
+┌────┬─────┬───────┬────┐
+│foo │bar  │tester │1   │
+│xxx │test │te     │foo │
+└────┴─────┴───────┴────┘
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+	test1 = []string{"foo", "bar", "tester", "1", "xxx", "test", "te", "foo"}
+
+	if res := PrintGraphicStringTable(test1, 1, 2, SingleDoubleLineTable); res != `
+╒═══════╕
+│foo    │
+│bar    │
+╞═══════╡
+│tester │
+│1      │
+│xxx    │
+│test   │
+│te     │
+│foo    │
+╘═══════╛
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	if res := PrintGraphicStringTable(test1, 1, 2, DoubleSingleLineTable); res != `
+╓───────╖
+║foo    ║
+║bar    ║
+╟───────╢
+║tester ║
+║1      ║
+║xxx    ║
+║test   ║
+║te     ║
+║foo    ║
+╙───────╜
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	if res := PrintGraphicStringTable(test1, 1, 2, DoubleLineTable); res != `
+╔═══════╗
+║foo    ║
+║bar    ║
+╠═══════╣
+║tester ║
+║1      ║
+║xxx    ║
+║test   ║
+║te     ║
+║foo    ║
+╚═══════╝
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
+	if res := PrintGraphicStringTable(test1, 100, 0, SingleLineTable); res != `
+┌────┬────┬───────┬──┬────┬─────┬───┬────┐
+│foo │bar │tester │1 │xxx │test │te │foo │
+└────┴────┴───────┴──┴────┴─────┴───┴────┘
+`[1:] {
+		t.Error("Unexpected result:\n", "#\n"+res+"#")
+		return
+	}
+
 }

@@ -41,7 +41,6 @@ type indexEndpoint struct {
 HandleGET handles a search query REST call.
 */
 func (ie *indexEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
-
 	var err error
 
 	// Check parameters
@@ -133,7 +132,7 @@ func (ie *indexEndpoint) SwaggerDefs(s map[string]interface{}) {
 	s["paths"].(map[string]interface{})["/v1/index/{partition}/{entity_type}/{kind}"] = map[string]interface{}{
 		"get": map[string]interface{}{
 			"summary":     "Run index searches on the EliasDB datastore.",
-			"description": "The query endpoint should be used to run index searches for either a word, phrase or a whole value. All queries must specify a kind and an node/edge attribute.",
+			"description": "The index endpoint should be used to run index searches for either a word, phrase or a whole value. All queries must specify a kind and an node/edge attribute.",
 			"produces": []string{
 				"text/plain",
 				"application/json",

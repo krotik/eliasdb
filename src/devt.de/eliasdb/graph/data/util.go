@@ -10,7 +10,11 @@
 
 package data
 
-import "devt.de/common/datautil"
+import (
+	"sort"
+
+	"devt.de/common/datautil"
+)
 
 /*
 NodeCompare compares node attributes.
@@ -61,3 +65,38 @@ func NodeMerge(node1 Node, node2 Node) Node {
 	}
 	return &graphNode{data}
 }
+
+/*
+NodeSort sorts a list of nodes.
+*/
+func NodeSort(list []Node) {
+	sort.Sort(NodeSlice(list))
+}
+
+/*
+NodeSlice attaches the methods of sort.Interface to []Node, sorting in
+increasing order by key and kind.
+*/
+type NodeSlice []Node
+
+/*
+Len belongs to the sort.Interface.
+*/
+func (p NodeSlice) Len() int { return len(p) }
+
+/*
+Less belongs to the sort.Interface.
+*/
+func (p NodeSlice) Less(i, j int) bool {
+	in := p[i]
+	jn := p[j]
+	if in.Kind() != jn.Kind() {
+		return in.Kind() < jn.Kind()
+	}
+	return in.Key() < jn.Key()
+}
+
+/*
+Swap belongs to the sort.Interface.
+*/
+func (p NodeSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }

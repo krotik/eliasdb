@@ -145,34 +145,42 @@ func (rt *getRuntime) Eval() (interface{}, error) {
 		}
 	}
 
-	return rt.gaterResult()
+	return rt.gaterResult(rt.node)
 }
 
-func (rt *getRuntime) gaterResult() (interface{}, error) {
+func (rt *getRuntime) gaterResult(topNode *parser.ASTNode) (interface{}, error) {
+
+	// Generate query
+
+	query, err := parser.PrettyPrint(topNode)
 
 	// Create result object
 
-	res := newSearchResult(rt.rtp.eqlRuntimeProvider)
+	res := newSearchResult(rt.rtp.eqlRuntimeProvider, query)
 
-	// Go through all rows
+	if err == nil {
+		var more bool
 
-	more, err := rt.rtp.next()
-	for more && err == nil {
-
-		// Add row to the result
-
-		if err := res.addRow(rt.rtp.rowNode, rt.rtp.rowEdge); err != nil {
-			return nil, err
-		}
-
-		// More on to the next row
+		// Go through all rows
 
 		more, err = rt.rtp.next()
+		for more && err == nil {
+
+			// Add row to the result
+
+			if err := res.addRow(rt.rtp.rowNode, rt.rtp.rowEdge); err != nil {
+				return nil, err
+			}
+
+			// More on to the next row
+
+			more, err = rt.rtp.next()
+		}
+
+		// Finish the result
+
+		res.finish()
 	}
-
-	// Finish the result
-
-	res.finish()
 
 	return res, err
 }

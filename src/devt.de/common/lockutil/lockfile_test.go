@@ -51,7 +51,7 @@ func TestMain(m *testing.M) {
 
 func TestLockFile(t *testing.T) {
 
-	duration := time.Duration(1) * time.Millisecond
+	duration := time.Duration(3) * time.Millisecond
 
 	// Straight case
 

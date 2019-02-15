@@ -21,7 +21,7 @@ import (
 defaultDistributionRange is the default range of possible addresses for any cluster.
 Depending on the cluster size each member is in charge of a certain part of this range.
 */
-var defaultDistributionRange uint64 = math.MaxUint64
+var defaultDistributionRange = uint64(math.MaxUint64)
 
 /*
 DistributionTable is used to locate data in a cluster. The table contains

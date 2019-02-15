@@ -12,8 +12,12 @@ package fileutil
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
+	"time"
 )
+
+const InvalidFileName = "**" + string(0x0)
 
 var testDefaultConfig = map[string]interface{}{
 	"MemoryOnlyStorage": false,
@@ -77,6 +81,18 @@ func TestLoadingConfig(t *testing.T) {
 
 	compareConfig(t, config, testDefaultConfig)
 
+	// Test value retrival
+
+	if res := ConfBool(config, "MemoryOnlyStorage"); res {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	if res := ConfStr(config, "DatastoreLocation"); res != "db" {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
 	if res, _ := PathExists(configFile); res {
 		os.Remove(configFile)
 	}
@@ -86,8 +102,7 @@ func TestLoadingConfig(t *testing.T) {
 	configFile = "**" + string(0x0)
 
 	_, err = LoadConfig(configFile, testDefaultConfig)
-	if err.Error() != "stat **"+string(0)+": invalid argument" &&
-		err.Error() != "Lstat **"+string(0)+": invalid argument" {
+	if !strings.Contains(strings.ToLower(err.Error()), string(0)+": invalid argument") {
 		t.Error(err)
 		return
 	}
@@ -104,5 +119,103 @@ func compareConfig(t *testing.T, config1 map[string]interface{}, config2 map[str
 			t.Error("Different values for:", k, " -> ", v, "vs", config2[k])
 			return
 		}
+	}
+}
+
+func TestPersistedConfig(t *testing.T) {
+	testFile := "persist_tester.cfg"
+	defer func() {
+		os.Remove(testFile)
+	}()
+
+	// Test the most basic start and stop
+
+	pt, err := NewWatchedConfig(testFile, testDefaultConfig, time.Millisecond)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	v, ok, err := pt.GetValue("MemoryOnlyStorage")
+	if !ok || err != nil || v != false {
+		t.Error("Unexpected stored value:", v, ok, err)
+		return
+	}
+
+	v, ok, err = pt.GetValue("foo")
+	if ok || err != nil || v != nil {
+		t.Error("Unexpected stored value:", v, ok, err)
+		return
+	}
+
+	c, err := pt.GetConfig()
+	if err != nil {
+		t.Error("Unexpected result:", err)
+		return
+	}
+
+	if len(c) != 2 {
+		t.Error("Unexpected result:", c)
+		return
+	}
+
+	ioutil.WriteFile(testFile, []byte(`{"MemoryOnlyStorage":true}`), 0644)
+
+	time.Sleep(10 * time.Millisecond)
+
+	v, ok, err = pt.GetValue("MemoryOnlyStorage")
+	if !ok || err != nil || v != true {
+		t.Error("Unexpected stored value:", v, ok, err)
+		return
+	}
+
+	// Check error state
+
+	pt.filename = InvalidFileName
+
+	WatchedConfigErrRetries = 2
+
+	time.Sleep(10 * time.Millisecond)
+
+	_, _, err = pt.GetValue("MemoryOnlyStorage")
+	if err == nil || err.Error() != "Could not sync config from disk: open **"+string(0)+": invalid argument" {
+		t.Error("Unexpected stored value:", err)
+		return
+	}
+
+	_, err = pt.GetConfig()
+	if err == nil || err.Error() != "Could not sync config from disk: open **"+string(0)+": invalid argument" {
+		t.Error("Unexpected stored value:", err)
+		return
+	}
+
+	err = pt.Close()
+	if err == nil || err.Error() != "Could not sync config from disk: open **"+string(0)+": invalid argument" {
+		t.Error("Unexpected stored value:", err)
+		return
+	}
+
+	pt, err = NewWatchedConfig(testFile, testDefaultConfig, time.Millisecond)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	time.Sleep(10 * time.Millisecond)
+
+	os.Remove(testFile)
+
+	time.Sleep(10 * time.Millisecond)
+
+	v, ok, err = pt.GetValue("MemoryOnlyStorage")
+	if !ok || err != nil || v != true {
+		t.Error("Unexpected stored value:", v, ok, err)
+		return
+	}
+
+	err = pt.Close()
+	if err != nil {
+		t.Error("Unexpected stored value:", err)
+		return
 	}
 }

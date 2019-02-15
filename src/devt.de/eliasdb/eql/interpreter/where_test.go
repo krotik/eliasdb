@@ -299,8 +299,6 @@ Data: 1:n:key, 1:n:name, 1:n:ranking
 		return
 	}
 
-	// TODO More tests on greater / less for strings
-
 	if err := runSearch("get mynode where name < Node1", `
 Labels: Mynode Key, Mynode Name, Ranking
 Format: auto, auto, auto

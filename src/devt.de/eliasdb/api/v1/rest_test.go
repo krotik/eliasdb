@@ -39,7 +39,7 @@ var gmMSM *graphstorage.MemoryGraphStorage
 func TestMain(m *testing.M) {
 	flag.Parse()
 
-	gm, msm := songGraph()
+	gm, msm := filterGraph()
 	api.GM = gm
 	api.GS = msm
 	gmMSM = msm
@@ -198,7 +198,10 @@ func songGraph() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 	node0.SetAttr("key", "000")
 	node0.SetAttr("kind", "Author")
 	node0.SetAttr("name", "John")
+	node0.SetAttr("desc", "One of the most popular acoustic artists of the decade and one of its best-selling artists.")
 	gm.StoreNode("main", node0)
+	gm.StoreNode("test", node0)  // Same node but different partition
+	gm.StoreNode("_test", node0) // Same node but different (hidden) partition
 
 	storeSong(node0, "Aria1", 8, 1)
 	storeSong(node0, "Aria2", 2, 2)
@@ -268,6 +271,60 @@ func songGraphGroups() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 	gm.StoreEdge("main", constructEdge("Aria3"))
 	gm.StoreEdge("main", constructEdge("MyOnlySong3"))
 	gm.StoreEdge("main", constructEdge("StrangeSong1"))
+
+	// Store additional groups
+
+	node0 = data.NewGraphNode()
+	node0.SetAttr("key", "foo")
+	node0.SetAttr("kind", eql.GroupNodeKind)
+	gm.StoreNode("main", node0)
+
+	node0 = data.NewGraphNode()
+	node0.SetAttr("key", "g1")
+	node0.SetAttr("kind", eql.GroupNodeKind)
+	gm.StoreNode("main", node0)
+
+	node0 = data.NewGraphNode()
+	node0.SetAttr("key", "g2")
+	node0.SetAttr("kind", eql.GroupNodeKind)
+	gm.StoreNode("main", node0)
+
+	return gm, mgs
+}
+
+func filterGraph() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
+	gm, mgs := songGraphGroups()
+
+	constructNode := func(key, val1, val2, val3 string) data.Node {
+		node0 := data.NewGraphNode()
+		node0.SetAttr("key", key)
+		node0.SetAttr("kind", "filtertest")
+		node0.SetAttr("val1", val1)
+		node0.SetAttr("val2", val2)
+		node0.SetAttr("val3", val3)
+
+		return node0
+	}
+
+	gm.StoreNode("main", constructNode("1", "test", "Hans", "foo"))
+	gm.StoreNode("main", constructNode("2", "test1", "Hans", "foo"))
+	gm.StoreNode("main", constructNode("3", "test2", "Hans", "foo"))
+	gm.StoreNode("main", constructNode("4", "test3", "Peter", "foo"))
+	gm.StoreNode("main", constructNode("5", "test4", "Peter", "foo"))
+	gm.StoreNode("main", constructNode("6", "test5", "Peter", "foo"))
+	gm.StoreNode("main", constructNode("7", "test6", "Anna", "foo"))
+	gm.StoreNode("main", constructNode("8", "test7", "Anna", "foo"))
+	gm.StoreNode("main", constructNode("9", "test8", "Steve", "foo"))
+	gm.StoreNode("main", constructNode("10", "test9", "Steve", "foo"))
+	gm.StoreNode("main", constructNode("11", "test10", "Franz", "foo"))
+	gm.StoreNode("main", constructNode("12", "test11", "Kevin", "foo"))
+	gm.StoreNode("main", constructNode("13", "test12", "Kevin", "foo"))
+	gm.StoreNode("main", constructNode("14", "test13", "Kevin", "foo"))
+	gm.StoreNode("main", constructNode("15", "test14", "X1", "foo"))
+	gm.StoreNode("main", constructNode("16", "test15", "X2", "foo"))
+	gm.StoreNode("main", constructNode("17", "test16", "X3", "foo"))
+	gm.StoreNode("main", constructNode("18", "test17", "X4", "foo"))
+	gm.StoreNode("main", constructNode("19", "test18", "X5", "foo"))
 
 	return gm, mgs
 }

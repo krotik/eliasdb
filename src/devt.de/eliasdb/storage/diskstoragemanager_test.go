@@ -138,7 +138,7 @@ func TestDiskStorageManager1(t *testing.T) {
 
 	// Test insert error
 
-	_, err = dsm.Insert(&testutil.GobTestObject{"test", true, false})
+	_, err = dsm.Insert(&testutil.GobTestObject{Name: "test", EncErr: true, DecErr: false})
 	if err == nil {
 		t.Error(err)
 		return
@@ -155,7 +155,7 @@ func TestDiskStorageManager1(t *testing.T) {
 		return
 	}
 
-	_, err = dsm.Insert(&testutil.GobTestObject{"test", false, false})
+	_, err = dsm.Insert(&testutil.GobTestObject{Name: "test", EncErr: false, DecErr: false})
 	if err != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
@@ -169,7 +169,7 @@ func TestDiskStorageManager1(t *testing.T) {
 		return
 	}
 
-	_, err = dsm.Insert(&testutil.GobTestObject{"test", false, false})
+	_, err = dsm.Insert(&testutil.GobTestObject{Name: "test", EncErr: false, DecErr: false})
 	if err != file.ErrAlreadyInUse {
 		t.Error(err, loc)
 	}
@@ -305,19 +305,19 @@ func TestDiskStorageManager2(t *testing.T) {
 		return
 	}
 
-	err = dsm.Update(loc, &testutil.GobTestObject{"test", true, false})
+	err = dsm.Update(loc, &testutil.GobTestObject{Name: "test", EncErr: true, DecErr: false})
 	if err == nil {
 		t.Error(err)
 		return
 	}
 
-	err = dsm.Update(loc, &testutil.GobTestObject{"test", false, false})
+	err = dsm.Update(loc, &testutil.GobTestObject{Name: "test", EncErr: false, DecErr: false})
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	testres := &testutil.GobTestObject{"test", false, true}
+	testres := &testutil.GobTestObject{Name: "test", EncErr: false, DecErr: true}
 	err = dsm.Fetch(loc, &testres)
 	if err == nil {
 		t.Error("Unexpected decode result")

@@ -47,13 +47,13 @@ type Rule interface {
 		Handle handles an event. The function should write all changes to the
 		given transaction.
 	*/
-	Handle(gm *Manager, trans *Trans, event int, data ...interface{}) error
+	Handle(gm *Manager, trans Trans, event int, data ...interface{}) error
 }
 
 /*
 graphEvent main event handler which receives all graph related events.
 */
-func (gr *graphRulesManager) graphEvent(trans *Trans, event int, data ...interface{}) error {
+func (gr *graphRulesManager) graphEvent(trans Trans, event int, data ...interface{}) error {
 	var errors []string
 
 	rules, ok := gr.eventMap[event]
@@ -92,7 +92,7 @@ func (gr *graphRulesManager) graphEvent(trans *Trans, event int, data ...interfa
 Clone a given graph manager and insert a new RWMutex.
 */
 func (gr *graphRulesManager) cloneGraphManager() *Manager {
-	return &Manager{gr.gm.gs, gr, gr.gm.nm, gr.gm.mapCache, &sync.RWMutex{}}
+	return &Manager{gr.gm.gs, gr, gr.gm.nm, gr.gm.mapCache, &sync.RWMutex{}, &sync.Mutex{}}
 }
 
 /*
@@ -155,7 +155,7 @@ func (r *SystemRuleDeleteNodeEdges) Handles() []int {
 /*
 Handle handles an event.
 */
-func (r *SystemRuleDeleteNodeEdges) Handle(gm *Manager, trans *Trans, event int, ed ...interface{}) error {
+func (r *SystemRuleDeleteNodeEdges) Handle(gm *Manager, trans Trans, event int, ed ...interface{}) error {
 	part := ed[0].(string)
 	node := ed[1].(data.Node)
 
@@ -165,6 +165,13 @@ func (r *SystemRuleDeleteNodeEdges) Handle(gm *Manager, trans *Trans, event int,
 	if err != nil {
 		return err
 	}
+
+	edgeRemovalCount := make(map[string]int) // Count of cascading last edges which are removed
+
+	// Nodes which need to be checked if the last edge of a certain kind has been removed
+
+	var nodeRemovalCheckNodes []data.Node
+	var nodeRemovalCheckSpecs []string
 
 	for i, edge := range edges {
 
@@ -176,14 +183,53 @@ func (r *SystemRuleDeleteNodeEdges) Handle(gm *Manager, trans *Trans, event int,
 
 		if edge.End1IsCascading() {
 
-			// No error handling at this point since only a wrong partition
-			// name can cause an issue and this would have failed before
+			if edge.End1IsCascadingLast() {
 
-			trans.RemoveNode(part, nnodes[i].Key(), nnodes[i].Kind())
+				// Only remove the node at the other end if all edges of this kind
+				// have been removed from that node after this operation
+
+				// Get edge spec from other side
+
+				nodeOtherSide := nnodes[i]
+				specOtherSide := edge.Spec(nodeOtherSide.Key())
+
+				if c, ok := edgeRemovalCount[specOtherSide]; ok {
+					edgeRemovalCount[specOtherSide] = c + 1
+				} else {
+					edgeRemovalCount[specOtherSide] = 1
+				}
+
+				nodeRemovalCheckSpecs = append(nodeRemovalCheckSpecs, specOtherSide)
+				nodeRemovalCheckNodes = append(nodeRemovalCheckNodes, nodeOtherSide)
+
+			} else {
+
+				// No error handling at this point since only a wrong partition
+				// name can cause an issue and this would have failed before
+
+				trans.RemoveNode(part, nnodes[i].Key(), nnodes[i].Kind())
+			}
 		}
 	}
 
-	return nil
+	// Check cascading last edges
+
+	for i, node := range nodeRemovalCheckNodes {
+		specToCheck := nodeRemovalCheckSpecs[i]
+		removalCount := edgeRemovalCount[specToCheck]
+
+		if err == nil {
+
+			_, edges, err = gm.TraverseMulti(part, node.Key(), node.Kind(), specToCheck, false)
+
+			if len(edges)-removalCount == 0 {
+
+				trans.RemoveNode(part, node.Key(), node.Kind())
+			}
+		}
+	}
+
+	return err
 }
 
 // System rule SystemRuleUpdateNodeStats
@@ -214,7 +260,7 @@ func (r *SystemRuleUpdateNodeStats) Handles() []int {
 /*
 Handle handles an event.
 */
-func (r *SystemRuleUpdateNodeStats) Handle(gm *Manager, trans *Trans, event int, ed ...interface{}) error {
+func (r *SystemRuleUpdateNodeStats) Handle(gm *Manager, trans Trans, event int, ed ...interface{}) error {
 	attrMap := MainDBNodeAttrs
 
 	if event == EventEdgeCreated {

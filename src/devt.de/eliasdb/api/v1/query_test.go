@@ -10,24 +10,26 @@
 
 package v1
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestQueryPagination(t *testing.T) {
 	queryURL := "http://localhost" + TESTPORT + EndpointQuery
 
-	st, _, res := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key);offset=p&limit=2", "GET", nil)
+	st, _, res := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key)&offset=p&limit=2", "GET", nil)
 	if st != "400 Bad Request" || res != "Invalid parameter value: offset should be a positive integer number" {
 		t.Error("Unexpected response:", st, res)
 		return
 	}
 
-	st, _, res = sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key);offset=2&limit=p", "GET", nil)
+	st, _, res = sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key)&offset=2&limit=p", "GET", nil)
 	if st != "400 Bad Request" || res != "Invalid parameter value: limit should be a positive integer number" {
 		t.Error("Unexpected response:", st, res)
 		return
 	}
 
-	st, h, res := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key);offset=2;limit=3", "GET", nil)
+	st, h, res := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key)&offset=2&limit=3", "GET", nil)
 
 	if st != "200 OK" || res != `
 {
@@ -66,23 +68,29 @@ func TestQueryPagination(t *testing.T) {
       6
     ]
   ],
+  "selections": [
+    false,
+    false,
+    false
+  ],
   "sources": [
+    [
+      "n:Song:Aria3",
+      "n:Song:Aria3",
+      "n:Song:Aria3"
+    ],
+    [
+      "n:Song:Aria4",
+      "n:Song:Aria4",
+      "n:Song:Aria4"
+    ],
     [
       "n:Song:DeadSong2",
       "n:Song:DeadSong2",
       "n:Song:DeadSong2"
-    ],
-    [
-      "n:Song:LoveSong3",
-      "n:Song:LoveSong3",
-      "n:Song:LoveSong3"
-    ],
-    [
-      "n:Song:MyOnlySong3",
-      "n:Song:MyOnlySong3",
-      "n:Song:MyOnlySong3"
     ]
-  ]
+  ],
+  "total_selections": 0
 }`[1:] {
 		t.Error("Unexpected response:", st, res)
 		return
@@ -102,7 +110,7 @@ func TestQueryPagination(t *testing.T) {
 		return
 	}
 
-	st, _, res = sendTestRequest(queryURL+"//main?rid="+rid+";offset=5;limit=0", "GET", nil)
+	st, _, res = sendTestRequest(queryURL+"//main?rid="+rid+"&offset=5&limit=0", "GET", nil)
 	if st != "200 OK" || res != `
 {
   "header": {
@@ -124,13 +132,15 @@ func TestQueryPagination(t *testing.T) {
     "primary_kind": "Song"
   },
   "rows": [],
-  "sources": []
+  "selections": [],
+  "sources": [],
+  "total_selections": 0
 }`[1:] {
 		t.Error("Unexpected response:", st, res)
 		return
 	}
 
-	st, _, res = sendTestRequest(queryURL+"//main?rid="+rid+";offset=5;limit=1", "GET", nil)
+	st, _, res = sendTestRequest(queryURL+"//main?rid="+rid+"&offset=5&limit=1", "GET", nil)
 	if st != "200 OK" || res != `
 {
   "header": {
@@ -158,28 +168,164 @@ func TestQueryPagination(t *testing.T) {
       3
     ]
   ],
+  "selections": [
+    false
+  ],
   "sources": [
     [
-      "n:Song:Aria1",
-      "n:Song:Aria1",
-      "n:Song:Aria1"
+      "n:Song:FightSong4",
+      "n:Song:FightSong4",
+      "n:Song:FightSong4"
     ]
-  ]
+  ],
+  "total_selections": 0
 }`[1:] {
 		t.Error("Unexpected response:", st, res)
 		return
 	}
 
-	_, _, res = sendTestRequest(queryURL+"//main?rid="+rid+";offset=500;limit=1", "GET", nil)
+	st, _, res = sendTestRequest(queryURL+"//main?rid="+rid, "GET", nil)
+	if st != "200 OK" || res != `
+{
+  "header": {
+    "data": [
+      "1:n:key",
+      "1:n:name",
+      "1:n:ranking"
+    ],
+    "format": [
+      "auto",
+      "auto",
+      "auto"
+    ],
+    "labels": [
+      "Song Key",
+      "Song Name",
+      "Ranking"
+    ],
+    "primary_kind": "Song"
+  },
+  "rows": [
+    [
+      "Aria1",
+      "Aria1",
+      8
+    ],
+    [
+      "Aria2",
+      "Aria2",
+      2
+    ],
+    [
+      "Aria3",
+      "Aria3",
+      4
+    ],
+    [
+      "Aria4",
+      "Aria4",
+      18
+    ],
+    [
+      "DeadSong2",
+      "DeadSong2",
+      6
+    ],
+    [
+      "FightSong4",
+      "FightSong4",
+      3
+    ],
+    [
+      "LoveSong3",
+      "LoveSong3",
+      1
+    ],
+    [
+      "MyOnlySong3",
+      "MyOnlySong3",
+      19
+    ],
+    [
+      "StrangeSong1",
+      "StrangeSong1",
+      5
+    ]
+  ],
+  "selections": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "sources": [
+    [
+      "n:Song:Aria1",
+      "n:Song:Aria1",
+      "n:Song:Aria1"
+    ],
+    [
+      "n:Song:Aria2",
+      "n:Song:Aria2",
+      "n:Song:Aria2"
+    ],
+    [
+      "n:Song:Aria3",
+      "n:Song:Aria3",
+      "n:Song:Aria3"
+    ],
+    [
+      "n:Song:Aria4",
+      "n:Song:Aria4",
+      "n:Song:Aria4"
+    ],
+    [
+      "n:Song:DeadSong2",
+      "n:Song:DeadSong2",
+      "n:Song:DeadSong2"
+    ],
+    [
+      "n:Song:FightSong4",
+      "n:Song:FightSong4",
+      "n:Song:FightSong4"
+    ],
+    [
+      "n:Song:LoveSong3",
+      "n:Song:LoveSong3",
+      "n:Song:LoveSong3"
+    ],
+    [
+      "n:Song:MyOnlySong3",
+      "n:Song:MyOnlySong3",
+      "n:Song:MyOnlySong3"
+    ],
+    [
+      "n:Song:StrangeSong1",
+      "n:Song:StrangeSong1",
+      "n:Song:StrangeSong1"
+    ]
+  ],
+  "total_selections": 0
+}`[1:] {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+
+	_, _, res = sendTestRequest(queryURL+"//main?rid="+rid+"&offset=500&limit=1", "GET", nil)
 
 	if res != "Offset exceeds available rows" {
 		t.Error("Unexpected response:", res)
 		return
 	}
 
-	_, _, res = sendTestRequest(queryURL+"//main?rid=abc;offset=5;limit=1", "GET", nil)
+	_, _, res = sendTestRequest(queryURL+"//main?rid=abc&offset=5&limit=1", "GET", nil)
 
-	if res != "Unknown result id (rid parameter)" {
+	if res != "Unknown result ID (rid parameter)" {
 		t.Error("Unexpected response:", res)
 		return
 	}
@@ -231,7 +377,7 @@ func TestQuery(t *testing.T) {
 	// Test first real query
 
 	st, _, res := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key)", "GET", nil)
-	st, _, res2 := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key);offset=0;limit=9", "GET", nil)
+	st, _, res2 := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key)&offset=0&limit=9", "GET", nil)
 
 	if st != "200 OK" || res2 != res || res != `
 {
@@ -300,32 +446,18 @@ func TestQuery(t *testing.T) {
       5
     ]
   ],
+  "selections": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
   "sources": [
-    [
-      "n:Song:StrangeSong1",
-      "n:Song:StrangeSong1",
-      "n:Song:StrangeSong1"
-    ],
-    [
-      "n:Song:FightSong4",
-      "n:Song:FightSong4",
-      "n:Song:FightSong4"
-    ],
-    [
-      "n:Song:DeadSong2",
-      "n:Song:DeadSong2",
-      "n:Song:DeadSong2"
-    ],
-    [
-      "n:Song:LoveSong3",
-      "n:Song:LoveSong3",
-      "n:Song:LoveSong3"
-    ],
-    [
-      "n:Song:MyOnlySong3",
-      "n:Song:MyOnlySong3",
-      "n:Song:MyOnlySong3"
-    ],
     [
       "n:Song:Aria1",
       "n:Song:Aria1",
@@ -345,9 +477,120 @@ func TestQuery(t *testing.T) {
       "n:Song:Aria4",
       "n:Song:Aria4",
       "n:Song:Aria4"
+    ],
+    [
+      "n:Song:DeadSong2",
+      "n:Song:DeadSong2",
+      "n:Song:DeadSong2"
+    ],
+    [
+      "n:Song:FightSong4",
+      "n:Song:FightSong4",
+      "n:Song:FightSong4"
+    ],
+    [
+      "n:Song:LoveSong3",
+      "n:Song:LoveSong3",
+      "n:Song:LoveSong3"
+    ],
+    [
+      "n:Song:MyOnlySong3",
+      "n:Song:MyOnlySong3",
+      "n:Song:MyOnlySong3"
+    ],
+    [
+      "n:Song:StrangeSong1",
+      "n:Song:StrangeSong1",
+      "n:Song:StrangeSong1"
     ]
-  ]
+  ],
+  "total_selections": 0
 }`[1:] {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+}
+
+func TestGroupingInfo(t *testing.T) {
+	queryURL := "http://localhost" + TESTPORT + EndpointQuery
+
+	st, _, res := sendTestRequest(queryURL+"//main?q=get+Song+with+ordering(ascending+key)&offset=2&limit=3&groups=1", "GET", nil)
+
+	if st != "200 OK" || res != `
+{
+  "groups": [
+    [
+      "Best"
+    ],
+    [],
+    []
+  ],
+  "header": {
+    "data": [
+      "1:n:key",
+      "1:n:name",
+      "1:n:ranking"
+    ],
+    "format": [
+      "auto",
+      "auto",
+      "auto"
+    ],
+    "labels": [
+      "Song Key",
+      "Song Name",
+      "Ranking"
+    ],
+    "primary_kind": "Song"
+  },
+  "rows": [
+    [
+      "Aria3",
+      "Aria3",
+      4
+    ],
+    [
+      "Aria4",
+      "Aria4",
+      18
+    ],
+    [
+      "DeadSong2",
+      "DeadSong2",
+      6
+    ]
+  ],
+  "selections": [
+    false,
+    false,
+    false
+  ],
+  "sources": [
+    [
+      "n:Song:Aria3",
+      "n:Song:Aria3",
+      "n:Song:Aria3"
+    ],
+    [
+      "n:Song:Aria4",
+      "n:Song:Aria4",
+      "n:Song:Aria4"
+    ],
+    [
+      "n:Song:DeadSong2",
+      "n:Song:DeadSong2",
+      "n:Song:DeadSong2"
+    ]
+  ],
+  "total_selections": 0
+}`[1:] {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+
+	st, _, res = sendTestRequest(queryURL+"//main?q=get+Song+primary+'group'+with+ordering(ascending+key)&offset=2&limit=3&groups=1", "GET", nil)
+
+	if st != "400 Bad Request" || res != "Could not determine key of primary node - query needs a primary expression" {
 		t.Error("Unexpected response:", st, res)
 		return
 	}

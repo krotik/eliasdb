@@ -7,9 +7,6 @@
  * For further information see: http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/*
-Package timeutil contains common function for time related operations.
-*/
 package timeutil
 
 import (
@@ -19,7 +16,8 @@ import (
 )
 
 /*
-MakeTimestamp creates a timestamp string based on the systems epoch.
+MakeTimestamp creates a timestamp string based on the systems
+epoch (January 1, 1970 UTC).
 */
 func MakeTimestamp() string {
 	return fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
@@ -51,7 +49,8 @@ func CompareTimestamp(ts1, ts2 string) (int, error) {
 }
 
 /*
-TimestampString prints a given timestamp as a human readable time.
+TimestampString prints a given timestamp as a human readable time in a given
+Location (timezone).
 */
 func TimestampString(ts, loc string) (string, error) {
 

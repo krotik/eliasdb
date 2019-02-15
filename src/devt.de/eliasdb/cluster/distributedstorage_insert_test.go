@@ -100,6 +100,17 @@ cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+`[1:] && res != `
+TestClusterMember-0 MemberStorageManager mgs1/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+TestClusterMember-1 MemberStorageManager mgs2/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+TestClusterMember-2 MemberStorageManager mgs3/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
 `[1:] {
 		t.Error("Unexpected cluster storage layout: ", res)
 		return
@@ -402,6 +413,45 @@ TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
 cloc: 2 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+`[1:] && res != `
+TestClusterMember-0 MemberStorageManager mgs1/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+TestClusterMember-1 MemberStorageManager mgs2/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+transfer: [TestClusterMember-3] - Insert {"Loc":2,"StoreName":"test"} "\b\f\x00\x05test2"
+TestClusterMember-2 MemberStorageManager mgs3/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 2 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+`[1:] && res != `
+TestClusterMember-0 MemberStorageManager mgs1/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+TestClusterMember-1 MemberStorageManager mgs2/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 2 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+transfer: [TestClusterMember-3] - Insert {"Loc":2,"StoreName":"test"} "\b\f\x00\x05test2"
+TestClusterMember-2 MemberStorageManager mgs3/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+`[1:] && res != `
+TestClusterMember-0 MemberStorageManager mgs1/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+TestClusterMember-1 MemberStorageManager mgs2/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+transfer: [TestClusterMember-3] - Insert {"Loc":2,"StoreName":"test"} "\b\f\x00\x05test2"
+TestClusterMember-2 MemberStorageManager mgs3/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
 `[1:] {
 		t.Error("Unexpected cluster storage layout: ", res)
 		return
@@ -436,6 +486,51 @@ TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
 cloc: 2 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+TestClusterMember-3 MemberStorageManager mgs4/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+`[1:] && res != `
+TestClusterMember-0 MemberStorageManager mgs1/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+TestClusterMember-1 MemberStorageManager mgs2/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+TestClusterMember-2 MemberStorageManager mgs3/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 2 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+TestClusterMember-3 MemberStorageManager mgs4/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+`[1:] && res != `
+TestClusterMember-0 MemberStorageManager mgs1/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+TestClusterMember-1 MemberStorageManager mgs2/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 2 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
+TestClusterMember-2 MemberStorageManager mgs3/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+TestClusterMember-3 MemberStorageManager mgs4/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+`[1:] && res != `
+TestClusterMember-0 MemberStorageManager mgs1/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+TestClusterMember-1 MemberStorageManager mgs2/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
+TestClusterMember-2 MemberStorageManager mgs3/ls_test
+Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
+cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
+cloc: 0 (v:1) - lloc: 2 - "\b\f\x00\x05test1"
 TestClusterMember-3 MemberStorageManager mgs4/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 2 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
