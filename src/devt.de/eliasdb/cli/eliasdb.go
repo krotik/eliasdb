@@ -330,7 +330,7 @@ func handleServerCommandLine(gm *graph.Manager) bool {
 					fmt.Println(fmt.Sprintf("Importing %s to partition %s", file.Name, part))
 
 					if in, err = file.Open(); err == nil {
-						err = server.ImportPartition(in, part, gm)
+						err = graph.ImportPartition(in, part, gm)
 					}
 
 					if err != nil {
@@ -360,7 +360,7 @@ func handleServerCommandLine(gm *graph.Manager) bool {
 				fmt.Println(fmt.Sprintf("Exporting partition %s to %s", part, name))
 
 				if exportFile, err = zipWriter.Create(name); err == nil {
-					err = server.ExportPartition(exportFile, part, gm)
+					err = graph.ExportPartition(exportFile, part, gm)
 				}
 
 				if err != nil {

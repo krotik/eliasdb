@@ -8,32 +8,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package server
+package graph
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 
 	"devt.de/common/errorutil"
-	"devt.de/common/fileutil"
-	"devt.de/eliasdb/graph"
 	"devt.de/eliasdb/graph/data"
 )
-
-/*
-ensurePath ensures that a given relative path exists.
-*/
-func ensurePath(path string) {
-	if res, _ := fileutil.PathExists(path); !res {
-		if err := os.Mkdir(path, 0770); err != nil {
-			fatal("Could not create directory:", err.Error())
-			return
-		}
-	}
-}
 
 /*
 ExportPartition dumps the contents of a partition to an io.Writer in JSON format:
@@ -43,7 +28,7 @@ ExportPartition dumps the contents of a partition to an io.Writer in JSON format
 		edges : [ { <attr> : <value> }, ... ]
 	}
 */
-func ExportPartition(out io.Writer, part string, gm *graph.Manager) error {
+func ExportPartition(out io.Writer, part string, gm *Manager) error {
 
 	// Use a map to unique found edge keys
 
@@ -84,7 +69,7 @@ func ExportPartition(out io.Writer, part string, gm *graph.Manager) error {
 	// Loop over all available kinds and build iterators if nodes
 	// exist in the given partition
 
-	var iters []*graph.NodeKeyIterator
+	var iters []*NodeKeyIterator
 	var kinds []string
 
 	for _, k := range gm.NodeKinds() {
@@ -226,7 +211,7 @@ The following format is expected:
 		edges : [ { <attr> : <value> }, ... ]
 	}
 */
-func ImportPartition(in io.Reader, part string, gm *graph.Manager) error {
+func ImportPartition(in io.Reader, part string, gm *Manager) error {
 
 	dec := json.NewDecoder(in)
 	gdata := make(map[string][]map[string]interface{})
@@ -240,7 +225,7 @@ func ImportPartition(in io.Reader, part string, gm *graph.Manager) error {
 
 	// Create a transaction
 
-	trans := graph.NewGraphTrans(gm)
+	trans := NewGraphTrans(gm)
 
 	// Store nodes in transaction
 

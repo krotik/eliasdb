@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"devt.de/common/datautil"
+	"devt.de/common/errorutil"
 	"devt.de/eliasdb/eql/parser"
 	"devt.de/eliasdb/graph/data"
 )
@@ -50,14 +51,54 @@ func whereCount(astNode *parser.ASTNode, rtp *eqlRuntimeProvider,
 
 	// Check parameters
 
-	if len(astNode.Children) != 2 {
+	np := len(astNode.Children)
+
+	if np != 2 && np != 3 {
 		return nil, rtp.newRuntimeError(ErrInvalidConstruct,
-			"Count function requires 1 parameter: traversal spec", astNode)
+			"Count function requires 1 or 2 parameters: traversal spec, condition clause", astNode)
 	}
 
 	spec := astNode.Children[1].Token.Val
 
-	nodes, _, err := rtp.gm.TraverseMulti(rtp.part, node.Key(), node.Kind(), spec, false)
+	// Only need to retrieve full node values if there is a where clause
+
+	nodes, _, err := rtp.gm.TraverseMulti(rtp.part, node.Key(), node.Kind(), spec, np == 3)
+
+	if np == 3 {
+		var filteredNodes []data.Node
+
+		// If a where clause was given parse it and evaluate it
+
+		conditionString := astNode.Children[2].Token.Val
+
+		ast, err := parser.ParseWithRuntime("count condition", "get _ where "+conditionString, &GetRuntimeProvider{rtp})
+		if err != nil {
+			return nil, rtp.newRuntimeError(ErrInvalidConstruct,
+				fmt.Sprintf("Invalid condition clause in count function: %s", err), astNode)
+		}
+
+		cond := ast.Children[1] // This should always pick out just the where clause
+
+		errorutil.AssertOk(cond.Runtime.Validate()) // Validation should alwasys succeed
+
+		for _, n := range nodes {
+			res, err := cond.Children[0].Runtime.(CondRuntime).CondEval(n, nil)
+
+			if err != nil {
+				return nil, rtp.newRuntimeError(ErrInvalidConstruct,
+					fmt.Sprintf("Invalid condition clause in count function: %s", err), astNode)
+			} else if b, ok := res.(bool); ok {
+				if b {
+					filteredNodes = append(filteredNodes, n)
+				}
+			} else {
+				return nil, rtp.newRuntimeError(ErrInvalidConstruct,
+					"Could not evaluate condition clause in count function", astNode)
+			}
+		}
+
+		nodes = filteredNodes
+	}
 
 	return len(nodes), err
 }
@@ -150,25 +191,46 @@ type FuncShowInst func(astNode *parser.ASTNode, rtp *eqlRuntimeProvider) (FuncSh
 showCountInst creates a new showCount object.
 */
 func showCountInst(astNode *parser.ASTNode, rtp *eqlRuntimeProvider) (FuncShow, string, string, error) {
+	var cond *parser.ASTNode
 
 	// Check parameters
 
-	if len(astNode.Children) != 3 {
-		return nil, "", "", errors.New("Count function requires 2 parameters: traversal step, traversal spec")
+	np := len(astNode.Children)
+
+	if np != 3 && np != 4 {
+		return nil, "", "", errors.New("Count function requires 2 or 3 parameters: traversal step, traversal spec, condition clause")
 	}
 
 	pos := astNode.Children[1].Token.Val
 	spec := astNode.Children[2].Token.Val
 
-	return &showCount{rtp, spec}, pos + ":n:key", "Count", nil
+	if np == 4 {
+
+		// If a condition clause was given parse it
+
+		condString := astNode.Children[3].Token.Val
+
+		ast, err := parser.ParseWithRuntime("count condition", "get _ where "+condString, &GetRuntimeProvider{rtp})
+		if err != nil {
+			return nil, "", "", fmt.Errorf("Invalid condition clause in count function: %s", err)
+		}
+
+		cond = ast.Children[1] // This should always pick out just the condition clause
+
+		errorutil.AssertOk(cond.Runtime.Validate()) // Validation should alwasys succeed
+	}
+
+	return &showCount{rtp, astNode, spec, cond}, pos + ":n:key", "Count", nil
 }
 
 /*
 showCount is the number of reachable nodes via a given traversal spec.
 */
 type showCount struct {
-	rtp  *eqlRuntimeProvider
-	spec string
+	rtp       *eqlRuntimeProvider
+	astNode   *parser.ASTNode
+	spec      string
+	condition *parser.ASTNode
 }
 
 /*
@@ -182,14 +244,44 @@ func (sc *showCount) name() string {
 eval counts reachable nodes via a given traversal.
 */
 func (sc *showCount) eval(node data.Node, edge data.Edge) (interface{}, string, error) {
+	condString := ""
 
-	nodes, _, err := sc.rtp.gm.TraverseMulti(sc.rtp.part, node.Key(), node.Kind(), sc.spec, false)
+	// Only need to retrieve full node values if there is a where clause
+
+	nodes, _, err := sc.rtp.gm.TraverseMulti(sc.rtp.part, node.Key(), node.Kind(), sc.spec, sc.condition != nil)
 	if err != nil {
 		return nil, "", err
 	}
 
-	srcQuery := fmt.Sprintf("q:lookup %s \"%s\" traverse %s end show 2:n:%s, 2:n:%s, 2:n:%s",
-		node.Kind(), strconv.Quote(node.Key()), sc.spec, data.NodeKey, data.NodeKind, data.NodeName)
+	if sc.condition != nil {
+		var filteredNodes []data.Node
+
+		// If there is a condition clause filter the result
+
+		condString, _ = parser.PrettyPrint(sc.condition)
+
+		for _, n := range nodes {
+			res, err := sc.condition.Children[0].Runtime.(CondRuntime).CondEval(n, nil)
+
+			if err != nil {
+				return nil, "", err
+			} else if b, ok := res.(bool); ok {
+				if b {
+					filteredNodes = append(filteredNodes, n)
+				}
+			} else {
+
+				return nil, "", sc.rtp.newRuntimeError(ErrInvalidConstruct,
+					"Could not evaluate condition clause in count function", sc.astNode)
+			}
+
+		}
+
+		nodes = filteredNodes
+	}
+
+	srcQuery := fmt.Sprintf("q:lookup %s %s traverse %s %s end show 2:n:%s, 2:n:%s, 2:n:%s",
+		node.Kind(), strconv.Quote(node.Key()), sc.spec, condString, data.NodeKey, data.NodeKind, data.NodeName)
 
 	return len(nodes), srcQuery, nil
 }
@@ -205,7 +297,8 @@ func showObjgetInst(astNode *parser.ASTNode, rtp *eqlRuntimeProvider) (FuncShow,
 	// Check parameters
 
 	if len(astNode.Children) != 4 {
-		return nil, "", "", errors.New("Objget function requires 3 parameters: traversal step, attribute name, path to value")
+		return nil, "", "",
+			fmt.Errorf("Objget function requires 3 parameters: traversal step, attribute name, path to value")
 	}
 
 	pos := astNode.Children[1].Token.Val

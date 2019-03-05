@@ -489,3 +489,15 @@ func StartServerWithSingleOp(singleOperation func(*graph.Manager) bool) {
 		gs.(*cluster.DistributedStorage).MemberManager.Shutdown()
 	}
 }
+
+/*
+ensurePath ensures that a given relative path exists.
+*/
+func ensurePath(path string) {
+	if res, _ := fileutil.PathExists(path); !res {
+		if err := os.Mkdir(path, 0770); err != nil {
+			fatal("Could not create directory:", err.Error())
+			return
+		}
+	}
+}

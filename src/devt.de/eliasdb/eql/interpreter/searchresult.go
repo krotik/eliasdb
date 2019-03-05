@@ -462,8 +462,8 @@ func (s rowSort) Less(i, j int) bool {
 }
 
 /*
-Sort the rows of the result in a stable 100% reproducible way.
+StableSort sorts the rows of the result in a stable 100% reproducible way.
 */
-func (sr *SearchResult) stableSort() {
+func (sr *SearchResult) StableSort() {
 	sort.Stable(rowSort(*sr))
 }

@@ -47,7 +47,7 @@ func runSearch(query string, expectedResult string, rt parser.RuntimeProvider) e
 		return err
 	}
 
-	res.(*SearchResult).stableSort()
+	res.(*SearchResult).StableSort()
 	if fmt.Sprint(res) != expectedResult {
 		return errors.New(fmt.Sprint("Unexpected search result:", res, err))
 	}
@@ -486,7 +486,7 @@ Data: 1:n:key, 2:n:key, 3:n:key, 4:n:key
 		return
 	}
 
-	res.(*SearchResult).stableSort()
+	res.(*SearchResult).StableSort()
 
 	if fmt.Sprint(res) != expectedResult {
 		t.Error("Unexpected search result:", res, err)
@@ -508,7 +508,7 @@ Data: 1:n:key, 2:n:key, 3:n:key, 4:n:key
 		return
 	}
 
-	res.(*SearchResult).stableSort()
+	res.(*SearchResult).StableSort()
 
 	expectedResult = `
 Labels: Mynode Key, Mynewnode Key, Mynewnode Key, Mynewnode Key
@@ -570,7 +570,7 @@ Data: 3:n:key, 2:n:key, 1:n:key
 		return
 	}
 
-	res.(*SearchResult).stableSort()
+	res.(*SearchResult).StableSort()
 
 	if fmt.Sprint(res) != expectedResult {
 		t.Error("Unexpected search result:", res, err)

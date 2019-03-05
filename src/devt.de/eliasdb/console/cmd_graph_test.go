@@ -168,6 +168,32 @@ Kind      Producer
 │123 │Producer │Jack │A producer of an aRtIsT │
 └────┴─────────┴─────┴────────────────────────┘
 
+`[1:] && res != `
+Partition main
+Kind      Author
+┌───────────────────┬────┬───────┬─────┐
+│desc               │key │kind   │name │
+├───────────────────┼────┼───────┼─────┤
+│An annoying artist │123 │Author │Mike │
+│A lonely artisT    │000 │Author │John │
+└───────────────────┴────┴───────┴─────┘
+
+Partition main
+Kind      Writer
+┌────┬───────┬─────┬────────────────────────────┐
+│key │kind   │name │text                        │
+├────┼───────┼─────┼────────────────────────────┤
+│456 │Writer │Hans │A song writer for an artist │
+└────┴───────┴─────┴────────────────────────────┘
+
+Partition second
+Kind      Producer
+┌────┬─────────┬─────┬────────────────────────┐
+│key │kind     │name │occupation              │
+├────┼─────────┼─────┼────────────────────────┤
+│123 │Producer │Jack │A producer of an aRtIsT │
+└────┴─────────┴─────┴────────────────────────┘
+
 `[1:] {
 		t.Error("Unexpected result:", res)
 		return

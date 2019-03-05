@@ -161,7 +161,7 @@ func TestPersistedConfig(t *testing.T) {
 
 	ioutil.WriteFile(testFile, []byte(`{"MemoryOnlyStorage":true}`), 0644)
 
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	v, ok, err = pt.GetValue("MemoryOnlyStorage")
 	if !ok || err != nil || v != true {
@@ -201,11 +201,11 @@ func TestPersistedConfig(t *testing.T) {
 		return
 	}
 
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	os.Remove(testFile)
 
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 
 	v, ok, err = pt.GetValue("MemoryOnlyStorage")
 	if !ok || err != nil || v != true {

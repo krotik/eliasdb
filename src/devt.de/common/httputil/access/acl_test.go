@@ -62,6 +62,8 @@ func TestPersistedACLTable(t *testing.T) {
 		return
 	}
 
+	time.Sleep(50 * time.Millisecond)
+
 	if pt.String() != `
 ACLTable
 ========
@@ -113,7 +115,7 @@ Users:
 
 	watchToggle <- true
 
-	time.Sleep(time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
 	// Check the new configuration has been loaded from disk
 
@@ -163,7 +165,7 @@ Group: public
 	}
 
 	watchToggle <- true
-	time.Sleep(time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
 	if err := pt.(*PersistedACLTable).SyncError; err != nil {
 		t.Error("Unexpected result:", err)

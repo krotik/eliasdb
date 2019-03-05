@@ -8,14 +8,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package server
+package graph
 
 import (
 	"bytes"
 	"strings"
 	"testing"
 
-	"devt.de/eliasdb/graph"
 	"devt.de/eliasdb/graph/data"
 	"devt.de/eliasdb/graph/graphstorage"
 	"devt.de/eliasdb/storage"
@@ -27,7 +26,7 @@ func TestImportExportError(t *testing.T) {
 	// Create a memory only storage
 
 	gs := graphstorage.NewMemoryGraphStorage("test")
-	gm := graph.NewGraphManager(gs)
+	gm := NewGraphManager(gs)
 
 	// Test incomplete import data
 
@@ -91,7 +90,7 @@ func TestImportExportError(t *testing.T) {
 
 	// Error when reading a node
 
-	msm := gs.StorageManager("main"+"bla"+graph.StorageSuffixNodes, false).(*storage.MemoryStorageManager)
+	msm := gs.StorageManager("main"+"bla"+StorageSuffixNodes, false).(*storage.MemoryStorageManager)
 	msm.AccessMap[1] = storage.AccessCacheAndFetchSeriousError
 
 	res.Reset()
@@ -109,7 +108,7 @@ func TestImportExportError(t *testing.T) {
 		"test": data.NewGraphNode,
 	}))
 
-	msm = gs.StorageManager("main"+"bla"+graph.StorageSuffixNodes, false).(*storage.MemoryStorageManager)
+	msm = gs.StorageManager("main"+"bla"+StorageSuffixNodes, false).(*storage.MemoryStorageManager)
 	msm.AccessMap[6] = storage.AccessCacheAndFetchSeriousError
 
 	res.Reset()
@@ -160,7 +159,7 @@ func TestImportExportError(t *testing.T) {
 
 	// Lookup of relationship should fail
 
-	msm = gs.StorageManager("main"+"xxx"+graph.StorageSuffixEdges, false).(*storage.MemoryStorageManager)
+	msm = gs.StorageManager("main"+"xxx"+StorageSuffixEdges, false).(*storage.MemoryStorageManager)
 
 	msm.AccessMap[1] = storage.AccessCacheAndFetchSeriousError
 
@@ -240,7 +239,7 @@ func TestImportExportError(t *testing.T) {
 	// Do actual import and exports
 
 	gs = graphstorage.NewMemoryGraphStorage("test")
-	gm = graph.NewGraphManager(gs)
+	gm = NewGraphManager(gs)
 
 	err = ImportPartition(bytes.NewBufferString(`{
 	"nodes" : [

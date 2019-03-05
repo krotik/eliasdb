@@ -473,7 +473,7 @@ func getResult(query string, expectedResult string, rt parser.RuntimeProvider, s
 	}
 
 	if sort {
-		res.(*SearchResult).stableSort()
+		res.(*SearchResult).StableSort()
 	}
 
 	if fmt.Sprint(res) != expectedResult {
