@@ -14,7 +14,7 @@ For the rest of this tutorial it is assumed that you have the following director
 | Path | Description |
 | --- | --- |
 | src/devt.de/common | Common code used by EliasDB |
-| src/devt.de/eliasdb/ | Root directory for EliasDB containing the main package for the standalone server |
+| src/devt.de/eliasdb/cli | Main directory for EliasDB containing the main package for the standalone server |
 | src/devt.de/eliasdb/api | HTTP endpoints for EliasDB's REST API |
 | src/devt.de/eliasdb/eql | Parser and interpreter for EQL |
 | src/devt.de/eliasdb/graph | API to the graph storage |
