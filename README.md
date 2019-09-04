@@ -1,50 +1,70 @@
 EliasDB
 =======
-EliasDB is a graph-based database which aims to provide a lightweight solution for projects which want to store their data as a graph. EliasDB does not require any third-party libraries.
+EliasDB is a graph-based database which aims to provide a lightweight solution for projects which want to store their data as a graph.
 
 <p>
-<a href="https://devt.de/build_status.html"><img src="https://devt.de/nightly/build.eliasdb.svg" alt="Build status"></a>
-<a href="https://devt.de/nightly/test.eliasdb.html"><img src="https://devt.de/nightly/test.eliasdb.svg" alt="Code coverage"></a>
-<a href="https://goreportcard.com/report/github.com/krotik/eliasdb">
-<img src="https://goreportcard.com/badge/github.com/krotik/eliasdb?style=flat-square" alt="Go Report Card"></a>
-<a href="http://devt.de/docs/pkg/devt.de/eliasdb/">
-<img src="https://devt.de/nightly/godoc_badge.svg" alt="Go Doc"></a>
-<a href="https://gitter.im/eliasdb/Lobby">
-<img src="https://badges.gitter.im/gitterHQ/gitter.svg" alt="Gitter Chat"></a>
+<a href="https://void.devt.de/pub/eliasdb/coverage.txt"><img src="https://void.devt.de/pub/eliasdb/test_result.svg" alt="Code coverage"></a>
+<a href="https://goreportcard.com/report/devt.de/krotik/eliasdb">
+<img src="https://goreportcard.com/badge/devt.de/krotik/eliasdb?style=flat-square" alt="Go Report Card"></a>
+<a href="https://godoc.org/devt.de/krotik/eliasdb">
+<img src="https://godoc.org/devt.de/krotik/eliasdb?status.svg" alt="Go Doc"></a>
 </p>
 
 Features
 --------
-- Build on top of a fast key-value store which supports transactions and memory-only storage.
+- Build on top of a custom key-value store which supports transactions and memory-only storage.
 - Data is stored in nodes (key-value objects) which are connected via edges.
 - Stored graphs can be separated via partitions.
 - Stored graphs support cascading deletions - delete one node and all its "children".
 - All stored data is indexed and can be quickly searched via a full text phrase search.
+- EliasDB has a GraphQL interface which can be used to store and retrieve data.
 - For more complex queries EliasDB has an own query language called EQL with an sql-like syntax.
-- Written in Go from scratch. No third party libraries were used apart from Go's standard library.
+- Written in Go from scratch. Only uses gorilla/websocket to support websockets for GraphQL subscriptions.
 - The database can be embedded or used as a standalone application.
-- When used as a standalone application it comes with an internal HTTPS webserver which
-  provides a REST API and a basic file server.
-- When used as an embedded database it supports transactions with rollbacks, iteration of data
-  and rule based consistency management.
+- When used as a standalone application it comes with an internal HTTPS webserver which provides user management, a REST API and a basic file server.
+- When used as an embedded database it supports transactions with rollbacks, iteration of data and rule based consistency management.
 
 Getting Started (standalone application)
 ----------------------------------------
-You can download a precompiled package for Windows (win64) or Linux (amd64) [here](https://devt.de/build_status.html).
+You can download a precompiled package for Windows (win64) or Linux (amd64) [here](https://void.devt.de/pub/eliasdb).
 
-Extract it and execute the executable. The executable should automatically create 3 subfolders and a configuration file. It should start an HTTPS server on port 9090. To see a terminal point your webbrowser to:
+Extract it and execute the executable with:
+```
+eliasdb server
+```
+The executable should automatically create 3 subfolders and a configuration file. It should start an HTTPS server on port 9090. To see a terminal point your webbrowser to:
 ```
 https://localhost:9090/db/term.html
 ```
 After accepting the self-signed certificate from the server you should see a web terminal. EliasDB can be stopped with a simple CTRL+C or by overwriting the content in eliasdb.lck with a single character.
 
+Getting Started (docker image)
+------------------------------
+You can pull the latest docker image of EliasDB from [Dockerhub](https://hub.docker.com/r/krotik/eliasdb):
+```
+docker pull krotik/eliasdb
+```
+
+Create an empty directory, change into it and run the following to start the server:
+```
+docker run --user $(id -u):$(id -g) -v $PWD:/data -p 9090:9090 krotik/eliasdb server
+```
+This exposes port 9090 from the container on the local machine. All runtime related files are written to the current directory as the current user/group.
+
+Connect to the running server with a console by running:
+```
+docker run --rm --network="host" -it -v $PWD:/data --user $(id -u):$(id -g) -v $PWD:/data krotik/eliasdb console
+```
+
 ### Tutorial:
 
-To get an idea of what EliasDB is about have a look at the [tutorial](/examples/tutorial/doc/tutorial.md).
+To get an idea of what EliasDB is about have a look at the [tutorial](https://devt.de/krotik/eliasdb/src/master/examples/tutorial/doc/tutorial.md). This tutorial will cover the basics of EQL and show how data is organized.
+
+There is a separate [tutorial](https://devt.de/krotik/eliasdb/src/master/examples/tutorial/doc/tutorial_graphql.md) on using ELiasDB with GraphQL.
 
 ### REST API:
 
-The terminal uses a REST API to communicate with the backend. The REST API can be browsed using a dynamically generated swagger.json definition (https://localhost:9090/db/swagger.json). You can browse the API of EliasDB's latest version [here](http://petstore.swagger.io/?url=https://raw.githubusercontent.com/krotik/eliasdb/master/doc/swagger.json#/default).
+The terminal uses a REST API to communicate with the backend. The REST API can be browsed using a dynamically generated swagger.json definition (https://localhost:9090/db/swagger.json). You can browse the API of EliasDB's latest version [here](http://petstore.swagger.io/?url=https://devt.de/krotik/eliasdb/raw/master/swagger.json).
 
 ### Command line options
 The main EliasDB executable has two main tools:
@@ -96,7 +116,7 @@ info    Returns general database information.
 part    Displays or sets the current partition.
 ver     Displays server version information.
 ```
-It is also possible to directly run EQL queries on the console. Use the arrow keys to cycle through the command history.
+It is also possible to directly run EQL and GraphQL queries on the console. Use the arrow keys to cycle through the command history.
 
 ### Configuration
 EliasDB uses a single configuration file called eliasdb.config.json. After starting EliasDB for the first time it should create a default configuration file. Available configurations are:
@@ -129,39 +149,76 @@ EliasDB uses a single configuration file called eliasdb.config.json. After start
 
 Note: It is not (and will never be) possible to access the REST API via HTTP.
 
+Enabling Access Control
+-----------------------
+It is possible to enforce access control by enabling the `EnableAccessControl` configuration option. When started with enabled access control EliasDB will only allow known users to connect. Users must authenticate with a password before connecting to the web interface or the REST API. On the first start with the flag enabled the following users are created by default:
+
+|Username|Default Password|Groups|Description|
+|---|---|---|---|
+|elias|elias|admin/public|Default Admin|
+|johndoe|doe|public|Default unprivileged user|
+
+Users can be managed from the console. Please do either delete the default users or change their password after starting EliasDB.
+
+Users are organized in groups and permissions are assigned to groups. Permissions are given to endpoints of the REST API. The following permissions are available:
+
+|Type|Allowed HTTP Request Type|Description|
+|---|---|---|
+|Create|Post|Creating new data|
+|Read|Get|Read data|
+|Update|Put|Modify existing data|
+|Delete|Delete|Delete data|
+
+The default group permissions are:
+
+|Group|Path|Permissions|
+|---|---|---|
+|admin|/db/*|`CRUD`|
+|public|/|`-R--`|
+||/css/*|`-R--`|
+||/db/*|`-R--`|
+||/img/*|`-R--`|
+||/js/*|`-R--`|
+||/vendor/*|`-R--`|
+
+
 Building EliasDB
 ----------------
-To build EliasDB from source you need to have Go installed. There a are two options:
+To build EliasDB from source you need to have Go installed (go >= 1.12):
 
-### Checkout from github (use this method if you want code + documentation and tutorials):
-
-Create a directory, change into it and run:
+- Create a directory, change into it and run:
 ```
-git clone https://github.com/krotik/eliasdb/ .
+git clone https://devt.de/krotik/eliasdb/ .
 ```
 
-Assuming your GOPATH is set to the new directory you should be able to build the binary with:
+- You can build EliasDB's executable with:
 ```
-go install devt.de/eliasdb/cli
-```
-
-### Using go get (use this method if you want to embed EliasDB in your project):
-
-Create a directory, change into it and run:
-```
-go get devt.de/common/... devt.de/eliasdb/...
+go build cli/eliasdb.go
 ```
 
-Assuming your GOPATH is set to the new directory you should be able to build the binary with:
+Building EliasDB as Docker image
+--------------------------------
+EliasDB can be build as a secure and compact Docker image.
+
+- Create a directory, change into it and run:
 ```
-go build devt.de/eliasdb/cli
+git clone https://devt.de/krotik/eliasdb/ .
 ```
+
+- You can now build the Docker image with:
+```
+docker build --tag krotik/eliasdb .
+```
+
+Example Applications
+--------------------
+[Chat](https://devt.de/krotik/eliasdb/src/master/examples/chat/doc/chat.md) - A simple chat application showing user management and subscriptions.
 
 Further Reading
 ---------------
-- A design document which describes the different components of the graph database. [Link](/doc/elias_db_design.md)
-- A reference for the EliasDB query language EQL. [Link](/doc/eql.md)
-- A quick overview of what you can do when you embed EliasDB in your own Go project. [Link](/doc/embedding.md)
+- A design document which describes the different components of the graph database. [Link](https://devt.de/krotik/eliasdb/src/master/eliasdb_design.md)
+- A reference for the EliasDB query language EQL. [Link](https://devt.de/krotik/eliasdb/src/master/eql.md)
+- A quick overview of what you can do when you embed EliasDB in your own Go project. [Link](https://devt.de/krotik/eliasdb/src/master/embedding.md)
 
 License
 -------

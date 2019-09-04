@@ -1,0 +1,53 @@
+/*
+Access control file for EliasDB. This file controls the access rights for each user.
+Rights to resources are assigned to groups. Users are assigned to groups.
+
+This file is monitored by the server - any changes to this file are picked up
+by the server immediately. Equally, any change on the server side is immediately
+written to this file.
+
+The comments in this file are for initial comprehension only. They will be
+removed as soon as the users, groups or permissions are modified from the
+server side.
+*/
+{
+  "groups": {
+    "public": {
+
+      // Page access
+      // ===========
+
+      "/": "-R--",               // Access to the root page
+      "/dist/chat.js": "-R--",   // Access to the chat application
+
+      // Resource access
+      // ===============
+
+      "/css/*": "-R--",    // Access to CSS rules
+      "/js/*": "-R--",     // Access to JavaScript files
+      "/img/*": "-R--",    // Access to image files
+      "/vendor/*": "-R--", // Access to frontend libraries
+
+      // REST API access
+      // ===============
+
+      "/db/*": "-R--"      // Access to database (read)
+    },
+    "admin": {
+
+      // REST API access
+      // ===============
+
+      "/db/*": "CRUD"      // Access to database
+    }
+  },
+  "users": {
+    "elias": [    // Default EliasDB admin user
+      "public",
+      "admin"
+    ],
+	"johndoe" : [ // Default EliasDB public user
+	  "public"
+	]
+  }
+}

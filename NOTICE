@@ -1,0 +1,9 @@
+EliasDB - Graph-based database
+Copyright (c) 2016 Matthias Ladkau
+
+The following components are included in this product:
+
+Gorilla WebSocket
+https://github.com/gorilla/websocket
+Copyright (c) 2013 The Gorilla WebSocket Authors
+Licensed under the MIT License

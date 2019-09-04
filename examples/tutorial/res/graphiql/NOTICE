@@ -1,0 +1,5 @@
+This is GraphiQL - A graphical interactive in-browser GraphQL IDE.
+see: https://github.com/graphql/graphiql
+
+Using subscriptions-transport-ws - A GraphQL WebSocket client to facilitate GraphQL subscriptions over WebSockets.
+see: https://github.com/apollographql/subscriptions-transport-ws

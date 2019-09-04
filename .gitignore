@@ -1,0 +1,12 @@
+.cache
+.cover
+.eliasdb_console_history
+coverage.txt
+coverage.out
+coverage.html
+test
+/dist
+build
+eliasdb
+examples/tutorial/run/
+examples/chat/run/
