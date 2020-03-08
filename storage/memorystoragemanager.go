@@ -71,7 +71,7 @@ type MemoryStorageManager struct {
 	Data  map[uint64]interface{} // Map of data
 	mutex *sync.Mutex            // Mutex to protect map operations
 
-	LocCount  uint64         // Counter for locations
+	LocCount  uint64         // Counter for locations - Must start > 0
 	AccessMap map[uint64]int // Special map to simulate access issues
 }
 
@@ -79,6 +79,11 @@ type MemoryStorageManager struct {
 NewMemoryStorageManager creates a new MemoryStorageManager
 */
 func NewMemoryStorageManager(name string) *MemoryStorageManager {
+
+	// LocCount must start > 0 - so they can be stored in a Root. Roots with
+	// the value 0 are considered empty. See also graph.getHTree which will
+	// keep creating new HTrees if a Root is 0.
+
 	return &MemoryStorageManager{name, make(map[int]uint64),
 		make(map[uint64]interface{}), &sync.Mutex{}, 1, make(map[uint64]int)}
 }
@@ -91,7 +96,7 @@ func (msm *MemoryStorageManager) Name() string {
 }
 
 /*
-Root returns a root value.
+Root returns a root value. Default (empty) value is 0.
 */
 func (msm *MemoryStorageManager) Root(root int) uint64 {
 	msm.mutex.Lock()

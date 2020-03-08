@@ -41,7 +41,7 @@ ENTRYPOINT ["../eliasdb"]
 #
 # docker run --rm --user $(id -u):$(id -g) -v $PWD:/data -p 9090:9090 krotik/eliasdb server
 
-# To run the console as the current user, use the eliasdb.config.json in 
-# the local directory
+# To run the console as the current user and use the eliasdb.config.json in 
+# the local directory run:
 
 # docker run --rm --network="host" -it -v $PWD:/data --user $(id -u):$(id -g) -v $PWD:/data krotik/eliasdb console

@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  frontend:
+    image: data-mining/frontend:latest
+    container_name: frontend
+    ports:
+      - 4040:80
+    # Uncomment to directly edit the frontend
+    # volumes:
+    #   - ./docker-images/frontend/app:/usr/share/nginx/html
+    networks:
+      - back-tier
+
+  eliasdb1:
+    image: data-mining/eliasdb1:latest
+    container_name: eliasdb1
+    ports:
+      - 4041:9090
+    networks:
+      - back-tier
+
+  eliasdb2:
+    image: data-mining/eliasdb2:latest
+    container_name: eliasdb2
+    ports:
+      - 4042:9090
+    networks:
+      - back-tier
+
+  eliasdb3:
+    image: data-mining/eliasdb3:latest
+    container_name: eliasdb3
+    ports:
+      - 4043:9090
+    networks:
+      - back-tier
+
+  collector:
+    image: data-mining/collector:latest
+    container_name: collector
+    networks:
+      - back-tier
+
+networks:
+  back-tier:

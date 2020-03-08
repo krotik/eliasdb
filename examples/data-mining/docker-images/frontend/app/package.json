@@ -1,0 +1,33 @@
+{
+  "name": "data-mining-frontend",
+  "version": "1.0.0",
+  "description": "The frontend of the data-mining example",
+  "main": "bundle.js",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch",
+    "pretty": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' --quiet --fix"
+  },
+  "author": "Matthias Ladkau",
+  "license": "ISC",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^1.13.0",
+    "@typescript-eslint/parser": "^1.13.0",
+    "css-loader": "^3.1.0",
+    "eslint": "^6.1.0",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "prettier": "^1.18.2",
+    "ts-loader": "^6.0.4",
+    "typescript": "^3.5.3",
+    "vue": "^2.6.10",
+    "vue-loader": "^15.7.1",
+    "vue-template-compiler": "^2.6.10",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6"
+  },
+  "dependencies": {
+    "chart.js": "^2.9.3",
+    "vue-chartjs": "^3.5.0"
+  }
+}

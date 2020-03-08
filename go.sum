@@ -1,4 +1,4 @@
-devt.de/krotik/common v1.0.0 h1:nMmFFkjqb8C/oFVfsEi39qnCUbu3J1FXg+FZn5gSOQU=
-devt.de/krotik/common v1.0.0/go.mod h1:X4nsS85DAxyHkwSg/Tc6+XC2zfmGeaVz+37F61+eSaI=
+devt.de/krotik/common v1.1.0 h1:8xNZ2CwGWon6PqpWHwPhYMnkEOIiIPwdCgGoJCMyj6o=
+devt.de/krotik/common v1.1.0/go.mod h1:X4nsS85DAxyHkwSg/Tc6+XC2zfmGeaVz+37F61+eSaI=
 github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=

@@ -806,7 +806,7 @@ const ClusterTermSRC = `
             padding: 10px;
             border: #000000 2px solid;
             border-radius: 10px;
-            margin: 3em 0 0 0;
+            margin: 3em 0 0 1em;
         }
 
         .c-term h2 {
@@ -821,7 +821,7 @@ const ClusterTermSRC = `
 
         .c-term input {
             padding: 2px;
-            width:100%;
+            width:95%;
         }
 
         .c-term .term_result {
@@ -853,7 +853,7 @@ const ClusterTermSRC = `
             padding: 10px;
             border: #000000 2px solid;
             border-radius: 10px;
-            margin: 3em 0 0 0;
+            margin: 3em 1em 0 0;
         }
 
         .c-log pre {
@@ -874,7 +874,7 @@ const ClusterTermSRC = `
             padding: 10px;
             border: #000000 2px solid;
             border-radius: 10px;
-            margin: 3em 0 0 0;
+            margin: 3em 0 0 1em;
             max-width: 80%;
             word-wrap: break-word;
         }

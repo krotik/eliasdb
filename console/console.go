@@ -109,6 +109,11 @@ type CommandConsoleAPI interface {
 	Authenticate(force bool)
 
 	/*
+	   Url returns the current connection URL.
+	*/
+	Url() string
+
+	/*
 	   Partition returns the current partition.
 	*/
 	Partition() string
@@ -209,6 +214,13 @@ type EliasDBConsole struct {
 	CommandMap     map[string]Command      // Map of registered commands
 	GetCredentials func() (string, string) // Ask the user for credentials
 	GetPassword    func() string           // Ask the user for a password
+}
+
+/*
+Url returns the current connected server URL.
+*/
+func (c *EliasDBConsole) Url() string {
+	return c.url
 }
 
 /*

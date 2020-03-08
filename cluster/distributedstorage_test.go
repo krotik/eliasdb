@@ -118,8 +118,8 @@ func TestMainDBDistribution(t *testing.T) {
 
 	// Setup a cluster
 
-	// Housekeeping frequency is low so the test runs fast and we have it
-	// interfering - try to produce dead locks, etc ...
+	// Housekeeping frequency is high so we have it interfering - try to
+	// produce dead locks, etc ...
 
 	manager.FreqHousekeeping = 5
 	defer func() { manager.FreqHousekeeping = 1000 }()
@@ -291,7 +291,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 		return
 	}
 
-	if loc, err := sm.Insert("test1"); loc != 0 || err != nil {
+	if loc, err := sm.Insert("test1"); loc != 1 || err != nil {
 		t.Error("Unexpected result:", loc, err)
 		return
 	}
@@ -319,12 +319,12 @@ func TestSimpleDataDistribution(t *testing.T) {
 
 	sm.Flush()
 
-	if loc, err := sm.Insert("test4"); loc != 1 || err != nil {
+	if loc, err := sm.Insert("test4"); loc != 2 || err != nil {
 		t.Error("Unexpected result:", loc, err)
 		return
 	}
 
-	if loc, err := sm.Insert("test5"); loc != 2 || err != nil {
+	if loc, err := sm.Insert("test5"); loc != 4 || err != nil {
 		t.Error("Unexpected result:", loc, err)
 		return
 	}
@@ -333,11 +333,11 @@ func TestSimpleDataDistribution(t *testing.T) {
 
 	var res string
 
-	if err := sm.Fetch(0, &res); res != "test1" || err != nil {
+	if err := sm.Fetch(1, &res); res != "test1" || err != nil {
 		t.Error("Unexpected result:", res, err)
 		return
 	}
-	if err := sm.Fetch(1, &res); res != "test4" || err != nil {
+	if err := sm.Fetch(2, &res); res != "test4" || err != nil {
 		t.Error("Unexpected result:", res, err)
 		return
 	}
@@ -345,7 +345,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 		t.Error("Unexpected result:", res, err)
 		return
 	}
-	if err := sm.Fetch(2, &res); res != "test5" || err != nil {
+	if err := sm.Fetch(4, &res); res != "test5" || err != nil {
 		t.Error("Unexpected result:", res, err)
 		return
 	}
@@ -356,7 +356,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 
 	// Update some data
 
-	if err := sm.Update(0, "test11"); err != nil {
+	if err := sm.Update(1, "test11"); err != nil {
 		t.Error("Unexpected result:", err)
 		return
 	}
@@ -367,7 +367,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 
 	// Lookup the data again
 
-	if err := sm.Fetch(0, &res); res != "test11" || err != nil {
+	if err := sm.Fetch(1, &res); res != "test11" || err != nil {
 		t.Error("Unexpected result:", res, err)
 		return
 	}
@@ -417,7 +417,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 
 	lsm.Update(1, "test11")
 
-	if err := sm.Fetch(0, &res); err.Error() !=
+	if err := sm.Fetch(1, &res); err.Error() !=
 		"gob: decoding into local type *[]uint8, received remote type string" {
 		t.Error("Unexpected result:", res, err)
 		return
@@ -425,7 +425,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 
 	// Delete some data
 
-	if err := sm.Free(0); err != nil {
+	if err := sm.Free(1); err != nil {
 		t.Error("Unexpected result:", err)
 		return
 	}
@@ -442,7 +442,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 		return
 	}
 	res = ""
-	if err := sm.Fetch(2, &res); res != "test5" || err != nil {
+	if err := sm.Fetch(4, &res); res != "test5" || err != nil {
 		t.Error("Unexpected result:", res, err)
 		return
 	}

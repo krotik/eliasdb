@@ -18,7 +18,7 @@ Above the StorageFile and its records is a page management system. The first rec
 
 Slots for storing data
 ----------------------------------
-The lists of pages are used to manage data slots. A data slot has a unique id (location) and can store an arbitrary amount of data. There are two types of slots: physical slots and logical slots. 
+The lists of pages are used to manage data slots. A data slot has a unique id (location) and can store an arbitrary amount of data. There are two types of slots: physical slots and logical slots.
 
 Physical slots are allocated space in StorageFile records. The amount of data a physical slot can store depends on its initial allocation - writing beyond the boundaries would overwrite data in other slots.
 
@@ -76,6 +76,6 @@ The distribution wrapper cluster.DistributedStorage provides a fully transparent
 
 The code tries to be as transparent as possible and will only involve client code during serious errors. Conflicts are usually solved by a simple "last one wins" policy. Availability is more important than 100% consistency. Background tasks ensure eventual consistency. The clustering code is split into two main parts: cluster management and data distribution.
 
-The cluster management code in cluster/manager provides client / server interfaces for the single cluster members. It provides automatic configuration distribution, communication security and failure detection. The cluster is secured by a shared secret string which is never directly transmitted via the network. A periodically housekeeping task is used to detect member failures and synchronizing member state.
+The cluster management code in cluster/manager provides client / server interfaces for the single cluster members. It provides automatic configuration distribution, communication security and failure detection. The cluster is secured by a shared secret string which is never directly transmitted via the network. A periodic housekeeping task is used to detect member failures and synchronizing member state.
 
 The data distribution code manages the actual distribution and replication of data. Depending on the configured replication factor each stored datum is replicated to multiple members in the cluster. The cluster size may expand or shrink (if replication factor > 1). With a replication factor of n the cluster becomes inoperable when more than n-1 members fail. Data is synchronized between members using simple Lamport timestamps. The cluster only provides eventual consistency. Recovering members are not updated immediately and may deliver outdated results for some time.

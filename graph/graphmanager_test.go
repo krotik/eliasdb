@@ -30,9 +30,12 @@ const GraphManagerTestDBDir1 = "gmtest1"
 const GraphManagerTestDBDir2 = "gmtest2"
 const GraphManagerTestDBDir3 = "gmtest3"
 const GraphManagerTestDBDir4 = "gmtest4"
+const GraphManagerTestDBDir5 = "gmtest5"
+const GraphManagerTestDBDir6 = "gmtest6"
 
 var DBDIRS = []string{GraphManagerTestDBDir1, GraphManagerTestDBDir2,
-	GraphManagerTestDBDir3, GraphManagerTestDBDir4}
+	GraphManagerTestDBDir3, GraphManagerTestDBDir4, GraphManagerTestDBDir5,
+	GraphManagerTestDBDir6}
 
 const InvlaidFileName = "**" + string(0x0)
 

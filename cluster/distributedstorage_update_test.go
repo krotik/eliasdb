@@ -62,7 +62,7 @@ func TestSimpleDataReplicationUpdate(t *testing.T) {
 
 	// Insert two strings into the store
 
-	if loc, err := sm.Insert("test1"); loc != 0 || err != nil {
+	if loc, err := sm.Insert("test1"); loc != 1 || err != nil {
 		t.Error("Unexpected result:", loc, err)
 		return
 	}
@@ -92,10 +92,10 @@ func TestSimpleDataReplicationUpdate(t *testing.T) {
 	if res := clusterLayout(ms, "test"); res != `
 TestClusterMember-0 MemberStorageManager mgs1/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 1 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
 TestClusterMember-1 MemberStorageManager mgs2/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 1 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
 cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
@@ -113,7 +113,7 @@ cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
 	manager.MemberErrors[cluster3[0].MemberManager.Name()] = &testNetError{}
 	cluster3[0].MemberManager.StopHousekeeping = true
 
-	if err := sm.Update(0, "test1updated"); err != nil {
+	if err := sm.Update(1, "test1updated"); err != nil {
 		t.Error("Unexpected result:", err)
 		return
 	}
@@ -124,12 +124,12 @@ cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
 	if res := clusterLayout(ms, "test"); res != `
 TestClusterMember-0 MemberStorageManager mgs1/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 0 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
+cloc: 1 (v:1) - lloc: 1 - "\b\f\x00\x05test1"
 TestClusterMember-1 MemberStorageManager mgs2/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 0 (v:2) - lloc: 1 - "\x0f\f\x00\ftest1updated"
+cloc: 1 (v:2) - lloc: 1 - "\x0f\f\x00\ftest1updated"
 cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
-transfer: [TestClusterMember-0] - Update {"Loc":0,"StoreName":"test","Ver":2} "\x0f\f\x00\ftest1updated"
+transfer: [TestClusterMember-0] - Update {"Loc":1,"StoreName":"test","Ver":2} "\x0f\f\x00\ftest1updated"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
 cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
@@ -159,10 +159,10 @@ cloc: 3 (v:1) - lloc: 1 - "\b\f\x00\x05test2"
 	if res := clusterLayout(ms, "test"); res != `
 TestClusterMember-0 MemberStorageManager mgs1/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 0 (v:2) - lloc: 1 - "\x0f\f\x00\ftest1updated"
+cloc: 1 (v:2) - lloc: 1 - "\x0f\f\x00\ftest1updated"
 TestClusterMember-1 MemberStorageManager mgs2/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 
-cloc: 0 (v:2) - lloc: 1 - "\x0f\f\x00\ftest1updated"
+cloc: 1 (v:2) - lloc: 1 - "\x0f\f\x00\ftest1updated"
 cloc: 3 (v:1) - lloc: 2 - "\b\f\x00\x05test2"
 TestClusterMember-2 MemberStorageManager mgs3/ls_test
 Roots: 0=0 1=0 2=0 3=0 4=0 5=0 6=0 7=0 8=0 9=0 

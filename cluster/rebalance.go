@@ -108,7 +108,7 @@ func (ms *memberStorage) rebalanceWorker(forceRun bool) {
 
 				maintMgmts = append(maintMgmts, smname)
 				maintLocs = append(maintLocs, cloc)
-				maintVers = append(maintVers, tr.ver)
+				maintVers = append(maintVers, tr.Ver)
 			}
 		}
 

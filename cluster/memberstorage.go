@@ -189,7 +189,7 @@ func (ms *memberStorage) handleSetRootRequest(distTable *DistributionTable, requ
 
 	sm := ms.dataStorage(dsname, true)
 
-	sm.SetRoot(root, request.Value.(uint64))
+	sm.SetRoot(root, toUInt64(request.Value))
 
 	if !request.Transfer {
 		ms.at.AddTransferRequest(distTable.OtherReplicationMembers(0, ms.ds.MemberManager.Name()),
@@ -227,14 +227,15 @@ func (ms *memberStorage) handleInsertRequest(distTable *DistributionTable, reque
 
 		// If this is a transfer request we know already the cluster location
 
-		cloc = request.Args[RPLoc].(uint64)
+		cloc = toUInt64(request.Args[RPLoc])
 	}
 
 	if err == nil {
+		var loc uint64
 
 		// Insert into the local storage
 
-		loc, err := sm.Insert(request.Value)
+		loc, err = sm.Insert(request.Value)
 
 		if err == nil {
 
@@ -285,7 +286,7 @@ func (ms *memberStorage) handleUpdateRequest(distTable *DistributionTable, reque
 	var newVersion uint64
 
 	dsname := request.Args[RPStoreName].(string)
-	cloc := request.Args[RPLoc].(uint64)
+	cloc := toUInt64(request.Args[RPLoc])
 	*response = 0
 
 	// Get the translation
@@ -301,14 +302,14 @@ func (ms *memberStorage) handleUpdateRequest(distTable *DistributionTable, reque
 			// Update the local storage
 
 			if !request.Transfer {
-				err = sm.Update(transRec.loc, request.Value)
-				newVersion = transRec.ver + 1
+				err = sm.Update(transRec.Loc, request.Value)
+				newVersion = transRec.Ver + 1
 
 			} else {
-				newVersion = request.Args[RPVer].(uint64)
+				newVersion = toUInt64(request.Args[RPVer])
 
-				if newVersion >= transRec.ver {
-					err = sm.Update(transRec.loc, request.Value)
+				if newVersion >= transRec.Ver {
+					err = sm.Update(transRec.Loc, request.Value)
 
 				} else {
 
@@ -330,7 +331,7 @@ func (ms *memberStorage) handleUpdateRequest(distTable *DistributionTable, reque
 
 				// Increase the version of the translation record
 
-				_, _, err = ms.at.SetTransClusterLoc(dsname, cloc, transRec.loc, newVersion)
+				_, _, err = ms.at.SetTransClusterLoc(dsname, cloc, transRec.Loc, newVersion)
 
 				if err == nil {
 
@@ -380,7 +381,7 @@ func (ms *memberStorage) handleFreeRequest(distTable *DistributionTable, request
 	var err error
 
 	dsname := request.Args[RPStoreName].(string)
-	cloc := request.Args[RPLoc].(uint64)
+	cloc := toUInt64(request.Args[RPLoc])
 
 	// Get the translation
 
@@ -400,7 +401,7 @@ func (ms *memberStorage) handleFreeRequest(distTable *DistributionTable, request
 
 				// Remove from the local storage
 
-				err = sm.Free(transRec.loc)
+				err = sm.Free(transRec.Loc)
 
 				if !request.Transfer {
 
@@ -439,7 +440,7 @@ func (ms *memberStorage) handleFetchRequest(distTable *DistributionTable,
 	var err error
 
 	dsname := request.Args[RPStoreName].(string)
-	cloc := request.Args[RPLoc].(uint64)
+	cloc := toUInt64(request.Args[RPLoc])
 
 	// Get the translation
 
@@ -461,7 +462,7 @@ func (ms *memberStorage) handleFetchRequest(distTable *DistributionTable,
 		if sm != nil {
 			var res []byte
 
-			err = sm.Fetch(transRec.loc, &res)
+			err = sm.Fetch(transRec.Loc, &res)
 
 			if err == nil {
 
@@ -546,7 +547,7 @@ func (ms *memberStorage) handleRebalanceRequest(distTable *DistributionTable, re
 
 			// Check if the version is newer and update the local record if it is
 
-			if tr.ver < ver {
+			if tr.Ver < ver {
 
 				// Local record exists and needs to be updated
 
@@ -563,11 +564,11 @@ func (ms *memberStorage) handleRebalanceRequest(distTable *DistributionTable, re
 
 					// Update the local storage
 
-					if err = sm.Update(tr.loc, res); err == nil {
+					if err = sm.Update(tr.Loc, res); err == nil {
 
 						// Update the translation
 
-						_, _, err = ms.at.SetTransClusterLoc(smname, cloc, tr.loc, ver)
+						_, _, err = ms.at.SetTransClusterLoc(smname, cloc, tr.Loc, ver)
 
 						manager.LogDebug(ms.ds.MemberManager.Name(),
 							fmt.Sprintf("(Store): Rebalance updated %v location: %v", smname, cloc))
@@ -621,7 +622,7 @@ func (ms *memberStorage) handleRebalanceRequest(distTable *DistributionTable, re
 
 				manager.LogDebug(ms.ds.MemberManager.Name(),
 					fmt.Sprintf("(Store): Rebalance removes %v location: %v from member %v",
-						smname, tr.loc, rsource))
+						smname, tr.Loc, rsource))
 
 				_, err = ms.ds.sendDataRequest(rsource, &DataRequest{RTFree, map[DataRequestArg]interface{}{
 					RPStoreName: smname,
@@ -662,15 +663,15 @@ func (ms *memberStorage) dump(smname string) string {
 			if val != nil {
 				tr := val.(*transferRec)
 
-				args, _ := json.Marshal(tr.request.Args)
+				args, _ := json.Marshal(tr.Request.Args)
 
-				vals, ok := tr.request.Value.([]byte)
+				vals, ok := tr.Request.Value.([]byte)
 				if !ok {
-					vals, _ = json.Marshal(tr.request.Value)
+					vals, _ = json.Marshal(tr.Request.Value)
 				}
 
 				buf.WriteString(fmt.Sprintf("transfer: %v - %v %v %q\n",
-					tr.members, tr.request.RequestType, string(args), vals))
+					tr.Members, tr.Request.RequestType, string(args), vals))
 			}
 		}
 	}
@@ -721,11 +722,11 @@ func (ms *memberStorage) dump(smname string) string {
 				k, v := it.Next()
 				key := string(k)
 
-				if strings.HasPrefix(key, transPrefix) {
+				if strings.HasPrefix(key, fmt.Sprint(transPrefix, smname, "#")) {
 					key = string(key[len(fmt.Sprint(transPrefix, smname, "#")):])
 
-					locmap[v.(*translationRec).loc] = fmt.Sprintf("%v (v:%v)",
-						key, v.(*translationRec).ver)
+					locmap[v.(*translationRec).Loc] = fmt.Sprintf("%v (v:%v)",
+						key, v.(*translationRec).Ver)
 				}
 			}
 

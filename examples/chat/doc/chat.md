@@ -4,7 +4,7 @@ This example demonstrates a simple application which uses advanced features of E
 - User Management
 - GraphQL subscriptions
 
-The tutorial assumes you have downloaded EliasDB and extracted it. For this tutorial please execute "start.sh" or "start.bat" in the subdirectory: examples/chat
+The tutorial assumes you have downloaded EliasDB, extracted and build it. For this tutorial please execute "start.sh" or "start.bat" in the subdirectory: examples/chat
 
 After starting EliasDB point your browser to:
 ```

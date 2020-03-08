@@ -73,15 +73,15 @@ func (ms *memberStorage) transferWorker() {
 
 			manager.LogDebug(ms.ds.Name(), "(TR): ",
 				fmt.Sprintf("Processing transfer request %v for %v from %v",
-					tr.request.RequestType, tr.members, ts))
+					tr.Request.RequestType, tr.Members, ts))
 
 			// Send the request to all members
 
 			var failedMembers []string
 
-			for _, member := range tr.members {
+			for _, member := range tr.Members {
 
-				if _, err := ms.ds.sendDataRequest(member, tr.request); err != nil {
+				if _, err := ms.ds.sendDataRequest(member, tr.Request); err != nil {
 					manager.LogDebug(ms.ds.Name(), "(TR): ",
 						fmt.Sprintf("Member %v Error: %v", member, err))
 
@@ -93,8 +93,8 @@ func (ms *memberStorage) transferWorker() {
 
 			if len(failedMembers) == 0 {
 				processed = append(processed, key)
-			} else if len(failedMembers) < len(tr.members) {
-				tr.members = failedMembers
+			} else if len(failedMembers) < len(tr.Members) {
+				tr.Members = failedMembers
 				ms.at.transfer.Put(key, tr)
 			}
 		}

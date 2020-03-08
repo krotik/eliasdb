@@ -25,8 +25,82 @@ import (
 	"devt.de/krotik/eliasdb/api"
 	"devt.de/krotik/eliasdb/cluster"
 	"devt.de/krotik/eliasdb/cluster/manager"
+	"devt.de/krotik/eliasdb/graph"
 	"devt.de/krotik/eliasdb/graph/graphstorage"
 )
+
+func TestClusterStorage(t *testing.T) {
+	clusterQueryURL := "http://localhost" + TESTPORT + EndpointClusterQuery
+	graphURL := "http://localhost" + TESTPORT + EndpointGraph
+
+	cluster2 := createCluster(2)
+
+	joinCluster(cluster2, t)
+
+	oldGM := api.GM
+	oldGS := api.GS
+	api.GS = cluster2[0]
+	api.GM = graph.NewGraphManager(cluster2[0])
+	api.DD = cluster2[0]
+	api.DDLog = datautil.NewRingBuffer(10)
+
+	defer func() {
+		api.GM = oldGM
+		api.GS = oldGS
+		api.DD = nil
+		api.DDLog = nil
+	}()
+
+	// We should now get back a state
+
+	st, _, res := sendTestRequest(clusterQueryURL, "GET", nil)
+
+	if st != "200 OK" || res != `
+{
+  "failed": null,
+  "members": [
+    "TestClusterMember-0",
+    "localhost:9020",
+    "TestClusterMember-1",
+    "localhost:9021"
+  ],
+  "replication": 1,
+  "ts": [
+    "TestClusterMember-0",
+    "2"
+  ],
+  "tsold": [
+    "TestClusterMember-0",
+    "1"
+  ]
+}`[1:] {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+
+	// Insert some data
+
+	st, _, res = sendTestRequest(graphURL+"i41health/n", "POST", []byte(`
+[{
+	"key":"3",
+	"kind":"Upload",
+	"parcel": "12345"
+}]
+`[1:]))
+
+	cluster.WaitForTransfer()
+
+	n, err := api.GM.FetchNode("i41health", "3", "Upload")
+
+	if err != nil || n.String() != `GraphNode:
+       key : 3
+      kind : Upload
+    parcel : 12345
+` {
+		t.Error("Unexpected result:", n, err)
+		return
+	}
+}
 
 func TestClusterQuery(t *testing.T) {
 	queryURL := "http://localhost" + TESTPORT + EndpointClusterQuery
@@ -53,8 +127,19 @@ func TestClusterQuery(t *testing.T) {
 
 	cluster2 := createCluster(2)
 
+	oldGM := api.GM
+	oldGS := api.GS
+	api.GS = cluster2[0]
+	api.GM = graph.NewGraphManager(cluster2[0])
 	api.DD = cluster2[0]
 	api.DDLog = datautil.NewRingBuffer(10)
+
+	defer func() {
+		api.GM = oldGM
+		api.GS = oldGS
+		api.DD = nil
+		api.DDLog = nil
+	}()
 
 	// We should now get back a state
 
@@ -339,13 +424,163 @@ func TestClusterQuery(t *testing.T) {
 	}
 }
 
+func TestClusterQueryBigCluster(t *testing.T) {
+	queryURL := "http://localhost" + TESTPORT + EndpointClusterQuery
+
+	// Create a big cluster
+
+	cluster3 := createCluster(3)
+
+	for _, dd := range cluster3 {
+		dd.Start()
+		defer dd.Close()
+	}
+
+	oldGM := api.GM
+	oldGS := api.GS
+	api.GS = cluster3[0]
+	api.GM = graph.NewGraphManager(cluster3[0])
+	api.DD = cluster3[0]
+	api.DDLog = datautil.NewRingBuffer(10)
+
+	defer func() {
+		api.GM = oldGM
+		api.GS = oldGS
+		api.DD = nil
+		api.DDLog = nil
+	}()
+
+	// We should now get back a state
+
+	st, _, res := sendTestRequest(queryURL, "GET", nil)
+
+	if st != "200 OK" || res != `
+{
+  "failed": null,
+  "members": [
+    "TestClusterMember-0",
+    "localhost:9020"
+  ],
+  "replication": 1,
+  "ts": [
+    "TestClusterMember-0",
+    "1"
+  ],
+  "tsold": [
+    "",
+    "0"
+  ]
+}`[1:] {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+
+	// Join more cluster members
+
+	api.DD = cluster3[1]
+	api.DDLog = datautil.NewRingBuffer(10)
+
+	jsonString, err := json.Marshal(map[string]interface{}{
+		"name":    cluster3[0].MemberManager.Name(),
+		"netaddr": cluster3[0].MemberManager.NetAddr(),
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	st, _, res = sendTestRequest(queryURL+"join", "PUT", jsonString)
+
+	if st != "200 OK" || res != "" {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+
+	st, _, res = sendTestRequest(queryURL, "GET", nil)
+
+	if st != "200 OK" || res != `
+{
+  "failed": null,
+  "members": [
+    "TestClusterMember-1",
+    "localhost:9021",
+    "TestClusterMember-0",
+    "localhost:9020"
+  ],
+  "replication": 1,
+  "ts": [
+    "TestClusterMember-0",
+    "2"
+  ],
+  "tsold": [
+    "TestClusterMember-0",
+    "1"
+  ]
+}`[1:] {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+
+	api.DD = cluster3[2]
+	api.DDLog = datautil.NewRingBuffer(10)
+
+	jsonString, err = json.Marshal(map[string]interface{}{
+		"name":    cluster3[0].MemberManager.Name(),
+		"netaddr": cluster3[0].MemberManager.NetAddr(),
+	})
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	st, _, res = sendTestRequest(queryURL+"join", "PUT", jsonString)
+
+	if st != "200 OK" || res != "" {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+
+	st, _, res = sendTestRequest(queryURL, "GET", nil)
+
+	if st != "200 OK" || res != `
+{
+  "failed": null,
+  "members": [
+    "TestClusterMember-2",
+    "localhost:9022",
+    "TestClusterMember-0",
+    "localhost:9020",
+    "TestClusterMember-1",
+    "localhost:9021"
+  ],
+  "replication": 1,
+  "ts": [
+    "TestClusterMember-0",
+    "3"
+  ],
+  "tsold": [
+    "TestClusterMember-0",
+    "2"
+  ]
+}`[1:] {
+		t.Error("Unexpected response:", st, res)
+		return
+	}
+}
+
 /*
 Create a cluster with n members (all storage is in memory)
 */
 func createCluster(n int) []*cluster.DistributedStorage {
 
+	// By default no log output
+
+	log.SetOutput(ioutil.Discard)
+
 	var mgs []*graphstorage.MemoryGraphStorage
 	var cs []*cluster.DistributedStorage
+
+	cluster.ClearMSMap()
 
 	for i := 0; i < n; i++ {
 		mgs = append(mgs, graphstorage.NewMemoryGraphStorage(fmt.Sprintf("mgs%v", i+1)).(*graphstorage.MemoryGraphStorage))
@@ -361,6 +596,26 @@ func createCluster(n int) []*cluster.DistributedStorage {
 	}
 
 	return cs
+}
+
+/*
+joinCluster joins up a given cluster.
+*/
+func joinCluster(cluster []*cluster.DistributedStorage, t *testing.T) {
+
+	for i, dd := range cluster {
+		dd.Start()
+		defer dd.Close()
+
+		if i > 0 {
+			err := dd.MemberManager.JoinCluster(cluster[0].MemberManager.Name(),
+				cluster[0].MemberManager.NetAddr())
+			if err != nil {
+				t.Error(err)
+				return
+			}
+		}
+	}
 }
 
 func checkStateInfo(mm *manager.MemberManager, expectedStateInfo string) error {

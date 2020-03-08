@@ -100,7 +100,12 @@ that the cluster has only one member.
 func NewDistributedStorage(gs graphstorage.Storage, config map[string]interface{},
 	stateInfo manager.StateInfo) (*DistributedStorage, error) {
 
-	ds, _, err := newDistributedAndMemberStorage(gs, config, stateInfo)
+	ds, ms, err := newDistributedAndMemberStorage(gs, config, stateInfo)
+
+	if _, ok := gs.(*graphstorage.MemoryGraphStorage); ok {
+		msmap[ds] = ms // Keep track of memory storages for debugging
+	}
+
 	return ds, err
 }
 

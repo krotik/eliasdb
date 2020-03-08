@@ -12,14 +12,9 @@ pipeline {
      * a new product version. The versioning will be according to the rules
      * of “Semantic Versioning” (https://semver.org/).
      *
-     * Building is done using goreleaser (https://goreleaser.com/) for different
-     * platforms.
+     * Building is done using simple make.
      *
-     * Testing produces code coverage badges which can be embedded on other
-     * pages.
-     *
-     * Everything runs in docker containers to ensure isolation of the build
-     * system and to allow painless upgrades.
+     * Testing produces code coverage badges which can be embedded web pages.
      */
 
     stages {
@@ -60,8 +55,7 @@ pipeline {
                     sh 'git fetch --tags'
                 }
 
-                sh 'mkdir -p .cache'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v $PWD/.cache:/.cache -v $PWD:/go/code -w /go/code goreleaser/goreleaser --snapshot --skip-publish --rm-dist'
+                sh '/opt/env-go/bin/env-go make dist'
             }
         }
         stage('Test') {
@@ -74,12 +68,12 @@ pipeline {
 
                 sh """echo '<svg width="88" height="20" xmlns="http://www.w3.org/2000/svg"><g shape-rendering="crispEdges"><path fill="#555" d="M0 0h41v20H0z"/><path fill="#fc1" d="M41 0h40v20H41z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="20.5" y="14">tests</text><text x="60" y="14">fail</text></g></svg>' > test_result.svg"""
 
-                sh 'docker run --rm -e GOPATH=/tmp -v $PWD:/go golang go test -p 1 --coverprofile=coverage.out ./...'
-                sh 'docker run --rm -e GOPATH=/tmp -v $PWD:/go golang go tool cover --html=coverage.out -o coverage.html'
+                sh 'CGO_ENABLED=0 /opt/env-go/bin/env-go go test -p 1 --coverprofile=coverage.out ./...'
+                sh '/opt/env-go/bin/env-go go tool cover --html=coverage.out -o coverage.html'
 
                 echo 'Determine overall coverage and writing badge'
                 script {
-                  coverage = sh(returnStdout: true, script: 'docker run --rm -e GOPATH=/tmp -v $PWD:/go golang go tool cover -func=coverage.out | tee coverage.txt | tail -1 | grep -o "[0-9]*.[0-9]*%$" | tr -d "\\n"')
+                  coverage = sh(returnStdout: true, script: '/opt/env-go/bin/env-go go tool cover -func=coverage.out | tee coverage.txt | tail -1 | grep -o "[0-9]*.[0-9]*%$" | tr -d "\\n"')
                   
                   echo "Overall coverage is: ${coverage}"
                   
@@ -105,7 +99,7 @@ pipeline {
                 sshagent (credentials: ['Gogs']) {
                     sh 'git fetch --tags'
                 }
-                sh 'docker run --rm -v $PWD:/app standard-version'
+                sh 'standard-version'
   
                 // The new version is inserted into the code
                 //

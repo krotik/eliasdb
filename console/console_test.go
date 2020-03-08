@@ -395,6 +395,7 @@ func TestNoAuthentication(t *testing.T) {
 	}
 
 	if res := out.String(); res != `
+Connected to: http://localhost:9090
 EliasDB `[1:]+config.ProductVersion+` (REST versions: [v1])
 ` {
 		t.Error("Unexpected result:", res)
@@ -461,6 +462,26 @@ Writer, 1
 	}
 
 	if ok, err := c.Run("help"); !ok || err != nil {
+		t.Error(ok, err)
+		return
+	}
+
+	if res := out.String(); res != `
+Command Description
+export  Exports the last output.
+find    Do a full-text search of the database.
+help    Display descriptions for all available commands.
+info    Returns general database information.
+part    Displays or sets the current partition.
+ver     Displays server version information.
+`[1:] {
+		t.Error("Unexpected result:", res)
+		return
+	}
+
+	out.Reset()
+
+	if ok, err := c.Run("?"); !ok || err != nil {
 		t.Error(ok, err)
 		return
 	}

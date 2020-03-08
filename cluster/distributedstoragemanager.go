@@ -43,7 +43,7 @@ Root returns a root value.
 func (dsm *DistributedStorageManager) Root(root int) uint64 {
 	var ret uint64
 
-	// Do not do anything is the cluster is not operational
+	// Do not do anything if the cluster is not operational
 
 	distTable, distTableErr := dsm.ds.DistributionTable()
 
@@ -80,7 +80,7 @@ func (dsm *DistributedStorageManager) Root(root int) uint64 {
 	dsm.rootError = err
 
 	if res != nil {
-		ret = res.(uint64)
+		ret = toUInt64(res)
 	}
 
 	return ret
@@ -192,7 +192,7 @@ func (dsm *DistributedStorageManager) insertOrUpdate(insert bool, loc uint64, o 
 	cloc, err := dsm.ds.sendDataRequest(member, request)
 
 	if err == nil {
-		return cloc.(uint64), err
+		return toUInt64(cloc), err
 
 	}
 
@@ -210,7 +210,7 @@ func (dsm *DistributedStorageManager) insertOrUpdate(insert bool, loc uint64, o 
 
 			cloc, nerr := dsm.ds.sendDataRequest(member, request)
 			if nerr == nil {
-				ret = cloc.(uint64)
+				ret = toUInt64(cloc)
 				err = nil
 				break
 			}
@@ -225,7 +225,7 @@ func (dsm *DistributedStorageManager) insertOrUpdate(insert bool, loc uint64, o 
 		for _, member := range replicatingMembers {
 			cloc, nerr := dsm.ds.sendDataRequest(member, request)
 			if nerr == nil {
-				ret = cloc.(uint64)
+				ret = toUInt64(cloc)
 				err = nil
 				break
 			}
