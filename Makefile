@@ -25,10 +25,13 @@ vet:
 build: clean mod fmt vet
 	go build -o $(NAME) cli/eliasdb.go
 
+build-mac: clean mod fmt vet
+	GOOS=darwin GOARCH=amd64 go build -o $(NAME).mac cli/eliasdb.go
+
 build-win: clean mod fmt vet
 	GOOS=windows GOARCH=amd64 go build -o $(NAME).exe cli/eliasdb.go
 
-dist: build build-win
+dist: build build-win build-mac
 	rm -fR dist
 
 	mkdir -p dist/$(NAME)_linux_amd64
@@ -36,6 +39,12 @@ dist: build build-win
 	cp LICENSE dist/$(NAME)_linux_amd64
 	cp NOTICE dist/$(NAME)_linux_amd64
 	tar --directory=dist -cz $(NAME)_linux_amd64 > dist/$(NAME)_$(TAG)_linux_amd64.tar.gz
+
+	mkdir -p dist/$(NAME)_darwin_amd64
+	mv $(NAME).mac dist/$(NAME)_darwin_amd64/$(NAME)
+	cp LICENSE dist/$(NAME)_darwin_amd64
+	cp NOTICE dist/$(NAME)_darwin_amd64
+	tar --directory=dist -cz $(NAME)_darwin_amd64 > dist/$(NAME)_$(TAG)_darwin_amd64.tar.gz
 
 	mkdir -p dist/$(NAME)_windows_amd64
 	mv $(NAME).exe dist/$(NAME)_windows_amd64
