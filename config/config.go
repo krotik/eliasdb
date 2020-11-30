@@ -25,7 +25,7 @@ import (
 /*
 ProductVersion is the current version of EliasDB
 */
-const ProductVersion = "1.0.3"
+const ProductVersion = "1.1.0"
 
 /*
 DefaultConfigFile is the default config file which will be used to configure EliasDB

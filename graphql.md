@@ -96,7 +96,29 @@ mutation {
   }
 }
 ```
-Possible arguments are `storeNode, storeEdge, removeNode and removeEdge`. Removal of nodes and edges requires only the `key` and `kind` to be specified. The operation allows retrieval of nodes as well (i.e. the single operation will insert *AND* retrieve data).
+Possible arguments are `storeNode, storeEdge, removeNode and removeEdge`. The operation allows retrieval of nodes as well (i.e. the single operation will insert *AND* retrieve data). Removal of edges requires only the `key` and `kind` to be specified. Removal of nodes requires only the `kind` to be specified. Using `removeNodes` with a missing `key` will remove all nodes of the kind.
+
+
+Variables
+---------
+To avoid parsing issues and possible security risks it is advisable to always use variables to pass data to EliasDB especially if it is a user-provided value. EliasDB supports all default GraphQL default types: string, integer, float
+```
+mutation($name: string) {
+    Person(storeNode: {
+        key: "hans"
+        name: $name
+    }) {
+        key
+        name
+    }
+}
+```
+The type name (in the example `string`) is not evaluated in EliasDB's GraphQL interpreter. The values should be send in a separate variables datastructure:
+```
+{
+  name: "Hans"
+}
+```
 
 Subscription to updates
 -----------------------

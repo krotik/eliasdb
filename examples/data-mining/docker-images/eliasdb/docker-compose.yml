@@ -1,0 +1,31 @@
+version: "3"
+
+# Sample file to just spin up the eliasdb cluster
+
+services:
+  eliasdb1:
+    image: data-mining/eliasdb1:latest
+    container_name: eliasdb1
+    ports:
+      - 4041:9090
+    networks:
+      - back-tier
+
+  eliasdb2:
+    image: data-mining/eliasdb2:latest
+    container_name: eliasdb2
+    ports:
+      - 4042:9090
+    networks:
+      - back-tier
+
+  eliasdb3:
+    image: data-mining/eliasdb3:latest
+    container_name: eliasdb3
+    ports:
+      - 4043:9090
+    networks:
+      - back-tier
+
+networks:
+  back-tier:

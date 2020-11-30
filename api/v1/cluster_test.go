@@ -80,7 +80,7 @@ func TestClusterStorage(t *testing.T) {
 
 	// Insert some data
 
-	st, _, res = sendTestRequest(graphURL+"i41health/n", "POST", []byte(`
+	sendTestRequest(graphURL+"i41health/n", "POST", []byte(`
 [{
 	"key":"3",
 	"kind":"Upload",

@@ -133,7 +133,7 @@ func TestClusterWithPhysicalStorage(t *testing.T) {
 		return
 	}
 
-	htree2, err := hash.LoadHTree(sm2, 1)
+	htree2, _ := hash.LoadHTree(sm2, 1)
 	if val, err := htree2.Get([]byte("123")); err != nil || val != "Test2" {
 		t.Error("Unexpected result:", val, err)
 		return
@@ -257,7 +257,7 @@ func TestClusterStorage(t *testing.T) {
 		return
 	}
 
-	htree2, err := hash.LoadHTree(sm2, 1)
+	htree2, _ := hash.LoadHTree(sm2, 1)
 	if val, err := htree2.Get([]byte("123")); err != nil || val != "Test2" {
 		t.Error("Unexpected result:", val, err)
 		return

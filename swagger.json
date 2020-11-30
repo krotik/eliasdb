@@ -165,7 +165,7 @@
          "type":"object"
       }
    },
-   "host":"localhost:9090",
+   "host":"127.0.0.1:9090",
    "info":{
       "description":"Query and modify the EliasDB datastore.",
       "title":"EliasDB API",
@@ -634,6 +634,64 @@
          }
       },
       "/v1/graph/{partition}":{
+         "delete":{
+            "consumes":[
+               "application/json"
+            ],
+            "description":"A whole graph can be send. DELETE will delete data in the datastore - only key and kind are required.",
+            "parameters":[
+               {
+                  "description":"Partition to select.",
+                  "in":"path",
+                  "name":"partition",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "description":"Nodes and Edges which should be stored",
+                  "in":"body",
+                  "name":"entities",
+                  "required":true,
+                  "schema":{
+                     "properties":{
+                        "edges":{
+                           "description":"List of edges to be inserted / updated.",
+                           "items":{
+                              "description":"Edge to be inserted / updated.",
+                              "type":"object"
+                           },
+                           "type":"array"
+                        },
+                        "nodes":{
+                           "description":"List of nodes to be inserted / updated.",
+                           "items":{
+                              "description":"Node to be inserted / updated.",
+                              "type":"object"
+                           },
+                           "type":"array"
+                        }
+                     },
+                     "type":"object"
+                  }
+               }
+            ],
+            "produces":[
+               "text/plain",
+               "application/json"
+            ],
+            "responses":{
+               "200":{
+                  "description":"No data is returned when data is created."
+               },
+               "default":{
+                  "description":"Error response",
+                  "schema":{
+                     "$ref":"#/definitions/Error"
+                  }
+               }
+            },
+            "summary":"Data can be send by using DELETE requests."
+         },
          "post":{
             "consumes":[
                "application/json"
@@ -691,9 +749,118 @@
                }
             },
             "summary":"Data can be send by using POST requests."
+         },
+         "put":{
+            "consumes":[
+               "application/json"
+            ],
+            "description":"A whole graph can be send. PUT will store data in the datastore and update existing data.",
+            "parameters":[
+               {
+                  "description":"Partition to select.",
+                  "in":"path",
+                  "name":"partition",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "description":"Nodes and Edges which should be stored",
+                  "in":"body",
+                  "name":"entities",
+                  "required":true,
+                  "schema":{
+                     "properties":{
+                        "edges":{
+                           "description":"List of edges to be inserted / updated.",
+                           "items":{
+                              "description":"Edge to be inserted / updated.",
+                              "type":"object"
+                           },
+                           "type":"array"
+                        },
+                        "nodes":{
+                           "description":"List of nodes to be inserted / updated.",
+                           "items":{
+                              "description":"Node to be inserted / updated.",
+                              "type":"object"
+                           },
+                           "type":"array"
+                        }
+                     },
+                     "type":"object"
+                  }
+               }
+            ],
+            "produces":[
+               "text/plain",
+               "application/json"
+            ],
+            "responses":{
+               "200":{
+                  "description":"No data is returned when data is created."
+               },
+               "default":{
+                  "description":"Error response",
+                  "schema":{
+                     "$ref":"#/definitions/Error"
+                  }
+               }
+            },
+            "summary":"Data can be send by using PUT requests."
          }
       },
       "/v1/graph/{partition}/{entity_type}":{
+         "delete":{
+            "consumes":[
+               "application/json"
+            ],
+            "description":"A list of nodes / edges can be send. DELETE will delete data in the datastore - only key and kind are required.",
+            "parameters":[
+               {
+                  "description":"Partition to select.",
+                  "in":"path",
+                  "name":"partition",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "description":"Datastore entity type which should selected. Either n for nodes or e for edges.",
+                  "in":"path",
+                  "name":"entity_type",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "description":"Nodes or Edges which should be stored",
+                  "in":"body",
+                  "name":"entities",
+                  "required":true,
+                  "schema":{
+                     "items":{
+                        "description":"Node or edge to be inserted / updated.",
+                        "type":"object"
+                     },
+                     "type":"array"
+                  }
+               }
+            ],
+            "produces":[
+               "text/plain",
+               "application/json"
+            ],
+            "responses":{
+               "200":{
+                  "description":"No data is returned when data is created."
+               },
+               "default":{
+                  "description":"Error response",
+                  "schema":{
+                     "$ref":"#/definitions/Error"
+                  }
+               }
+            },
+            "summary":"Data can be send by using DELETE requests."
+         },
          "post":{
             "consumes":[
                "application/json"
@@ -744,6 +911,57 @@
                }
             },
             "summary":"Data can be send by using POST requests."
+         },
+         "put":{
+            "consumes":[
+               "application/json"
+            ],
+            "description":"A list of nodes / edges can be send. PUT will store data in the datastore and update existing data.",
+            "parameters":[
+               {
+                  "description":"Partition to select.",
+                  "in":"path",
+                  "name":"partition",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "description":"Datastore entity type which should selected. Either n for nodes or e for edges.",
+                  "in":"path",
+                  "name":"entity_type",
+                  "required":true,
+                  "type":"string"
+               },
+               {
+                  "description":"Nodes or Edges which should be stored",
+                  "in":"body",
+                  "name":"entities",
+                  "required":true,
+                  "schema":{
+                     "items":{
+                        "description":"Node or edge to be inserted / updated.",
+                        "type":"object"
+                     },
+                     "type":"array"
+                  }
+               }
+            ],
+            "produces":[
+               "text/plain",
+               "application/json"
+            ],
+            "responses":{
+               "200":{
+                  "description":"No data is returned when data is created."
+               },
+               "default":{
+                  "description":"Error response",
+                  "schema":{
+                     "$ref":"#/definitions/Error"
+                  }
+               }
+            },
+            "summary":"Data can be send by using PUT requests."
          }
       },
       "/v1/graph/{partition}/{entity_type}/{kind}":{

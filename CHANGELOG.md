@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://devt.de///compare/v1.0.5...v1.1.0) (2020-11-30)
+
+
+### Features
+
+* Removing old integrations ([3fe1577](https://devt.de///commit/3fe157712ff41243dd325a876d8fed70cb038b34))
+
+
+### Bug Fixes
+
+* Upgrade to latest common version ([9df7dec](https://devt.de///commit/9df7decab6a2b623705c7b80dfd6d81fe699638c))
+
+### [1.0.5](https://devt.de///compare/v1.0.4...v1.0.5) (2020-06-28)
+
+### [1.0.4](https://devt.de///compare/v1.0.3...v1.0.4) (2020-05-24)
+
+
+### Bug Fixes
+
+* Allow mass deleteion via GraphQL ([1adf80f](https://devt.de///commit/1adf80fdcc1b0b9858627d9628c11c9f6aa038d2))
+
 ### [1.0.3](https://devt.de///compare/v1.0.2...v1.0.3) (2020-03-08)
 
 

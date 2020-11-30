@@ -389,7 +389,30 @@ func (rt *selectionSetRuntime) handleMutationArgs(path []string, args map[string
 			if node.Kind() == "" {
 				node.SetAttr("kind", kind)
 			}
-			_, err = rt.rtp.gm.RemoveNode(rt.rtp.part, node.Key(), node.Kind())
+
+			if node.Key() == "" {
+				var it *graph.NodeKeyIterator
+
+				if it, err = rt.rtp.gm.NodeKeyIterator(rt.rtp.part, node.Kind()); err == nil {
+					var keys []string
+
+					for it.HasNext() && err == nil {
+						keys = append(keys, it.Next())
+						err = it.Error()
+					}
+
+					if err == nil {
+						for _, key := range keys {
+							if err == nil {
+								_, err = rt.rtp.gm.RemoveNode(rt.rtp.part, key, node.Kind())
+							}
+						}
+					}
+				}
+
+			} else {
+				_, err = rt.rtp.gm.RemoveNode(rt.rtp.part, node.Key(), node.Kind())
+			}
 
 		} else {
 

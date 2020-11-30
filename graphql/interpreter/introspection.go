@@ -204,7 +204,7 @@ func (rt *selectionSetRuntime) GetFieldTypesIntrospection(action string, lookupA
 			map[string]interface{}{
 				"name":         "removeNode",
 				"defaultValue": nil,
-				"description":  "Remove a node according to this template.",
+				"description":  "Remove a node according to this template (only kind is needed).",
 				"type": map[string]interface{}{
 					"kind":   "OBJECT",
 					"name":   "NodeTemplate",
@@ -214,7 +214,7 @@ func (rt *selectionSetRuntime) GetFieldTypesIntrospection(action string, lookupA
 			map[string]interface{}{
 				"name":         "storeEdge",
 				"defaultValue": nil,
-				"description":  "Store an edge according to this template (only key and kind are needed).",
+				"description":  "Store an edge according to this template.",
 				"type": map[string]interface{}{
 					"kind":   "OBJECT",
 					"name":   "NodeTemplate",

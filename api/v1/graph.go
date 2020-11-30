@@ -539,6 +539,44 @@ func (ge *graphEndpoint) SwaggerDefs(s map[string]interface{}) {
 				"default": defaultError,
 			},
 		},
+		"put": map[string]interface{}{
+			"summary": "Data can be send by using PUT requests.",
+			"description": "A whole graph can be send. " +
+				"PUT will store data in the datastore and update existing data.",
+			"consumes": []string{
+				"application/json",
+			},
+			"produces": []string{
+				"text/plain",
+				"application/json",
+			},
+			"parameters": append(partitionParams, graphPost...),
+			"responses": map[string]interface{}{
+				"200": map[string]interface{}{
+					"description": "No data is returned when data is created.",
+				},
+				"default": defaultError,
+			},
+		},
+		"delete": map[string]interface{}{
+			"summary": "Data can be send by using DELETE requests.",
+			"description": "A whole graph can be send. " +
+				"DELETE will delete data in the datastore - only key and kind are required.",
+			"consumes": []string{
+				"application/json",
+			},
+			"produces": []string{
+				"text/plain",
+				"application/json",
+			},
+			"parameters": append(partitionParams, graphPost...),
+			"responses": map[string]interface{}{
+				"200": map[string]interface{}{
+					"description": "No data is returned when data is created.",
+				},
+				"default": defaultError,
+			},
+		},
 	}
 
 	// Add endpoint to insert nodes / edges
@@ -548,6 +586,44 @@ func (ge *graphEndpoint) SwaggerDefs(s map[string]interface{}) {
 			"summary": "Data can be send by using POST requests.",
 			"description": "A list of nodes / edges can be send. " +
 				"POST will store data in the datastore and always overwrite any existing data.",
+			"consumes": []string{
+				"application/json",
+			},
+			"produces": []string{
+				"text/plain",
+				"application/json",
+			},
+			"parameters": append(append(partitionParams, entityParams...), entitiesPost...),
+			"responses": map[string]interface{}{
+				"200": map[string]interface{}{
+					"description": "No data is returned when data is created.",
+				},
+				"default": defaultError,
+			},
+		},
+		"put": map[string]interface{}{
+			"summary": "Data can be send by using PUT requests.",
+			"description": "A list of nodes / edges can be send. " +
+				"PUT will store data in the datastore and update existing data.",
+			"consumes": []string{
+				"application/json",
+			},
+			"produces": []string{
+				"text/plain",
+				"application/json",
+			},
+			"parameters": append(append(partitionParams, entityParams...), entitiesPost...),
+			"responses": map[string]interface{}{
+				"200": map[string]interface{}{
+					"description": "No data is returned when data is created.",
+				},
+				"default": defaultError,
+			},
+		},
+		"delete": map[string]interface{}{
+			"summary": "Data can be send by using DELETE requests.",
+			"description": "A list of nodes / edges can be send. " +
+				"DELETE will delete data in the datastore - only key and kind are required.",
 			"consumes": []string{
 				"application/json",
 			},

@@ -59,7 +59,7 @@ Run executes the command.
 */
 func (c *CmdVer) Run(args []string, capi CommandConsoleAPI) error {
 
-	fmt.Fprintln(capi.Out(), fmt.Sprintf("Connected to: %v", capi.Url()))
+	fmt.Fprintln(capi.Out(), fmt.Sprintf("Connected to: %v", capi.URL()))
 
 	res, err := capi.Req(api.EndpointAbout, "GET", nil)
 

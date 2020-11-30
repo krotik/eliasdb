@@ -109,9 +109,9 @@ type CommandConsoleAPI interface {
 	Authenticate(force bool)
 
 	/*
-	   Url returns the current connection URL.
+	   URL returns the current connection URL.
 	*/
-	Url() string
+	URL() string
 
 	/*
 	   Partition returns the current partition.
@@ -217,9 +217,9 @@ type EliasDBConsole struct {
 }
 
 /*
-Url returns the current connected server URL.
+URL returns the current connected server URL.
 */
-func (c *EliasDBConsole) Url() string {
+func (c *EliasDBConsole) URL() string {
 	return c.url
 }
 

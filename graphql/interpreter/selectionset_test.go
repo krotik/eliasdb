@@ -693,6 +693,29 @@ mutation {
 		"operationName": nil,
 		"query": `
 mutation {
+  Song(removeNode : {}) {
+    key
+    kind
+  }
+}
+`,
+		"variables": nil,
+	}
+
+	if rerr := checkResult(`
+{
+  "data": {
+    "Song": []
+  }
+}`[1:], query, gm); rerr != nil {
+		t.Error(rerr)
+		return
+	}
+
+	query = map[string]interface{}{
+		"operationName": nil,
+		"query": `
+mutation {
   Song(storeNode : "Hans", storeEdge : "Franz", key : "Honk") {
     key,
     name,

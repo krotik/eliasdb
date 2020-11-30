@@ -1,5 +1,10 @@
 EliasDB
 =======
+
+<p align="center">
+  <img height="300px" style="height:300px;" src="logo.png">
+</p>
+
 EliasDB is a graph-based database which aims to provide a lightweight solution for projects which want to store their data as a graph.
 
 <p>

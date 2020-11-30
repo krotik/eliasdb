@@ -12,7 +12,7 @@ msmap is a map of all know  memory-only memberStorages.
 var msmap = make(map[*DistributedStorage]*memberStorage)
 
 /*
-Clear the current map of known memory-only memberStorages.
+ClearMSMap clears the current map of known memory-only memberStorages.
 */
 func ClearMSMap() {
 	msmap = make(map[*DistributedStorage]*memberStorage)
