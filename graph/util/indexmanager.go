@@ -39,12 +39,12 @@ var CaseSensitiveWordIndex = false
 /*
 PrefixAttrWord is the prefix used for word index entries
 */
-const PrefixAttrWord = string(0x01)
+const PrefixAttrWord = "\x01"
 
 /*
 PrefixAttrHash is the prefix used for hashes of attribute values
 */
-const PrefixAttrHash = string(0x02)
+const PrefixAttrHash = "\x01"
 
 /*
 IndexManager data structure

@@ -37,7 +37,7 @@ var DBDIRS = []string{GraphManagerTestDBDir1, GraphManagerTestDBDir2,
 	GraphManagerTestDBDir3, GraphManagerTestDBDir4, GraphManagerTestDBDir5,
 	GraphManagerTestDBDir6}
 
-const InvlaidFileName = "**" + string(0x0)
+const InvlaidFileName = "**" + "\x00"
 
 // Main function for all tests in this package
 

@@ -21,7 +21,7 @@ import (
 
 const DBDir = "storagefiletest"
 
-const InvalidFileName = "**" + string(0x0)
+const InvalidFileName = "**" + "\x00"
 
 func TestMain(m *testing.M) {
 	flag.Parse()

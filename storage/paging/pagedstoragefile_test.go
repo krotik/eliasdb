@@ -23,7 +23,7 @@ import (
 
 const DBDIR = "pagingtest"
 
-const InvalidFileName = "**" + string(0x0)
+const InvalidFileName = "**" + "\x00"
 
 // Main function for all tests in this package
 

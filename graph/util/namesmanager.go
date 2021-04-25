@@ -15,27 +15,27 @@ import "encoding/binary"
 /*
 PrefixCode is the prefix for entries storing codes
 */
-const PrefixCode = string(0x0)
+const PrefixCode = "\x00"
 
 /*
 PrefixName is the prefix for entries storing names
 */
-const PrefixName = string(0x1)
+const PrefixName = "\x01"
 
 /*
 PrefixCounter is the prefix for counter entries
 */
-const PrefixCounter = string(0x0)
+const PrefixCounter = "\x00"
 
 /*
 Prefix16Bit is the prefix for 16 bit kind related entries
 */
-const Prefix16Bit = string(0x1)
+const Prefix16Bit = "\x01"
 
 /*
 Prefix32Bit is the prefix for attribute related entries
 */
-const Prefix32Bit = string(0x2)
+const Prefix32Bit = "\x02"
 
 /*
 NamesManager data structure

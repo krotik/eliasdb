@@ -21,7 +21,7 @@ import (
 	"devt.de/krotik/common/datautil"
 )
 
-const invalidFileName = "**" + string(0x0)
+const invalidFileName = "**" + "\x00"
 
 func TestDefaultStateInfo(t *testing.T) {
 
