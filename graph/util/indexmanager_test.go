@@ -761,6 +761,8 @@ func TestIndexManagerString(t *testing.T) {
 	im.Index("testkey", obj1)
 
 	if res := im.String(); res != "IndexManager: 1\n"+
+		"    1\"aaa\\b\\xf8\\xe0&\\fdA\\x85\\x10\\xce\\xfb+\\x06\\xee\\xe5\\xcd\" map[testkey:[]]\n"+
+		"    1\"aaabbb\" map[testkey:[1]]\n" && res != "IndexManager: 1\n"+
 		"    1\"aaabbb\" map[testkey:[1]]\n"+
 		"    2\"aaa\\b\\xf8\\xe0&\\fdA\\x85\\x10\\xce\\xfb+\\x06\\xee\\xe5\\xcd\" map[testkey:[]]\n" {
 		t.Error("Unexpected string output:", res)
