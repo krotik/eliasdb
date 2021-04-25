@@ -27,7 +27,7 @@ const diskGraphStorageTestDBDir2 = "diskgraphstoragetest2"
 
 var dbdirs = []string{diskGraphStorageTestDBDir, diskGraphStorageTestDBDir2}
 
-const invalidFileName = "**" + string(0x0)
+const invalidFileName = "**" + "\x00"
 
 // Main function for all tests in this package
 

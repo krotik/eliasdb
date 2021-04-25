@@ -42,7 +42,7 @@ const RunLongRunningTests = true
 
 const testdb = "testdb"
 
-const invalidFileName = "**" + string(0x0)
+const invalidFileName = "**" + "\x00"
 
 var printLog = []string{}
 var errorLog = []string{}

@@ -9,7 +9,7 @@ import (
 
 const testconf = "testconfig"
 
-const invalidFileName = "**" + string(0x0)
+const invalidFileName = "**" + "\x00"
 
 func TestConfig(t *testing.T) {
 

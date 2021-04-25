@@ -108,7 +108,7 @@ const VERSION = 1
 /*
 MainDBEntryPrefix is the prefix for entries stored in the main database
 */
-const MainDBEntryPrefix = string(0x2)
+const MainDBEntryPrefix = "\x02"
 
 // MainDB entries
 // ==============
@@ -204,22 +204,22 @@ const StorageSuffixEdgesIndex = ".edgeidx"
 /*
 PrefixNSAttrs is the prefix for storing attributes of a node
 */
-const PrefixNSAttrs = string(0x01)
+const PrefixNSAttrs = "\x01"
 
 /*
 PrefixNSAttr is the prefix for storing the value of a node attribute
 */
-const PrefixNSAttr = string(0x02)
+const PrefixNSAttr = "\x02"
 
 /*
 PrefixNSSpecs is the prefix for storing specs of edges related to a node
 */
-const PrefixNSSpecs = string(0x03)
+const PrefixNSSpecs = "\x03"
 
 /*
 PrefixNSEdge is the prefix for storing a link from a node (and a spec) to an edge
 */
-const PrefixNSEdge = string(0x04)
+const PrefixNSEdge = "\x04"
 
 // Graph events
 //=============

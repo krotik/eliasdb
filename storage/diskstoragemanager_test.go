@@ -589,7 +589,7 @@ func TestDiskStorageManagerRollback(t *testing.T) {
 	}
 }
 
-const InvalidFileName = "**" + string(0x0)
+const InvalidFileName = "**" + "\x00"
 
 func TestDiskStorageManagerInit(t *testing.T) {
 	lockfile := lockutil.NewLockFile(DBDIR+"/"+"lock0.lck", time.Duration(50)*time.Millisecond)
