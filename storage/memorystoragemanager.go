@@ -123,7 +123,7 @@ func (msm *MemoryStorageManager) Insert(o interface{}) (uint64, error) {
 	defer msm.mutex.Unlock()
 
 	if msm.AccessMap[msm.LocCount] == AccessInsertError {
-		return 0, file.ErrAlreadyInUse
+		return 0, file.NewStorageFileError(file.ErrAlreadyInUse, "", "<memory>")
 	}
 	loc := msm.LocCount
 	msm.LocCount++
@@ -139,7 +139,7 @@ func (msm *MemoryStorageManager) Update(loc uint64, o interface{}) error {
 	defer msm.mutex.Unlock()
 
 	if msm.AccessMap[loc] == AccessUpdateError {
-		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
+		return NewStorageManagerError(ErrSlotNotFound, fmt.Sprint("Location:", loc), msm.Name())
 	}
 	msm.Data[loc] = o
 	return nil
@@ -153,7 +153,7 @@ func (msm *MemoryStorageManager) Free(loc uint64) error {
 	defer msm.mutex.Unlock()
 
 	if msm.AccessMap[loc] == AccessFreeError {
-		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
+		return NewStorageManagerError(ErrSlotNotFound, fmt.Sprint("Location:", loc), msm.Name())
 	}
 	delete(msm.Data, loc)
 	return nil
@@ -170,15 +170,15 @@ func (msm *MemoryStorageManager) Fetch(loc uint64, o interface{}) error {
 	defer msm.mutex.Unlock()
 
 	if msm.AccessMap[loc] == AccessFetchError || msm.AccessMap[loc] == AccessCacheAndFetchError {
-		return ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
+		return NewStorageManagerError(ErrSlotNotFound, fmt.Sprint("Location:", loc), msm.Name())
 	} else if msm.AccessMap[loc] == AccessCacheAndFetchSeriousError {
-		return file.ErrAlreadyInUse
+		return file.NewStorageFileError(file.ErrAlreadyInUse, "", "<memory>")
 	}
 
 	if obj, ok := msm.Data[loc]; ok {
 		err = datautil.CopyObject(obj, o)
 	} else {
-		err = ErrSlotNotFound.fireError(msm, fmt.Sprint("Location:", loc))
+		err = NewStorageManagerError(ErrSlotNotFound, fmt.Sprint("Location:", loc), msm.Name())
 	}
 	return err
 }
@@ -192,9 +192,9 @@ func (msm *MemoryStorageManager) FetchCached(loc uint64) (interface{}, error) {
 	defer msm.mutex.Unlock()
 
 	if msm.AccessMap[loc] == AccessNotInCache || msm.AccessMap[loc] == AccessCacheAndFetchError {
-		return nil, ErrNotInCache
+		return nil, NewStorageManagerError(ErrNotInCache, "", msm.Name())
 	} else if msm.AccessMap[loc] == AccessCacheAndFetchSeriousError {
-		return nil, file.ErrAlreadyInUse
+		return nil, file.NewStorageFileError(file.ErrAlreadyInUse, "", "<memory>")
 	}
 	return msm.Data[loc], nil
 }

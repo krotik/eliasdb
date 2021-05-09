@@ -40,16 +40,17 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
+	defer func() {
+		// Teardown
+		err = os.RemoveAll(DBDIR)
+		if err != nil {
+			fmt.Print("Could not remove test directory:", err.Error())
+		}
+	}()
+
 	// Run the tests
-	res := m.Run()
 
-	// Teardown
-	err = os.RemoveAll(DBDIR)
-	if err != nil {
-		fmt.Print("Could not remove test directory:", err.Error())
-	}
-
-	os.Exit(res)
+	m.Run()
 }
 
 var enableConcurrencyTest = false

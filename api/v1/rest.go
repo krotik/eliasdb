@@ -49,6 +49,15 @@ var V1EndpointMap = map[string]api.RestEndpointInst{
 	EndpointInfoQuery:            InfoEndpointInst,
 	EndpointQuery:                QueryEndpointInst,
 	EndpointQueryResult:          QueryResultEndpointInst,
+	EndpointECALInternal:         ECALEndpointInst,
+	EndpointECALSock:             ECALSockEndpointInst,
+}
+
+/*
+V1PublicEndpointMap is a map of urls to public endpoints for version 1 of the API
+*/
+var V1PublicEndpointMap = map[string]api.RestEndpointInst{
+	EndpointECALPublic: ECALEndpointInst,
 }
 
 // Helper functions

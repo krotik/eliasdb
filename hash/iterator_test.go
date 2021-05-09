@@ -207,7 +207,7 @@ func TestIterator(t *testing.T) {
 		return
 	}
 
-	if it.LastError != file.ErrAlreadyInUse {
+	if sfe, ok := it.LastError.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected last error pointer of iterator")
 		return
 	}

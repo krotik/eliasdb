@@ -1,0 +1,47 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <script src="dist/frontend.js"></script>
+        <style>
+            .landing-page-element {
+                height: 30%;
+                max-height: 150px;
+                text-align: center;
+                margin: auto;
+                width: 50%;
+                max-width: 600px;
+                padding: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1 class="landing-page-element">Astro</h1>
+        <form action="world.html" method="GET">
+            <table class="landing-page-element">
+                <tr>
+                    <td>Game:</td>
+                    <td><input type="text" name="game" value="main" /></td>
+                </tr>
+                <tr>
+                    <td>Player:</td>
+                    <td>
+                        <input
+                            id="player-name-input"
+                            type="text"
+                            name="player"
+                            value=""
+                        />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"><input type="submit" value="Start" /></td>
+                </tr>
+            </table>
+        </form>
+        <script>
+            document.getElementById(
+                'player-name-input'
+            ).value = astro.generatePlayerName();
+        </script>
+    </body>
+</html>

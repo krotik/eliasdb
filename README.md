@@ -2,18 +2,15 @@ EliasDB
 =======
 
 <p align="center">
-  <img height="300px" style="height:300px;" src="logo.png">
+  <img height="300px" style="height:300px;" src="eliasdb_logo.png">
 </p>
 
 EliasDB is a graph-based database which aims to provide a lightweight solution for projects which want to store their data as a graph.
 
-<p>
-<a href="https://void.devt.de/pub/eliasdb/coverage.txt"><img src="https://void.devt.de/pub/eliasdb/test_result.svg" alt="Code coverage"></a>
-<a href="https://goreportcard.com/report/devt.de/krotik/eliasdb">
-<img src="https://goreportcard.com/badge/devt.de/krotik/eliasdb?style=flat-square" alt="Go Report Card"></a>
-<a href="https://godoc.org/devt.de/krotik/eliasdb">
-<img src="https://godoc.org/devt.de/krotik/eliasdb?status.svg" alt="Go Doc"></a>
-</p>
+[![Code coverage](https://void.devt.de/pub/eliasdb/test_result.svg)](https://void.devt.de/pub/eliasdb/coverage.txt)
+[![Go Report Card](https://goreportcard.com/badge/devt.de/krotik/eliasdb?style=flat-square)](https://goreportcard.com/report/devt.de/krotik/eliasdb)
+[![Go Reference](https://pkg.go.dev/badge/krotik/eliasdb.svg)](https://pkg.go.dev/devt.de/krotik/eliasdb)
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge-flat.svg)](https://github.com/avelino/awesome-go)
 
 Features
 --------
@@ -24,6 +21,7 @@ Features
 - All stored data is indexed and can be quickly searched via a full text phrase search.
 - EliasDB has a GraphQL interface which can be used to store and retrieve data.
 - For more complex queries EliasDB has an own query language called EQL with an sql-like syntax.
+- Includes a scripting interpreter to define alternative actions for database operations or writing backend logic.
 - Written in Go from scratch. Only uses gorilla/websocket to support websockets for GraphQL subscriptions.
 - The database can be embedded or used as a standalone application.
 - When used as a standalone application it comes with an internal HTTPS webserver which provides user management, a REST API and a basic file server.
@@ -71,6 +69,12 @@ There is a separate [tutorial](examples/tutorial/doc/tutorial_graphql.md) on usi
 
 The terminal uses a REST API to communicate with the backend. The REST API can be browsed using a dynamically generated swagger.json definition (https://localhost:9090/db/swagger.json). You can browse the API of EliasDB's latest version [here](http://petstore.swagger.io/?url=https://devt.de/krotik/eliasdb/raw/master/swagger.json).
 
+### Scripting
+
+EliasDB supports a scripting language called [ECAL](ecal.md) to define alternative actions for database operations such as store, update or delete. The actions can be taken before, instead (by calling `db.raiseGraphEventHandled()`) or after the normal database operation. The language is powerful enough to write backend logic for applications.
+
+There is a [VSCode integration](https://devt.de/krotik/ecal/src/master/ecal-support/README.md) available which supports syntax highlighting and debugging via the debug server. More information can be found in the [code repository](https://devt.de/krotik/ecal) of the interpreter.
+
 ### Clustering:
 
 EliasDB supports to be run in a cluster by joining multiple instances of EliasDB together. You can read more about it [here](cluster.md).
@@ -100,6 +104,13 @@ Usage of ./eliasdb server [options]
   -no-serv
     	Do not start the server after initialization
 ```
+If the `EnableECALScripts` configuration option is set the following additional option is available:
+```
+-ecal-console
+    Start an interactive interpreter console for ECAL
+```
+The interactive console can be used to inspect and modify the runtime state of the ECAL interpreter.
+
 Once the server is started the console tool can be used to interact with the server. The options of the console tool are:
 ```
 Usage of ./eliasdb console [options]
@@ -136,9 +147,18 @@ EliasDB uses a single configuration file called eliasdb.config.json. After start
 | ClusterLogHistory | File which is used to store the console history. |
 | ClusterStateInfoFile | File which is used to store the cluster state. |
 | CookieMaxAgeSeconds | Lifetime for cookies used by EliasDB. |
+| ECALDebugServerHost | Hostname the ECAL debug server should listen to. |
+| ECALDebugServerPort | Port on which the debug server should listen on. |
+| ECALEntryScript | Entry script for ECAL interpreter. |
+| ECALLogFile | Logfile for ECAL interpreter. An empty string will cause the logger to write to the console. |
+| ECALLogLevel | Log level for ECAL interpreter. Can be debug, info or error. |
+| ECALScriptFolder | Directory for ECAL scripts. |
+| ECALWorkerCount | Number of worker threads in the ECA engine's thread pool. |
 | EnableAccessControl | Flag if access control for EliasDB should be enabled. This provides user authentication and authorization features. |
 | EnableCluster | Flag if EliasDB clustering support should be enabled. EXPERIMENTAL! |
 | EnableClusterTerminal | Flag if the cluster terminal file /web/db/cluster.html should be created. |
+| EnableECALDebugServer | Flag if the ECAL debug server should be started. Note: This will slow ECAL performance significantly. |
+| EnableECALScripts | Flag if ECAL scripts should be executed on startup. |
 | EnableReadOnly | Flag if the datastore should be open read-only. |
 | EnableWebFolder | Flag if the files in the webfolder /web should be served up by the webserver. If false only the REST API is accessible. |
 | EnableWebTerminal | Flag if the web terminal file /web/db/term.html should be created. |
@@ -221,16 +241,16 @@ docker build --tag krotik/eliasdb .
 
 Example Applications
 --------------------
-- [Chat](examples/chat/doc/chat.md) - A simple chat application showing user /management and subscriptions.
+- [Chat](examples/chat/doc/chat.md) - A simple chat application showing node modification via ECAL script, user management and subscriptions.
 - [Data-mining](examples/data-mining/doc/data-mining.md) - A more complex application which uses the cluster feature of EliasDB and GraphQL for data queries.
-
+- [Game](examples/game/doc/game.md) - A multiplayer game example using ECAL for simulating the game scene in the backend.
 
 Further Reading
 ---------------
-- A design document which describes the different components of the graph database. [Link](https://devt.de/krotik/eliasdb/src/master/eliasdb_design.md)
-- A reference for the EliasDB query language EQL. [Link](https://devt.de/krotik/eliasdb/src/master/eql.md)
-- A reference for the EliasDB's support for GraphQL. [Link](https://devt.de/krotik/eliasdb/src/master/graphql.md)
-- A quick overview of what you can do when you embed EliasDB in your own Go project. [Link](https://devt.de/krotik/eliasdb/src/master/embedding.md)
+- A design document which describes the different components of the graph database. [Link](eliasdb_design.md)
+- A reference for EliasDB's custom query language EQL. [Link](eql.md)
+- A reference for EliasDB's support for GraphQL. [Link](graphql.md)
+- A quick overview of what you can do when you embed EliasDB in your own Go project. [Link](embedding.md)
 
 License
 -------

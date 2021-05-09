@@ -48,32 +48,38 @@ dist: build build-win build-mac build-arm7 build-arm8
 
 	mkdir -p dist/$(NAME)_linux_amd64
 	mv $(NAME) dist/$(NAME)_linux_amd64
+	cp -fR examples dist/$(NAME)_linux_amd64
 	cp LICENSE dist/$(NAME)_linux_amd64
 	cp NOTICE dist/$(NAME)_linux_amd64
 	tar --directory=dist -cz $(NAME)_linux_amd64 > dist/$(NAME)_$(TAG)_linux_amd64.tar.gz
 
 	mkdir -p dist/$(NAME)_darwin_amd64
 	mv $(NAME).mac dist/$(NAME)_darwin_amd64/$(NAME)
+	cp -fR examples dist/$(NAME)_darwin_amd64
 	cp LICENSE dist/$(NAME)_darwin_amd64
 	cp NOTICE dist/$(NAME)_darwin_amd64
 	tar --directory=dist -cz $(NAME)_darwin_amd64 > dist/$(NAME)_$(TAG)_darwin_amd64.tar.gz
 
 	mkdir -p dist/$(NAME)_windows_amd64
 	mv $(NAME).exe dist/$(NAME)_windows_amd64
+	cp -fR examples dist/$(NAME)_windows_amd64
 	cp LICENSE dist/$(NAME)_windows_amd64
 	cp NOTICE dist/$(NAME)_windows_amd64
 	tar --directory=dist -cz $(NAME)_windows_amd64 > dist/$(NAME)_$(TAG)_windows_amd64.tar.gz
 
 	mkdir -p dist/$(NAME)_arm7
 	mv $(NAME).arm7 dist/$(NAME)_arm7
+	cp -fR examples dist/$(NAME)_arm7
 	cp LICENSE dist/$(NAME)_arm7
 	cp NOTICE dist/$(NAME)_arm7
 	tar --directory=dist -cz $(NAME)_arm7 > dist/$(NAME)_$(TAG)_arm7.tar.gz
 
 	mkdir -p dist/$(NAME)_arm8
 	mv $(NAME).arm8 dist/$(NAME)_arm8
+	cp -fR examples dist/$(NAME)_arm8
 	cp LICENSE dist/$(NAME)_arm8
 	cp NOTICE dist/$(NAME)_arm8
+
 	tar --directory=dist -cz $(NAME)_arm8 > dist/$(NAME)_$(TAG)_arm8.tar.gz
 
 	sh -c 'cd dist; sha256sum *.tar.gz' > dist/checksums.txt

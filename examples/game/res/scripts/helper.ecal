@@ -1,0 +1,50 @@
+/*
+ copyMap copies a given map.
+*/
+func copyMap(m, base={}) {
+    let ret := base
+    for [k, v] in m {
+        ret[k] := v
+    }
+    return ret
+}
+
+/*
+ max returns the maximum of two numbers.
+*/
+func max(a, b) {
+    if a > b {
+        return a
+    }
+    return b
+}
+
+/*
+ allNodeKeys returns the keys of all nodes of a certain kind.
+*/
+func allNodeKeys(part, kind) {
+    let ret := []
+    let res := db.graphQL("main", "{ {{kind}} { key } }", {"kind" : kind})
+
+    if len(res.data[kind]) > 0 {
+        for o in res.data[kind] {
+            ret := add(ret, o.key)
+        }
+    }
+
+    return ret
+}
+
+/*
+ Create a new list from a given list with all elements that pass
+ the test implemented by the provided function.
+*/
+func filter(list, f) {
+    ret := []
+    for i in list {
+        if f(i) {
+            ret := add(ret, i)
+        }
+    }
+    return ret
+}

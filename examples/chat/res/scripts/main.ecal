@@ -1,0 +1,21 @@
+/*
+ Modify all stored nodes which have a message with a timestamp.
+ */
+sink AddNodeTimestamp
+    kindmatch ["db.node.store", "db.node.update"]
+    priority 0
+{
+    log("Node Event: ", event)
+
+    if event.state.node.message != NULL and event.state.node.ts == NULL {
+        try {
+            log("store node")
+            event.state.node.ts := now()
+            db.storeNode(event.state.part, event.state.node)
+        } except e {
+            error(e)
+        } otherwise {
+            db.raiseGraphEventHandled()
+        }
+    }
+}

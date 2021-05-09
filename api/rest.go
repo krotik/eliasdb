@@ -16,6 +16,7 @@ import (
 
 	"devt.de/krotik/common/datautil"
 	"devt.de/krotik/eliasdb/cluster"
+	"devt.de/krotik/eliasdb/ecal"
 	"devt.de/krotik/eliasdb/graph"
 	"devt.de/krotik/eliasdb/graph/graphstorage"
 )
@@ -88,6 +89,11 @@ type RestEndpointHandler interface {
 GM is the GraphManager instance which should be used by the REST API.
 */
 var GM *graph.Manager
+
+/*
+SI is the ScriptingInterpreter instance which is working with the api.GM GraphManager instance.
+*/
+var SI *ecal.ScriptingInterpreter
 
 /*
 GS is the GraphStorage instance which should be used by the REST API.

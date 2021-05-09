@@ -14,17 +14,22 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
 
 	"devt.de/krotik/common/errorutil"
+	"devt.de/krotik/common/fileutil"
 	"devt.de/krotik/common/httputil"
 	"devt.de/krotik/eliasdb/api"
+	"devt.de/krotik/eliasdb/config"
+	"devt.de/krotik/eliasdb/ecal"
 	"devt.de/krotik/eliasdb/eql"
 	"devt.de/krotik/eliasdb/graph"
 	"devt.de/krotik/eliasdb/graph/data"
@@ -35,15 +40,46 @@ const TESTPORT = ":9090"
 
 var gmMSM *graphstorage.MemoryGraphStorage
 
+const testScriptDir = "testscripts"
+
 // Main function for all tests in this package
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
+	defer func() {
+		if res, _ := fileutil.PathExists(testScriptDir); res {
+			if err := os.RemoveAll(testScriptDir); err != nil {
+				fmt.Print("Could not remove test directory:", err.Error())
+			}
+		}
+	}()
+
+	if res, _ := fileutil.PathExists(testScriptDir); res {
+		if err := os.RemoveAll(testScriptDir); err != nil {
+			fmt.Print("Could not remove test directory:", err.Error())
+		}
+	}
+
+	ensurePath(testScriptDir)
+
+	data := make(map[string]interface{})
+	for k, v := range config.DefaultConfig {
+		data[k] = v
+	}
+
+	config.Config = data
+
+	config.Config[config.EnableECALScripts] = true
+	config.Config[config.ECALScriptFolder] = testScriptDir
+	config.Config[config.ECALLogFile] = filepath.Join(testScriptDir, "interpreter.log")
+
 	gm, msm := filterGraph()
 	api.GM = gm
 	api.GS = msm
 	gmMSM = msm
+
+	resetSI()
 
 	hs, wg := startServer()
 	if hs == nil {
@@ -53,16 +89,15 @@ func TestMain(m *testing.M) {
 	// Register endpoints for version 1
 
 	api.RegisterRestEndpoints(V1EndpointMap)
+	api.RegisterRestEndpoints(V1PublicEndpointMap)
 
 	// Run the tests
 
-	res := m.Run()
+	m.Run()
 
 	// Teardown
 
 	stopServer(hs, wg)
-
-	os.Exit(res)
 }
 
 func TestSwaggerDefs(t *testing.T) {
@@ -350,4 +385,41 @@ func filterGraph() (*graph.Manager, *graphstorage.MemoryGraphStorage) {
 	gm.StoreNode("main", constructNode("19", "test18", "X5", "foo"))
 
 	return gm, mgs
+}
+
+func ensurePath(path string) {
+	if res, _ := fileutil.PathExists(path); !res {
+		if err := os.Mkdir(path, 0770); err != nil {
+			fmt.Print("Could not create directory:", err.Error())
+			return
+		}
+	}
+}
+
+func resetSI() {
+	api.SI = ecal.NewScriptingInterpreter(testScriptDir, api.GM)
+}
+
+func writeScript(content string) {
+	filename := filepath.Join(testScriptDir, config.Str(config.ECALEntryScript))
+	err := ioutil.WriteFile(
+		filename,
+		[]byte(content), 0600)
+	errorutil.AssertOk(err)
+	os.Remove(config.Str(config.ECALLogFile))
+}
+
+func checkLog(expected string) error {
+	var err error
+
+	content, err := ioutil.ReadFile(config.Str(config.ECALLogFile))
+
+	if err == nil {
+		logtext := string(content)
+
+		if logtext != expected {
+			err = fmt.Errorf("Unexpected log text:\n%v", logtext)
+		}
+	}
+	return err
 }

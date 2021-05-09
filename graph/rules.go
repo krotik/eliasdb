@@ -54,9 +54,12 @@ type Rule interface {
 graphEvent main event handler which receives all graph related events.
 */
 func (gr *graphRulesManager) graphEvent(trans Trans, event int, data ...interface{}) error {
+	var result error
 	var errors []string
 
 	rules, ok := gr.eventMap[event]
+
+	handled := false // Flag to return a special handled error if no other error occured
 
 	if ok {
 
@@ -73,10 +76,14 @@ func (gr *graphRulesManager) graphEvent(trans Trans, event int, data ...interfac
 			err := rule.Handle(gmclone, trans, event, data...)
 
 			if err != nil {
-				if errors == nil {
-					errors = make([]string, 0)
+				if err == ErrEventHandled {
+					handled = true
+				} else {
+					if errors == nil {
+						errors = make([]string, 0)
+					}
+					errors = append(errors, err.Error())
 				}
-				errors = append(errors, err.Error())
 			}
 		}
 	}
@@ -85,7 +92,11 @@ func (gr *graphRulesManager) graphEvent(trans Trans, event int, data ...interfac
 		return &util.GraphError{Type: util.ErrRule, Detail: strings.Join(errors, ";")}
 	}
 
-	return nil
+	if handled {
+		result = ErrEventHandled
+	}
+
+	return result
 }
 
 /*

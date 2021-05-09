@@ -64,7 +64,7 @@ func TestCachedDiskStorageManager(t *testing.T) {
 
 	// Test getting non-existent entry from cache
 
-	if _, err := cdsm.FetchCached(loc + 1); err != ErrNotInCache {
+	if _, err := cdsm.FetchCached(loc + 1); err.(*ManagerError).Type != ErrNotInCache {
 		t.Error("Unexpected FetchCached result:", err)
 		return
 	}
@@ -181,12 +181,13 @@ func TestCachedDiskStorageManager(t *testing.T) {
 	}
 
 	err = cdsm.Fetch(loc, &ret3)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected fetch result:", ret3, err)
 		return
 	}
 
-	if err := cdsm.Update(loc, "test99"); err != file.ErrAlreadyInUse {
+	err = cdsm.Update(loc, "test99")
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected update result:", err)
 		return
 	}
@@ -238,7 +239,7 @@ func TestCachedDiskStorageManagerTransactions(t *testing.T) {
 	}
 
 	var ret string
-	if err := cdsm.Fetch(loc, &ret); err != ErrSlotNotFound ||
+	if err := cdsm.Fetch(loc, &ret); err.(*ManagerError).Type != ErrSlotNotFound ||
 		err.Error() != "Slot not found (ByteDiskStorageFile:storagemanagertest/ctest2 - Location:1 18)" {
 
 		t.Error("Unexpected fetch result:", err)
@@ -266,7 +267,8 @@ func TestCachedDiskStorageManagerTransactions(t *testing.T) {
 		return
 	}
 
-	if err := cdsm.Free(loc2); err != file.ErrAlreadyInUse {
+	err = cdsm.Free(loc2)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected free result:", err)
 		return
 	}
@@ -285,7 +287,7 @@ func TestCachedDiskStorageManagerTransactions(t *testing.T) {
 		return
 	}
 
-	if err := cdsm.Fetch(loc2, &ret); err != ErrSlotNotFound {
+	if err := cdsm.Fetch(loc2, &ret); err.(*ManagerError).Type != ErrSlotNotFound {
 		t.Error("Unexpected fetch result:", err)
 		return
 	}

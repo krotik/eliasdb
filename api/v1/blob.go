@@ -468,7 +468,7 @@ func (be *blobEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resour
 
 		res, err = sm.FetchCached(loc)
 
-		if err == storage.ErrNotInCache {
+		if sme, ok := err.(*storage.ManagerError); ok && sme.Type == storage.ErrNotInCache {
 			err = sm.Fetch(loc, &ret)
 		} else if err == nil && res != nil {
 			ret = res.([]byte)

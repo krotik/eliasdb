@@ -90,7 +90,7 @@ func TestBlob(t *testing.T) {
 
 	st, _, res = sendTestRequest(queryURL, "POST", []byte{0x0b, 0x00, 0x00, 0x0b, 0x01, 0x0e, 0x05})
 
-	if st != "500 Internal Server Error" || res != "Record is already in-use (? - )" {
+	if st != "500 Internal Server Error" || res != "Record is already in-use (<memory> - )" {
 		t.Error("Unexpected response:", st, res)
 		return
 	}

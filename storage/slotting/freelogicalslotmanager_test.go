@@ -126,7 +126,8 @@ func TestFreeLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	if err = flsm.Flush(); err != file.ErrAlreadyInUse {
+	err = flsm.Flush()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected Get result:", err)
 		return
 	}
@@ -181,7 +182,7 @@ func TestFreeLogicalSlotManager(t *testing.T) {
 	}
 
 	_, err = flsm.Get()
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -310,12 +311,14 @@ func TestFreeLogiclaSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := flsm.Flush(); err != file.ErrAlreadyInUse {
+	err = flsm.Flush()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected flush result:", err)
 		return
 	}
 
-	if i, err := flsm.doFlush(1, 0); i != 0 || err != file.ErrAlreadyInUse {
+	i, err := flsm.doFlush(1, 0)
+	if sfe, ok := err.(*file.StorageFileError); i != 0 || !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected doFlush result:", i, err)
 		return
 	}
@@ -334,7 +337,8 @@ func TestFreeLogiclaSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := flsm.Flush(); err != file.ErrAlreadyInUse {
+	err = flsm.Flush()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected flush result:", err)
 		return
 	}

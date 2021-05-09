@@ -1,0 +1,246 @@
+import "./const.ecal" as const
+import "./helper.ecal" as hlp
+
+/*
+ newGameWorld creates a new game world datastructure.
+*/
+func newGameWorld(name) {
+    let ret := hlp.copyMap(DefaultGameWorld)
+
+    ret["key"] := name
+    ret["kind"] := const.ObjectKinds.ConfigurationObject
+
+    return ret
+}
+
+DefaultGameWorld := {
+    "screenWidth" : 1280,
+    "screenHeight" : 1024,
+    "screenElementWidth" : 1280,
+    "screenElementHeight" : 1024,
+    "backdrop" : "background_nebular"
+}
+
+/*
+ newSpriteNode creates a new general sprite datastructure.
+*/
+func newSpriteNode(id, kind, x, y, dim=20, rot=0, speed=0) {
+    let ret := hlp.copyMap(DefaultSpriteState)
+
+    ret["key"] := id
+    ret["kind"] := kind
+
+    ret["id"] := id
+    ret["x"] := x
+    ret["y"] := y
+
+    ret["dim"] := dim
+    ret["rot"] := rot
+    ret["speed"] := speed
+
+    return ret
+}
+
+DefaultSpriteState := {
+
+    /* A unique ID */
+    "id" : "",
+
+    /* Sprite x position */
+    "x" : 20,
+
+    /* Sprite y position */
+    "y" : 20,
+
+    /* Dimensions of the sprite (box) */
+    "dim" : 20,
+
+    /* Flag if the sprite is moving or static */
+    "isMoving" : true,
+
+    /*
+     Flag if the sprite is kept in the display or if it should be
+     destroyed once it is outside of the visible area
+     */
+    "displayLoop" : true,
+
+    /* Turning direction (-1 for left, 1 for right, 0 no turning) */
+    "dir" : 0,
+
+    /* Angle of rotation */
+    "rot" : 0,
+
+    /* Rotation speed for each step (in radians) */
+    "rotSpeed" : math.Pi / 180,
+
+    /* Moving direction (1 forward, -1 backwards, 0 no movement) */
+    "speed" : 0,
+
+    /* Strafing direction of sprite (-1 left, 1 right, 0 no movement) */
+    "strafe" : 0,
+
+    /* Move speed for each step */
+    "moveSpeed" : 0.21,
+
+    /* Action handler funcion */
+    "doAction" : func (entity, action, engine) {
+    },
+
+    /* Collision handler funcion */
+    "collision" : func (entity, otherEntity) {
+        return []
+    }
+}
+
+PlayerState := {
+    "lastBounce" : 0,
+
+    /* Collision handler funcion */
+    "collision" : func (entity, otherEntity, engine) {
+        return [entity]
+    },
+
+    /* Action handler funcion */
+    "doAction" : func (entity, action, engine) {
+
+        if action == "fire" {
+            let sx := entity.x + math.cos(entity.rot) * 20
+            let sy := entity.y + math.sin(entity.rot) * 20
+            let sprites := engine.gameState[engine.part].sprites
+            let sprite := newShot("shot-{{entity.id}}-{{math.floor(rand() * 1000)}}", sx, sy, entity.rot)
+
+            sprite.displayLoop := false
+            sprite.owner := entity.id
+
+            mutex GameStateMutex {
+                engine.gameState[engine.part].sprites := add(sprites, sprite)
+            }
+
+            sendAudioEvent({"audioEvent" : "shot", "player" : entity.id}, engine)
+        }
+    }
+}
+
+/*
+ newPlayer creates a new player datastructure.
+*/
+func newPlayer(id, x, y) {
+    base := newSpriteNode(id, const.ObjectKinds.Player, x, y)
+    return hlp.copyMap(PlayerState, base)
+}
+
+ShotState := {
+    /* Collision handler funcion */
+    "collision" : func (entity, otherEntity, engine) {
+
+        if otherEntity.kind == const.ObjectKinds.Asteroid {
+            addEvent("changescore", "main.gamescore", {
+                "id" : entity.owner,
+                "part" : engine.part,
+                "changeFunc" : func (s) {
+                    s.score := s.score + 100
+                }
+            })
+        }
+
+        /* A shot colliding with anything removes the shot */
+        return [entity]
+}}
+
+/*
+ newShot creates a new shot datastructure.
+*/
+func newShot(id, x, y, rot) {
+    base := newSpriteNode(id, const.ObjectKinds.Shot, x, y, 10, rot, 0.05)
+    return hlp.copyMap(ShotState, base)
+}
+
+AsteroidState := {
+    "lastBounce" : 0,
+
+    /* Collision handler funcion */
+    "collision" : func (entity, otherEntity, engine) {
+        let ret := []
+
+        if otherEntity.kind == const.ObjectKinds.Asteroid {
+
+            /*
+             Asteroids bounce off each other
+             */
+            if now() - entity.lastBounce > 1000000 {
+
+                entity.rot := entity.rot + math.Pi
+
+                if otherEntity.kind == const.ObjectKinds.Asteroid {
+                    otherEntity.rot := otherEntity.rot + math.Pi
+                }
+
+                /* Prevent further bouncing for some time on both objects */
+                entity.lastBounce := now()
+                if otherEntity.kind == const.ObjectKinds.Asteroid {
+                    otherEntity.lastBounce := now()
+                }
+            }
+        } elif otherEntity.kind == const.ObjectKinds.Shot {
+            let sprites := engine.gameState[engine.part].sprites
+
+            let newParticleAsteroid := func (counter) {
+
+                /*
+                 Create a particle asteroid after a bigger asteroid has been shot
+                 */
+                let rot := counter % 3 * 45 + math.floor(rand() * 45)
+                let dim := math.floor(entity.dim * 0.5)
+                let radius := 10 + math.floor(rand() * 10)
+                let speed := entity.speed + math.floor(2 + rand() * 3) / 1000
+                let newX := math.floor(entity.x + math.cos(rot) * radius)
+                let newY := math.floor(entity.y + math.sin(rot) * radius)
+
+                return newAsteroid("{{entity.id}}-{{counter}}", newX, newY, 5 + dim, rot, speed)
+            }
+
+            if entity.dim > 35 {
+                for i in range(1, 4) {
+                    let sprite := newParticleAsteroid(i)
+                    sprite.lastBounce := now()
+                    sprites := add(sprites, sprite)
+                }
+
+                mutex GameStateMutex {
+                    engine.gameState[engine.part].sprites := sprites
+                }
+
+                sendAudioEvent({"audioEvent" : "explosion"}, engine)
+            } else {
+                sendAudioEvent({"audioEvent" : "vanish"}, engine)
+            }
+
+            ret := [entity]
+        }
+
+        return ret
+    },
+
+    /* Action handler funcion */
+    "doAction" : func (entity, action, engine) {
+    }
+}
+
+/*
+ newAsteroid creates a new asteroid datastructure.
+*/
+func newAsteroid(id, x, y, dim=20, rot=0, speed=0) {
+    base := newSpriteNode(id, const.ObjectKinds.Asteroid, x, y, dim, rot, speed)
+    return hlp.copyMap(AsteroidState, base)
+}
+
+/*
+ sendAudioEvent sends an audio event to the frontend.
+*/
+func sendAudioEvent(payload, engine) {
+    for [commID, data] in engine.websocket {
+        if data.gamename == engine.part {
+            addEvent("AudioEvent", "db.web.sock.msg", {"commID" : commID, "payload" : payload})
+        }
+    }
+}

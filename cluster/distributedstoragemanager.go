@@ -355,7 +355,7 @@ FetchCached is not implemented for a DistributedStorageManager. Only defined to 
 the StorageManager interface.
 */
 func (dsm *DistributedStorageManager) FetchCached(loc uint64) (interface{}, error) {
-	return nil, storage.ErrNotInCache
+	return nil, storage.NewStorageManagerError(storage.ErrNotInCache, "", dsm.Name())
 }
 
 /*

@@ -67,11 +67,11 @@ func TestHTreePageFetchExists(t *testing.T) {
 
 	sm.AccessMap[8] = storage.AccessCacheAndFetchError
 
-	if res, err := page.Exists([]byte("testkey4")); res != false || err != storage.ErrSlotNotFound {
+	if res, err := page.Exists([]byte("testkey4")); res != false || err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected exists result:", res, err)
 		return
 	}
-	if res, _, err := page.Get([]byte("testkey4")); res != nil || err != storage.ErrSlotNotFound {
+	if res, _, err := page.Get([]byte("testkey4")); res != nil || err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected get result:", res, err)
 		return
 	}
@@ -95,7 +95,8 @@ func TestHTreePageInsert(t *testing.T) {
 
 	sm.AccessMap[2] = storage.AccessInsertError
 
-	if _, err := page.Put([]byte("testkey1"), "test1"); err != file.ErrAlreadyInUse {
+	_, err := page.Put([]byte("testkey1"), "test1")
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected put result:", err)
 		return
 	}
@@ -104,7 +105,7 @@ func TestHTreePageInsert(t *testing.T) {
 
 	sm.AccessMap[1] = storage.AccessUpdateError
 
-	if _, err := page.Put([]byte("testkey1"), "test1"); err != storage.ErrSlotNotFound {
+	if _, err := page.Put([]byte("testkey1"), "test1"); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected put result:", err)
 		return
 	}
@@ -119,7 +120,7 @@ func TestHTreePageInsert(t *testing.T) {
 
 	sm.AccessMap[2] = storage.AccessCacheAndFetchError
 
-	if _, err := page.Put([]byte("testkey2"), "test2"); err != storage.ErrSlotNotFound {
+	if _, err := page.Put([]byte("testkey2"), "test2"); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected put result:", err)
 		return
 	}
@@ -147,7 +148,8 @@ func TestHTreePageInsert(t *testing.T) {
 
 	sm.AccessMap[3] = storage.AccessInsertError
 
-	if _, err := page.Put([]byte("testkey9"), "test9"); err != file.ErrAlreadyInUse {
+	_, err = page.Put([]byte("testkey9"), "test9")
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected put result:", err)
 		return
 	}
@@ -156,7 +158,7 @@ func TestHTreePageInsert(t *testing.T) {
 
 	sm.AccessMap[1] = storage.AccessUpdateError
 
-	if _, err := page.Put([]byte("testkey9"), "test9"); err != storage.ErrSlotNotFound {
+	if _, err := page.Put([]byte("testkey9"), "test9"); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected put result:", err)
 		return
 	}
@@ -367,7 +369,7 @@ func TestHTreePageRemove(t *testing.T) {
 
 	sm.AccessMap[16] = storage.AccessCacheAndFetchError
 
-	if _, err := page.Remove([]byte("testkey1")); err != storage.ErrSlotNotFound {
+	if _, err := page.Remove([]byte("testkey1")); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected remove result", res)
 		return
 	}
@@ -376,7 +378,7 @@ func TestHTreePageRemove(t *testing.T) {
 
 	sm.AccessMap[1] = storage.AccessUpdateError
 
-	if _, err := page.Remove([]byte("testkey10")); err != storage.ErrSlotNotFound {
+	if _, err := page.Remove([]byte("testkey10")); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected remove result", res)
 		return
 	}
@@ -394,7 +396,7 @@ func TestHTreePageRemove(t *testing.T) {
 
 	sm.AccessMap[1] = storage.AccessUpdateError
 
-	if _, err := page.Remove([]byte("testkey9")); err != storage.ErrSlotNotFound {
+	if _, err := page.Remove([]byte("testkey9")); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected remove result", res)
 		//return
 	}

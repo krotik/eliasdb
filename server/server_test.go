@@ -126,6 +126,10 @@ func TestMainNormalCase(t *testing.T) {
 
 	config.LoadDefaultConfig()
 
+	// Start ECAL scripting by default
+
+	config.Config[config.EnableECALScripts] = true
+
 	// Start cluster by default
 
 	config.Config[config.EnableCluster] = true
@@ -206,12 +210,13 @@ Opening cluster state info
 Starting cluster (log history: 100)
 [Cluster] member1: Starting member manager member1 rpc server on: 127.0.0.1:9030
 Creating GraphManager instance
+Loading ECAL scripts in testdb/scripts
 Creating key (key.pem) and certificate (cert.pem) in: ssl
 Ensuring web folder: testdb/web
 Ensuring login page: testdb/web/login.html
 Ensuring web terminal: testdb/web/db/term.html
 Ensuring cluster terminal: testdb/web/db/cluster.html
-Starting server on: 127.0.0.1:9090
+Starting HTTPS server on: 127.0.0.1:9090
 Writing fingerprint file: testdb/web/fingerprint.json
 Waiting for shutdown
 Lockfile was modified
@@ -259,6 +264,30 @@ func TestMainErrorCases(t *testing.T) {
 
 	// Test db access error
 
+	config.Config[config.MemoryOnlyStorage] = true
+	config.Config[config.EnableReadOnly] = true
+	config.Config[config.EnableECALScripts] = true
+	config.Config[config.ECALEntryScript] = invalidFileName
+
+	runServer()
+
+	// Check that an error happened
+
+	if len(errorLog) != 1 ||
+		!strings.Contains(errorLog[0], "Failed to start ECAL scripting interpreter") {
+		t.Error("Unexpected error:", errorLog)
+		return
+	}
+
+	// Set back logs
+
+	printLog = []string{}
+	errorLog = []string{}
+
+	// Test db access error
+
+	config.Config[config.EnableECALScripts] = false
+	config.Config[config.MemoryOnlyStorage] = false
 	config.Config[config.LocationDatastore] = invalidFileName
 	config.Config[config.EnableReadOnly] = true
 

@@ -68,7 +68,7 @@ func TestPagedStorageFileInitialisation(t *testing.T) {
 	}
 
 	_, err = NewPagedStorageFile(sf)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Init of PageStorageFile should fail if header record is not available")
 		return
 	}
@@ -160,7 +160,9 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	if err := psf.FreePage(3); err != file.ErrAlreadyInUse {
+
+	err = psf.FreePage(3)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -261,7 +263,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 	}
 
 	_, err = psf.AllocatePage(view.TypeTranslationPage)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -275,7 +277,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 	}
 
 	_, err = psf.AllocatePage(view.TypeTranslationPage)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -295,7 +297,7 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 	}
 
 	_, err = psf.AllocatePage(view.TypeTranslationPage)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 	}
 
@@ -316,12 +318,14 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 
 	// Check we can't get Prev info when record is in use
 
-	if _, err := psf.Prev(4); err != file.ErrAlreadyInUse {
+	_, err = psf.Prev(4)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
 
-	if err := psf.FreePage(2); err != file.ErrAlreadyInUse {
+	err = psf.FreePage(2)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -336,7 +340,8 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	if err := psf.FreePage(4); err != file.ErrAlreadyInUse {
+	err = psf.FreePage(4)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -354,7 +359,8 @@ func TestPagedStorageFilePageManagement(t *testing.T) {
 		return
 	}
 
-	if err := psf.Close(); err != file.ErrInUse {
+	err = psf.Close()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrInUse {
 		t.Error(err)
 		return
 	}
@@ -417,7 +423,8 @@ func TestPagedStorageFileTransactionPageManagement(t *testing.T) {
 		return
 	}
 
-	if err := psf.FreePage(3); err != file.ErrAlreadyInUse {
+	err = psf.FreePage(3)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -465,7 +472,8 @@ func TestPagedStorageFileTransactionPageManagement(t *testing.T) {
 
 	record, err = sf.Get(4)
 
-	if err := psf.Flush(); err != file.ErrInUse {
+	err = psf.Flush()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrInUse {
 		t.Error(err)
 		return
 	}
@@ -474,7 +482,8 @@ func TestPagedStorageFileTransactionPageManagement(t *testing.T) {
 
 	psf.header.record = nil
 
-	if err := psf.Flush(); err != file.ErrInUse {
+	err = psf.Flush()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrInUse {
 		t.Error(err)
 		return
 	}
@@ -483,7 +492,8 @@ func TestPagedStorageFileTransactionPageManagement(t *testing.T) {
 
 	record, err = sf.Get(4)
 
-	if err := psf.Rollback(); err != file.ErrInUse {
+	err = psf.Rollback()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrInUse {
 		t.Error(err)
 		return
 	}

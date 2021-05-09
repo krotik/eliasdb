@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <help_text/>
+  <zoom_level>8</zoom_level>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>128</x>
+      <y>216</y>
+      <w>1392</w>
+      <h>336</h>
+    </coordinates>
+    <panel_attributes>title=Game loop in the backend
+obj=engine.ecal\nmoveLoop()~a 
+obj=engine.ecal\nmoveObject()~b
+obj=engine.ecal\nexecuteAction()~c
+obj=engine.ecal\ncollisionDetection()~d
+obj=game/game-controller.ts\nupdatePushHandler()~e
+gate-&gt;a:Pulse trigger main.gameloop
+a-&gt;b:loop over game objects
+a-&gt;c:loop over game objects
+b-&gt;e:send state update to all websockets
+a-&gt;d:loop over game objects
+a-&gt;e:send object removals to all websockets
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>

@@ -36,10 +36,11 @@ import (
 	"devt.de/krotik/common/timeutil"
 	"devt.de/krotik/eliasdb/api"
 	"devt.de/krotik/eliasdb/api/ac"
-	"devt.de/krotik/eliasdb/api/v1"
+	v1 "devt.de/krotik/eliasdb/api/v1"
 	"devt.de/krotik/eliasdb/cluster"
 	"devt.de/krotik/eliasdb/cluster/manager"
 	"devt.de/krotik/eliasdb/config"
+	"devt.de/krotik/eliasdb/ecal"
 	"devt.de/krotik/eliasdb/graph"
 	"devt.de/krotik/eliasdb/graph/graphstorage"
 )
@@ -196,6 +197,24 @@ func StartServerWithSingleOp(singleOperation func(*graph.Manager) bool) {
 		os.RemoveAll(filepath.Join(basepath, config.Str(config.LockFile)))
 	}()
 
+	// Create ScriptingInterpreter instance and run ECAL scripts
+
+	if config.Bool(config.EnableECALScripts) {
+
+		// Make sure the script directory exists
+
+		loc := filepath.Join(basepath, config.Str(config.ECALScriptFolder))
+		ensurePath(loc)
+
+		print("Loading ECAL scripts in ", loc)
+
+		api.SI = ecal.NewScriptingInterpreter(loc, api.GM)
+		if err := api.SI.Run(); err != nil {
+			fatal("Failed to start ECAL scripting interpreter:", err)
+			return
+		}
+	}
+
 	// Handle single operation - these are operations which work on the GraphManager
 	// and then exit.
 
@@ -248,6 +267,7 @@ func StartServerWithSingleOp(singleOperation func(*graph.Manager) bool) {
 	// Register public REST endpoints - these will never be checked for authentication
 
 	api.RegisterRestEndpoints(api.GeneralEndpointMap)
+	api.RegisterRestEndpoints(v1.V1PublicEndpointMap)
 
 	// Setup access control
 
@@ -413,7 +433,7 @@ func StartServerWithSingleOp(singleOperation func(*graph.Manager) bool) {
 
 	port := config.Str(config.HTTPSPort)
 
-	print("Starting server on: ", api.APIHost)
+	print("Starting HTTPS server on: ", api.APIHost)
 
 	go hs.RunHTTPSServer(basepath+config.Str(config.LocationHTTPS), config.Str(config.HTTPSCertificate),
 		config.Str(config.HTTPSKey), ":"+port, &wg)
@@ -428,6 +448,10 @@ func StartServerWithSingleOp(singleOperation func(*graph.Manager) bool) {
 		fatal(hs.LastError)
 		return
 	}
+
+	// Add to the wait group so we can wait for the shutdown
+
+	wg.Add(1)
 
 	// Read server certificate and write a fingerprint file
 
@@ -471,10 +495,6 @@ func StartServerWithSingleOp(singleOperation func(*graph.Manager) bool) {
 
 		hs.Shutdown()
 	}()
-
-	// Add to the wait group so we can wait for the shutdown
-
-	wg.Add(1)
 
 	print("Waiting for shutdown")
 	wg.Wait()

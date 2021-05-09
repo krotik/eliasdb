@@ -25,7 +25,7 @@ import (
 /*
 ProductVersion is the current version of EliasDB
 */
-const ProductVersion = "1.1.0"
+const ProductVersion = "1.2.0"
 
 /*
 DefaultConfigFile is the default config file which will be used to configure EliasDB
@@ -49,6 +49,8 @@ const (
 	HTTPSPort                = "HTTPSPort"
 	CookieMaxAgeSeconds      = "CookieMaxAgeSeconds"
 	EnableReadOnly           = "EnableReadOnly"
+	EnableECALScripts        = "EnableECALScripts"
+	EnableECALDebugServer    = "EnableECALDebugServer"
 	EnableWebFolder          = "EnableWebFolder"
 	EnableAccessControl      = "EnableAccessControl"
 	EnableWebTerminal        = "EnableWebTerminal"
@@ -59,6 +61,13 @@ const (
 	ClusterStateInfoFile     = "ClusterStateInfoFile"
 	ClusterConfigFile        = "ClusterConfigFile"
 	ClusterLogHistory        = "ClusterLogHistory"
+	ECALScriptFolder         = "ECALScriptFolder"
+	ECALWorkerCount          = "ECALWorkerCount"
+	ECALEntryScript          = "ECALEntryScript"
+	ECALLogLevel             = "ECALLogLevel"
+	ECALLogFile              = "ECALLogFile"
+	ECALDebugServerHost      = "ECALDebugServerHost"
+	ECALDebugServerPort      = "ECALDebugServerPort"
 )
 
 /*
@@ -67,6 +76,8 @@ DefaultConfig is the defaut configuration
 var DefaultConfig = map[string]interface{}{
 	MemoryOnlyStorage:        false,
 	EnableReadOnly:           false,
+	EnableECALScripts:        false,
+	EnableECALDebugServer:    false,
 	EnableWebFolder:          true,
 	EnableAccessControl:      false,
 	EnableWebTerminal:        true,
@@ -88,6 +99,13 @@ var DefaultConfig = map[string]interface{}{
 	ClusterStateInfoFile:     "cluster.stateinfo",
 	ClusterConfigFile:        "cluster.config.json",
 	ClusterLogHistory:        100.0,
+	ECALScriptFolder:         "scripts",
+	ECALWorkerCount:          10,
+	ECALEntryScript:          "main.ecal",
+	ECALLogLevel:             "info",
+	ECALLogFile:              "",
+	ECALDebugServerHost:      "127.0.0.1",
+	ECALDebugServerPort:      "33274",
 }
 
 /*

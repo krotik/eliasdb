@@ -16,7 +16,7 @@ Chat window which displays an ongoing chat channel.
         <div class="chat-msg-window" 
             v-for="msg in messages"
             v-bind:key="msg.key">
-                <div>{{msg.message}}</div>
+                <div>{{msg.message}} at {{new Date(msg.ts / 1000).toLocaleString()}}</div>
         </div>
         <chat-text-area :channel="channel"/>
     </div>
@@ -66,6 +66,7 @@ subscription {
   ${this.channel}(ascending:key, last:11) { # last:11 because channel node will be last
       key,
       message,
+      ts,
   }
 }`,
             data => {

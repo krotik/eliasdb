@@ -196,7 +196,7 @@ func (cdsm *CachedDiskStorageManager) FetchCached(loc uint64) (interface{}, erro
 		return entry.object, nil
 	}
 
-	return nil, ErrNotInCache
+	return nil, NewStorageManagerError(ErrNotInCache, "", cdsm.Name())
 }
 
 /*

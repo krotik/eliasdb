@@ -11,6 +11,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 
 	"devt.de/krotik/common/pools"
@@ -22,44 +23,32 @@ BufferPool is a pool of byte buffers.
 var BufferPool = pools.NewByteBufferPool()
 
 /*
-Common storage manager related errors. Having these global definitions
-makes the error comparison easier but has potential race-conditions.
-If two storage manager objects throw an error at the same time both errors
-will appear to come from the same instance.
+Common storage manager related errors.
 */
 var (
-	ErrSlotNotFound = newStorageManagerError("Slot not found")
-	ErrNotInCache   = newStorageManagerError("No entry in cache")
+	ErrSlotNotFound = errors.New("Slot not found")
+	ErrNotInCache   = errors.New("No entry in cache")
 )
 
 /*
-newStorageManagerError returns a new StorageManager specific error.
+ManagerError is a storage manager related error.
 */
-func newStorageManagerError(text string) *storagemanagerError {
-	return &storagemanagerError{text, "?", ""}
+type ManagerError struct {
+	Type        error
+	Detail      string
+	Managername string
 }
 
 /*
-StorageManager specific error datastructure
+NewStorageManagerError returns a new StorageManager specific error.
 */
-type storagemanagerError struct {
-	msg      string
-	filename string
-	info     string
-}
-
-/*
-fireError returns the error instance from a specific StorageManager instance.
-*/
-func (e *storagemanagerError) fireError(s Manager, info string) error {
-	e.filename = s.Name()
-	e.info = info
-	return e
+func NewStorageManagerError(smeType error, smeDetail string, smeManagername string) *ManagerError {
+	return &ManagerError{smeType, smeDetail, smeManagername}
 }
 
 /*
 Error returns a string representation of the error.
 */
-func (e *storagemanagerError) Error() string {
-	return fmt.Sprintf("%s (%s - %s)", e.msg, e.filename, e.info)
+func (e *ManagerError) Error() string {
+	return fmt.Sprintf("%s (%s - %s)", e.Type.Error(), e.Managername, e.Detail)
 }

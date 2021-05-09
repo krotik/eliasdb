@@ -30,6 +30,7 @@ import (
 )
 
 func TestClusterStorage(t *testing.T) {
+
 	clusterQueryURL := "http://localhost" + TESTPORT + EndpointClusterQuery
 	graphURL := "http://localhost" + TESTPORT + EndpointGraph
 
@@ -103,6 +104,7 @@ func TestClusterStorage(t *testing.T) {
 }
 
 func TestClusterQuery(t *testing.T) {
+
 	queryURL := "http://localhost" + TESTPORT + EndpointClusterQuery
 
 	st, _, res := sendTestRequest(queryURL, "GET", nil)
@@ -425,6 +427,7 @@ func TestClusterQuery(t *testing.T) {
 }
 
 func TestClusterQueryBigCluster(t *testing.T) {
+
 	queryURL := "http://localhost" + TESTPORT + EndpointClusterQuery
 
 	// Create a big cluster

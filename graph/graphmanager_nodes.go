@@ -184,7 +184,23 @@ StoreNode stores a single node in a partition of the graph. This function will
 overwrites any existing node.
 */
 func (gm *Manager) StoreNode(part string, node data.Node) error {
-	return gm.storeOrUpdateNode(part, node, false)
+	trans := newInternalGraphTrans(gm)
+	trans.subtrans = true
+
+	err := gm.gr.graphEvent(trans, EventNodeStore, part, node)
+
+	if err != nil {
+		if err == ErrEventHandled {
+			err = nil
+		}
+		return err
+	}
+
+	if err = trans.Commit(); err == nil {
+		err = gm.storeOrUpdateNode(part, node, false)
+	}
+
+	return err
 }
 
 /*
@@ -192,7 +208,23 @@ UpdateNode updates a single node in a partition of the graph. This function will
 only update the given values of the node.
 */
 func (gm *Manager) UpdateNode(part string, node data.Node) error {
-	return gm.storeOrUpdateNode(part, node, true)
+	trans := newInternalGraphTrans(gm)
+	trans.subtrans = true
+
+	err := gm.gr.graphEvent(trans, EventNodeUpdate, part, node)
+
+	if err != nil {
+		if err == ErrEventHandled {
+			err = nil
+		}
+		return err
+	}
+
+	if err = trans.Commit(); err == nil {
+		err = gm.storeOrUpdateNode(part, node, true)
+	}
+
+	return err
 }
 
 /*
@@ -264,6 +296,18 @@ func (gm *Manager) storeOrUpdateNode(part string, node data.Node, onlyUpdate boo
 		}
 	}
 
+	defer func() {
+
+		// Flush changes
+
+		gm.gs.FlushMain()
+
+		gm.flushNodeIndex(part, node.Kind())
+
+		gm.flushNodeStorage(part, node.Kind())
+
+	}()
+
 	// Execute rules
 
 	trans := newInternalGraphTrans(gm)
@@ -276,19 +320,13 @@ func (gm *Manager) storeOrUpdateNode(part string, node data.Node, onlyUpdate boo
 		event = EventNodeUpdated
 	}
 
-	if err := gm.gr.graphEvent(trans, event, part, node, oldnode); err != nil {
+	if err := gm.gr.graphEvent(trans, event, part, node, oldnode); err != nil && err != ErrEventHandled {
 		return err
 	} else if err := trans.Commit(); err != nil {
 		return err
 	}
 
-	// Flush changes - errors only reported on the actual node storage flush
-
-	gm.gs.FlushMain()
-
-	gm.flushNodeIndex(part, node.Kind())
-
-	return gm.flushNodeStorage(part, node.Kind())
+	return nil
 }
 
 /*
@@ -438,70 +476,91 @@ func (gm *Manager) writeNode(node data.Node, onlyUpdate bool, attrTree *hash.HTr
 RemoveNode removes a single node from a partition of the graph.
 */
 func (gm *Manager) RemoveNode(part string, key string, kind string) (data.Node, error) {
+	var err error
 
-	// Get the HTree which stores the node index and node kind
+	trans := newInternalGraphTrans(gm)
+	trans.subtrans = true
 
-	iht, err := gm.getNodeIndexHTree(part, kind, false)
-	if err != nil {
+	if err = gm.gr.graphEvent(trans, EventNodeDelete, part, key, kind); err != nil {
+		if err == ErrEventHandled {
+			err = nil
+		}
 		return nil, err
 	}
 
-	attTree, valTree, err := gm.getNodeStorageHTree(part, kind, false)
-	if err != nil || attTree == nil || valTree == nil {
-		return nil, err
-	}
+	err = trans.Commit()
 
-	// Take writer lock
+	if err == nil {
 
-	gm.mutex.Lock()
-	defer gm.mutex.Unlock()
+		// Get the HTree which stores the node index and node kind
 
-	// Delete the node from the datastore
+		iht, err := gm.getNodeIndexHTree(part, kind, false)
+		if err != nil {
+			return nil, err
+		}
 
-	node, err := gm.deleteNode(key, kind, attTree, valTree)
-	if err != nil {
-		return node, err
-	}
+		attTree, valTree, err := gm.getNodeStorageHTree(part, kind, false)
+		if err != nil || attTree == nil || valTree == nil {
+			return nil, err
+		}
 
-	// Update the index
+		// Take writer lock
 
-	if node != nil {
+		gm.mutex.Lock()
+		defer gm.mutex.Unlock()
 
-		if iht != nil {
-			err := util.NewIndexManager(iht).Deindex(key, node.IndexMap())
-			if err != nil {
+		// Delete the node from the datastore
+
+		node, err := gm.deleteNode(key, kind, attTree, valTree)
+		if err != nil {
+			return node, err
+		}
+
+		// Update the index
+
+		if node != nil {
+
+			if iht != nil {
+				err := util.NewIndexManager(iht).Deindex(key, node.IndexMap())
+				if err != nil {
+					return node, err
+				}
+			}
+
+			// Decrease the node count
+
+			currentCount := gm.NodeCount(kind)
+			if err := gm.writeNodeCount(kind, currentCount-1, true); err != nil {
 				return node, err
 			}
+
+			defer func() {
+
+				// Flush changes
+
+				gm.gs.FlushMain()
+
+				gm.flushNodeIndex(part, kind)
+
+				gm.flushNodeStorage(part, kind)
+			}()
+
+			// Execute rules
+
+			trans := newInternalGraphTrans(gm)
+			trans.subtrans = true
+
+			if err := gm.gr.graphEvent(trans, EventNodeDeleted, part, node); err != nil && err != ErrEventHandled {
+				return node, err
+			} else if err := trans.Commit(); err != nil {
+				return node, err
+			}
+
+			return node, nil
 		}
-
-		// Decrease the node count
-
-		currentCount := gm.NodeCount(kind)
-		if err := gm.writeNodeCount(kind, currentCount-1, true); err != nil {
-			return node, err
-		}
-
-		// Execute rules
-
-		trans := newInternalGraphTrans(gm)
-		trans.subtrans = true
-
-		if err := gm.gr.graphEvent(trans, EventNodeDeleted, part, node); err != nil {
-			return node, err
-		} else if err := trans.Commit(); err != nil {
-			return node, err
-		}
-
-		// Flush changes - errors only reported on the actual node storage flush
-
-		gm.gs.FlushMain()
-
-		gm.flushNodeIndex(part, kind)
-
-		return node, gm.flushNodeStorage(part, kind)
 	}
 
-	return nil, nil
+	return nil, err
 }
 
 /*

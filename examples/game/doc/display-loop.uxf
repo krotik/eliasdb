@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <help_text/>
+  <zoom_level>9</zoom_level>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>63</x>
+      <y>243</y>
+      <w>1377</w>
+      <h>450</h>
+    </coordinates>
+    <panel_attributes>title=Display loop in the frontend
+obj=game/game-controller.ts\nupdatePushHandler~a
+obj=game/objects.ts\nPlayer~b
+obj=game/objects.ts\nSprite~c
+obj=display/engine.ts\nMainDisplayController:drawLoop()~d
+obj=display/engine.ts\nMainDisplayController~e
+gate-&gt;a:Websocket messages
+a-&gt;b:setState()
+a-&gt;c:setState()
+d-&gt;e:drawSprites()
+d-&gt;e:drawPlayer()
+d-&gt;e:drawInfoOverlay()
+d-&gt;d+:drawLoop() (using setTimeout)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>

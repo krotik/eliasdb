@@ -348,8 +348,8 @@ func (bdsm *ByteDiskStorageManager) Update(loc uint64, o interface{}) error {
 	}
 
 	if ploc == 0 {
-		return ErrSlotNotFound.fireError(bdsm, fmt.Sprint("Location:",
-			util.LocationRecord(loc), util.LocationOffset(loc)))
+		return NewStorageManagerError(ErrSlotNotFound, fmt.Sprint("Location:",
+			util.LocationRecord(loc), util.LocationOffset(loc)), bdsm.Name())
 	}
 
 	// Continue single threaded from here on
@@ -393,8 +393,8 @@ func (bdsm *ByteDiskStorageManager) Fetch(loc uint64, o interface{}) error {
 	}
 
 	if ploc == 0 {
-		return ErrSlotNotFound.fireError(bdsm, fmt.Sprint("Location:",
-			util.LocationRecord(loc), util.LocationOffset(loc)))
+		return NewStorageManagerError(ErrSlotNotFound, fmt.Sprint("Location:",
+			util.LocationRecord(loc), util.LocationOffset(loc)), bdsm.Name())
 	}
 
 	// Request the stored bytes
@@ -419,7 +419,8 @@ FetchCached is not implemented for a ByteDiskStorageManager.
 Only defined to satisfy the StorageManager interface.
 */
 func (bdsm *ByteDiskStorageManager) FetchCached(loc uint64) (interface{}, error) {
-	return nil, ErrNotInCache
+	return nil, NewStorageManagerError(ErrNotInCache, "", bdsm.Name())
+
 }
 
 /*
@@ -447,8 +448,8 @@ func (bdsm *ByteDiskStorageManager) Free(loc uint64) error {
 	}
 
 	if ploc == 0 {
-		return ErrSlotNotFound.fireError(bdsm, fmt.Sprint("Location:",
-			util.LocationRecord(loc), util.LocationOffset(loc)))
+		return NewStorageManagerError(ErrSlotNotFound, fmt.Sprint("Location:",
+			util.LocationRecord(loc), util.LocationOffset(loc)), bdsm.Name())
 	}
 
 	// First try to free the physical slot since here is the data

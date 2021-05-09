@@ -315,7 +315,7 @@ func TestGraphQuery(t *testing.T) {
 	st, _, res = sendTestRequest(queryURL+"/main/n/Spam?offset=19&limit=1", "GET", nil)
 
 	if st != "500 Internal Server Error" ||
-		res != "GraphError: Could not read graph information (Record is already in-use (? - ))" {
+		res != "GraphError: Could not read graph information (Record is already in-use (<memory> - ))" {
 		t.Error("Unexpected response:", res)
 		return
 	}
@@ -323,7 +323,7 @@ func TestGraphQuery(t *testing.T) {
 	st, _, res = sendTestRequest(queryURL+"/main/n/Spam", "GET", nil)
 
 	if st != "500 Internal Server Error" ||
-		res != "GraphError: Could not read graph information (Record is already in-use (? - ))" {
+		res != "GraphError: Could not read graph information (Record is already in-use (<memory> - ))" {
 		t.Error("Unexpected response:", res)
 		return
 	}

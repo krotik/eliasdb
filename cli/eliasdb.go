@@ -47,10 +47,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"devt.de/krotik/common/errorutil"
 	"devt.de/krotik/common/fileutil"
 	"devt.de/krotik/common/termutil"
+	"devt.de/krotik/eliasdb/api"
 	"devt.de/krotik/eliasdb/config"
 	"devt.de/krotik/eliasdb/console"
 	"devt.de/krotik/eliasdb/graph"
@@ -289,9 +291,14 @@ handleServerCommandLine handles all command line options for the server
 */
 func handleServerCommandLine(gm *graph.Manager) bool {
 	var err error
+	var ecalConsole *bool
 
 	importDb := flag.String("import", "", "Import a database from a zip file")
 	exportDb := flag.String("export", "", "Export the current database to a zip file")
+
+	if config.Bool(config.EnableECALScripts) {
+		ecalConsole = flag.Bool("ecal-console", false, "Start an interactive interpreter console for ECAL")
+	}
 
 	noServ := flag.Bool("no-serv", false, "Do not start the server after initialization")
 
@@ -363,6 +370,48 @@ func handleServerCommandLine(gm *graph.Manager) bool {
 
 				if err != nil {
 					break
+				}
+			}
+		}
+	}
+
+	if ecalConsole != nil && *ecalConsole {
+		var term termutil.ConsoleLineTerminal
+
+		isExitLine := func(s string) bool {
+			return s == "exit" || s == "q" || s == "quit" || s == "bye" || s == "\x04"
+		}
+
+		term, err = termutil.NewConsoleLineTerminal(os.Stdout)
+		if err == nil {
+			term, err = termutil.AddHistoryMixin(term, "", isExitLine)
+			if err == nil {
+				tid := api.SI.Interpreter.RuntimeProvider.NewThreadID()
+
+				runECALConsole := func(delay int) {
+					defer term.StopTerm()
+
+					time.Sleep(time.Duration(delay) * time.Millisecond)
+
+					term.WriteString(fmt.Sprintln("Type 'q' or 'quit' to exit the shell and '?' to get help"))
+
+					line, err := term.NextLine()
+					for err == nil && !isExitLine(line) {
+						trimmedLine := strings.TrimSpace(line)
+
+						api.SI.Interpreter.HandleInput(term, trimmedLine, tid)
+
+						line, err = term.NextLine()
+					}
+				}
+
+				if err = term.StartTerm(); err == nil {
+
+					if *noServ {
+						runECALConsole(0)
+					} else {
+						go runECALConsole(3000)
+					}
 				}
 			}
 		}

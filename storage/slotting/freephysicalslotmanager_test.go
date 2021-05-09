@@ -217,12 +217,14 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := fpsm.Flush(); err != file.ErrAlreadyInUse {
+	err = fpsm.Flush()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected flush result:", err)
 		return
 	}
 
-	if i, err := fpsm.doFlush(1, 0); i != 0 || err != file.ErrAlreadyInUse {
+	i, err := fpsm.doFlush(1, 0)
+	if sfe, ok := err.(*file.StorageFileError); i != 0 || !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected doFlush result:", i, err)
 		return
 	}
@@ -241,7 +243,8 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := fpsm.Flush(); err != file.ErrAlreadyInUse {
+	err = fpsm.Flush()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected flush result:", err)
 		return
 	}
@@ -293,7 +296,8 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if loc, err := fpsm.Get(499); err != file.ErrAlreadyInUse {
+	loc, err := fpsm.Get(499)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected Get result:", loc, err)
 		return
 	}
@@ -303,7 +307,7 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	loc, err := fpsm.Get(499)
+	loc, err = fpsm.Get(499)
 	if err != nil || loc != 32702963 {
 		t.Error("Unexpected Get result:", err, loc)
 		return
@@ -321,7 +325,8 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if loc, err := fpsm.Get(499); err != file.ErrAlreadyInUse {
+	loc, err = fpsm.Get(499)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected Get result:", loc, err)
 		return
 	}
@@ -356,7 +361,8 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if err := fpsm.Flush(); err != file.ErrAlreadyInUse {
+	err = fpsm.Flush()
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected Flush result:", err)
 		return
 	}

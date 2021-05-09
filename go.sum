@@ -1,4 +1,7 @@
-devt.de/krotik/common v1.4.0 h1:chZihshmuv1yehyujrYyW7Yg4cgRqqIWEG2IAzhfFkA=
 devt.de/krotik/common v1.4.0/go.mod h1:X4nsS85DAxyHkwSg/Tc6+XC2zfmGeaVz+37F61+eSaI=
+devt.de/krotik/common v1.4.1 h1:gsZ9OrV+Eo4ar8Y5iLs1lAdWd8aRIcPQJ0CVxLp0uys=
+devt.de/krotik/common v1.4.1/go.mod h1:X4nsS85DAxyHkwSg/Tc6+XC2zfmGeaVz+37F61+eSaI=
+devt.de/krotik/ecal v1.6.1 h1:3E4v4KyptVmLw4qejEe5XPNUaJhI9Ba7rcXWX/xKyrY=
+devt.de/krotik/ecal v1.6.1/go.mod h1:0qIx3h+EjUnStgdEUnwAeO44UluTSLcpBWXA5zEw0hQ=
 github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=

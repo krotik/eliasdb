@@ -86,13 +86,13 @@ func TestPageCursor(t *testing.T) {
 	sf.Get(4)
 
 	_, err = pc.Prev()
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Operation should fail as the required record is in use")
 		return
 	}
 
 	_, err = pc.Next()
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Operation should fail as the required record is in use")
 		return
 	}

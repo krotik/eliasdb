@@ -12,6 +12,7 @@ package file
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -20,18 +21,15 @@ import (
 )
 
 /*
-Common storage file related errors. Having these global definitions
-makes the error comparison easier but has potential race-conditions.
-If two StorageFile objects throw an error at the same time both errors
-will appear to come from the same instance.
+Common storage file related errors.
 */
 var (
-	ErrAlreadyInUse  = newStorageFileError("Record is already in-use")
-	ErrNotInUse      = newStorageFileError("Record was not in-use")
-	ErrInUse         = newStorageFileError("Records are still in-use")
-	ErrTransDisabled = newStorageFileError("Transactions are disabled")
-	ErrInTrans       = newStorageFileError("Records are still in a transaction")
-	ErrNilData       = newStorageFileError("Record has nil data")
+	ErrAlreadyInUse  = errors.New("Record is already in-use")
+	ErrNotInUse      = errors.New("Record was not in-use")
+	ErrInUse         = errors.New("Records are still in-use")
+	ErrTransDisabled = errors.New("Transactions are disabled")
+	ErrInTrans       = errors.New("Records are still in a transaction")
+	ErrNilData       = errors.New("Record has nil data")
 )
 
 /*
@@ -143,7 +141,7 @@ func (s *StorageFile) Get(id uint64) (*Record, error) {
 
 	// Error if a record which is in-use is requested again before it is released.
 	if _, ok := s.inUse[id]; ok {
-		return nil, ErrAlreadyInUse.fireError(s, fmt.Sprintf("Record %v", id))
+		return nil, NewStorageFileError(ErrAlreadyInUse, fmt.Sprintf("Record %v", id), s.name)
 	}
 
 	// Read the record in from file
@@ -248,7 +246,7 @@ func (s *StorageFile) writeRecord(record *Record) error {
 		return nil
 	}
 
-	return ErrNilData.fireError(s, fmt.Sprintf("Record %v", record.ID()))
+	return NewStorageFileError(ErrNilData, fmt.Sprintf("Record %v", record.ID()), s.name)
 }
 
 /*
@@ -257,7 +255,7 @@ readRecord fills a given record object with data.
 func (s *StorageFile) readRecord(record *Record) error {
 
 	if record.Data() == nil {
-		return ErrNilData.fireError(s, fmt.Sprintf("Record %v", record.ID()))
+		return NewStorageFileError(ErrNilData, fmt.Sprintf("Record %v", record.ID()), s.name)
 	}
 
 	offset := record.ID() * uint64(s.recordSize)
@@ -324,7 +322,7 @@ func (s *StorageFile) ReleaseInUseID(id uint64, dirty bool) error {
 	record, ok := s.inUse[id]
 
 	if !ok {
-		return ErrNotInUse.fireError(s, fmt.Sprintf("Record %v", id))
+		return NewStorageFileError(ErrNotInUse, fmt.Sprintf("Record %v", id), s.name)
 	}
 
 	if !record.Dirty() && dirty {
@@ -371,7 +369,7 @@ writes all dirty records to disk.
 */
 func (s *StorageFile) Flush() error {
 	if len(s.inUse) > 0 {
-		return ErrInUse.fireError(s, fmt.Sprintf("Records %v", len(s.inUse)))
+		return NewStorageFileError(ErrInUse, fmt.Sprintf("Records %v", len(s.inUse)), s.name)
 	}
 
 	if len(s.dirty) == 0 {
@@ -411,11 +409,11 @@ Rollback cancels the current transaction by discarding all dirty records.
 func (s *StorageFile) Rollback() error {
 
 	if s.transDisabled {
-		return ErrTransDisabled.fireError(s, "")
+		return NewStorageFileError(ErrTransDisabled, "", s.name)
 	}
 
 	if len(s.inUse) > 0 {
-		return ErrInUse.fireError(s, fmt.Sprintf("Records %v", len(s.inUse)))
+		return NewStorageFileError(ErrInUse, fmt.Sprintf("Records %v", len(s.inUse)), s.name)
 	}
 
 	s.dirty = make(map[uint64]*Record)
@@ -425,7 +423,7 @@ func (s *StorageFile) Rollback() error {
 	}
 
 	if len(s.inTrans) > 0 {
-		return ErrInTrans.fireError(s, fmt.Sprintf("Records %v", len(s.inTrans)))
+		return NewStorageFileError(ErrInTrans, fmt.Sprintf("Records %v", len(s.inTrans)), s.name)
 	}
 
 	return nil
@@ -464,9 +462,9 @@ func (s *StorageFile) Close() error {
 	}
 
 	if len(s.inTrans) > 0 {
-		return ErrInTrans.fireError(s, fmt.Sprintf("Records %v", len(s.inTrans)))
+		return NewStorageFileError(ErrInTrans, fmt.Sprintf("Records %v", len(s.inTrans)), s.name)
 	} else if len(s.inUse) > 0 {
-		return ErrInUse.fireError(s, fmt.Sprintf("Records %v", len(s.inUse)))
+		return NewStorageFileError(ErrInUse, fmt.Sprintf("Records %v", len(s.inUse)), s.name)
 	}
 
 	for _, file := range s.files {
@@ -552,33 +550,24 @@ func printRecordIDMap(buf *bytes.Buffer, recordMap *map[uint64]*Record, name str
 }
 
 /*
-newStorageFileError returns a new StorageFile specific error.
+StorageFileError is a storage file related error.
 */
-func newStorageFileError(text string) *storagefileError {
-	return &storagefileError{text, "?", ""}
+type StorageFileError struct {
+	Type     error
+	Detail   string
+	Filename string
 }
 
 /*
-StorageFile specific error datastructure
+NewStorageFileError returns a new StorageFile specific error.
 */
-type storagefileError struct {
-	msg      string
-	filename string
-	info     string
-}
-
-/*
-fireError returns the error instance from a specific StorageFile instance.
-*/
-func (e *storagefileError) fireError(s *StorageFile, info string) error {
-	e.filename = s.name
-	e.info = info
-	return e
+func NewStorageFileError(sfeType error, sfeDetail string, sfeFilename string) *StorageFileError {
+	return &StorageFileError{sfeType, sfeDetail, sfeFilename}
 }
 
 /*
 Error returns a string representation of the error.
 */
-func (e *storagefileError) Error() string {
-	return fmt.Sprintf("%s (%s - %s)", e.msg, e.filename, e.info)
+func (e *StorageFileError) Error() string {
+	return fmt.Sprintf("%s (%s - %s)", e.Type.Error(), e.Filename, e.Detail)
 }

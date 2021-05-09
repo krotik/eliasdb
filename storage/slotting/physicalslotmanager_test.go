@@ -136,14 +136,15 @@ func TestPhysicalSlotManager(t *testing.T) {
 	}
 
 	_, err = psm.Insert(make([]byte, 1), 0, 1)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected insert result:", err)
 		return
 	}
 
 	fsf.ReleaseInUse(record)
 
-	if err := psm.Free(util.PackLocation(0, 20)); err != file.ErrAlreadyInUse {
+	err = psm.Free(util.PackLocation(0, 20))
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected free result:", err)
 		return
 	}
@@ -155,7 +156,7 @@ func TestPhysicalSlotManager(t *testing.T) {
 	}
 
 	_, err = psm.allocate(10)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected allocate result:", err)
 		return
 	}
@@ -175,7 +176,7 @@ func TestPhysicalSlotManager(t *testing.T) {
 	// The insert should have failed. The allocated space
 	// for it should have been send back to the free manager
 
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected insert result:", err)
 		return
 	}
@@ -194,7 +195,7 @@ func TestPhysicalSlotManager(t *testing.T) {
 	}
 
 	_, err = psm.Insert(arr2, 1, 8999)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected update result:", err)
 		return
 	}
@@ -223,7 +224,7 @@ func TestPhysicalSlotManager(t *testing.T) {
 	}
 
 	_, err = psm.Update(loc, arr2, 1, 8999)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected update result:", err)
 		return
 	}
@@ -237,7 +238,7 @@ func TestPhysicalSlotManager(t *testing.T) {
 	}
 
 	_, err = psm.Update(loc, arr2, 1, 8999)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected update result:", err)
 		return
 	}
@@ -251,7 +252,7 @@ func TestPhysicalSlotManager(t *testing.T) {
 	}
 
 	_, err = psm.Update(loc, arr2, 0, 9000)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected update result:", err)
 		return
 	}
@@ -265,7 +266,7 @@ func TestPhysicalSlotManager(t *testing.T) {
 	}
 
 	_, err = psm.Update(loc, arr2, 0, 9000)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected update result:", err)
 		return
 	}
@@ -470,10 +471,12 @@ func TestPhysicalSlotManagerReadWrite(t *testing.T) {
 		return
 	}
 
-	if err := psm.write(loc2, make([]byte, 0), 0, 0); err != file.ErrAlreadyInUse {
+	err = psm.write(loc2, make([]byte, 0), 0, 0)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected write result:", err)
 	}
-	if err := psm.Fetch(loc2, buf); err != file.ErrAlreadyInUse {
+	err = psm.Fetch(loc2, buf)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected read result:", err)
 		return
 	}
@@ -514,10 +517,12 @@ func TestPhysicalSlotManagerReadWrite(t *testing.T) {
 		return
 	}
 
-	if err := psm.write(loc2, make([]byte, 10000), 0, 9999); err != file.ErrAlreadyInUse {
+	err = psm.write(loc2, make([]byte, 10000), 0, 9999)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected write result:", err)
 	}
-	if err := psm.Fetch(loc2, buf); err != file.ErrAlreadyInUse {
+	err = psm.Fetch(loc2, buf)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected read result:", err)
 		return
 	}
@@ -536,10 +541,12 @@ func TestPhysicalSlotManagerReadWrite(t *testing.T) {
 		return
 	}
 
-	if err := psm.write(loc3, make([]byte, 10000), 0, 9999); err != file.ErrAlreadyInUse {
+	err = psm.write(loc3, make([]byte, 10000), 0, 9999)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected write result:", err)
 	}
-	if err := psm.Fetch(loc3, buf); err != file.ErrAlreadyInUse {
+	err = psm.Fetch(loc3, buf)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected read result:", err)
 		return
 	}
@@ -598,7 +605,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 	}
 
 	_, err = psm.allocateNew(size, 0)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -624,7 +631,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 	}
 
 	_, err = psm.allocateNew(10, 1)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -776,7 +783,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 	}
 
 	_, err = psm.allocateNew(8147, 5)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -801,7 +808,7 @@ func TestPhysicalSlotManagerAllocateNew(t *testing.T) {
 	}
 
 	_, err = psm.allocateNew(8147, 12)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}

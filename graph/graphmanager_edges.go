@@ -330,89 +330,116 @@ StoreEdge stores a single edge in a partition of the graph. This function will
 overwrites any existing edge.
 */
 func (gm *Manager) StoreEdge(part string, edge data.Edge) error {
+	trans := newInternalGraphTrans(gm)
+	trans.subtrans = true
 
-	// Check if the edge can be stored
-
-	if err := gm.checkEdge(edge); err != nil {
-		return err
-	}
-
-	// Get the HTrees which stores the edges and the edge index
-
-	iht, err := gm.getEdgeIndexHTree(part, edge.Kind(), true)
-	if err != nil {
-		return err
-	}
-
-	edgeht, err := gm.getEdgeStorageHTree(part, edge.Kind(), true)
-	if err != nil {
-		return err
-	}
-
-	// Get the HTrees which stores the edge endpoints and make sure the endpoints
-	// do exist
-
-	end1nodeht, end1ht, err := gm.getNodeStorageHTree(part, edge.End1Kind(), false)
+	err := gm.gr.graphEvent(trans, EventEdgeStore, part, edge)
 
 	if err != nil {
-		return err
-	} else if end1ht == nil {
-		return &util.GraphError{
-			Type:   util.ErrInvalidData,
-			Detail: "Can't store edge to non-existing node kind: " + edge.End1Kind(),
+		if err == ErrEventHandled {
+			err = nil
 		}
-	} else if end1, err := end1nodeht.Get([]byte(PrefixNSAttrs + edge.End1Key())); err != nil || end1 == nil {
-		return &util.GraphError{
-			Type:   util.ErrInvalidData,
-			Detail: fmt.Sprintf("Can't find edge endpoint: %s (%s)", edge.End1Key(), edge.End1Kind()),
-		}
-	}
-
-	end2nodeht, end2ht, err := gm.getNodeStorageHTree(part, edge.End2Kind(), false)
-
-	if err != nil {
-		return err
-	} else if end2ht == nil {
-		return &util.GraphError{
-			Type:   util.ErrInvalidData,
-			Detail: "Can't store edge to non-existing node kind: " + edge.End2Kind(),
-		}
-	} else if end2, err := end2nodeht.Get([]byte(PrefixNSAttrs + edge.End2Key())); err != nil || end2 == nil {
-		return &util.GraphError{
-			Type:   util.ErrInvalidData,
-			Detail: fmt.Sprintf("Can't find edge endpoint: %s (%s)", edge.End2Key(), edge.End2Kind()),
-		}
-	}
-
-	// Take writer lock
-
-	gm.mutex.Lock()
-	defer gm.mutex.Unlock()
-
-	// Write edge to the datastore
-
-	oldedge, err := gm.writeEdge(edge, edgeht, end1ht, end2ht)
-	if err != nil {
 		return err
 	}
 
-	// Increase edge count if the edge was inserted and write the changes
-	// to the index.
+	if err = trans.Commit(); err == nil {
 
-	if oldedge == nil {
+		// Check if the edge can be stored
 
-		// Increase edge count
-
-		currentCount := gm.EdgeCount(edge.Kind())
-		if err := gm.writeEdgeCount(edge.Kind(), currentCount+1, true); err != nil {
+		if err := gm.checkEdge(edge); err != nil {
 			return err
 		}
 
-		// Write edge data to the index
+		// Get the HTrees which stores the edges and the edge index
 
-		if iht != nil {
+		iht, err := gm.getEdgeIndexHTree(part, edge.Kind(), true)
+		if err != nil {
+			return err
+		}
 
-			if err := util.NewIndexManager(iht).Index(edge.Key(), edge.IndexMap()); err != nil {
+		edgeht, err := gm.getEdgeStorageHTree(part, edge.Kind(), true)
+		if err != nil {
+			return err
+		}
+
+		// Get the HTrees which stores the edge endpoints and make sure the endpoints
+		// do exist
+
+		end1nodeht, end1ht, err := gm.getNodeStorageHTree(part, edge.End1Kind(), false)
+
+		if err != nil {
+			return err
+		} else if end1ht == nil {
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: "Can't store edge to non-existing node kind: " + edge.End1Kind(),
+			}
+		} else if end1, err := end1nodeht.Get([]byte(PrefixNSAttrs + edge.End1Key())); err != nil || end1 == nil {
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: fmt.Sprintf("Can't find edge endpoint: %s (%s)", edge.End1Key(), edge.End1Kind()),
+			}
+		}
+
+		end2nodeht, end2ht, err := gm.getNodeStorageHTree(part, edge.End2Kind(), false)
+
+		if err != nil {
+			return err
+		} else if end2ht == nil {
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: "Can't store edge to non-existing node kind: " + edge.End2Kind(),
+			}
+		} else if end2, err := end2nodeht.Get([]byte(PrefixNSAttrs + edge.End2Key())); err != nil || end2 == nil {
+			return &util.GraphError{
+				Type:   util.ErrInvalidData,
+				Detail: fmt.Sprintf("Can't find edge endpoint: %s (%s)", edge.End2Key(), edge.End2Kind()),
+			}
+		}
+
+		// Take writer lock
+
+		gm.mutex.Lock()
+		defer gm.mutex.Unlock()
+
+		// Write edge to the datastore
+
+		oldedge, err := gm.writeEdge(edge, edgeht, end1ht, end2ht)
+		if err != nil {
+			return err
+		}
+
+		// Increase edge count if the edge was inserted and write the changes
+		// to the index.
+
+		if oldedge == nil {
+
+			// Increase edge count
+
+			currentCount := gm.EdgeCount(edge.Kind())
+			if err := gm.writeEdgeCount(edge.Kind(), currentCount+1, true); err != nil {
+				return err
+			}
+
+			// Write edge data to the index
+
+			if iht != nil {
+
+				if err := util.NewIndexManager(iht).Index(edge.Key(), edge.IndexMap()); err != nil {
+
+					// The edge was written at this point and the model is
+					// consistent only the index is missing entries
+
+					return err
+				}
+			}
+
+		} else if iht != nil {
+
+			err := util.NewIndexManager(iht).Reindex(edge.Key(), edge.IndexMap(),
+				oldedge.IndexMap())
+
+			if err != nil {
 
 				// The edge was written at this point and the model is
 				// consistent only the index is missing entries
@@ -421,49 +448,41 @@ func (gm *Manager) StoreEdge(part string, edge data.Edge) error {
 			}
 		}
 
-	} else if iht != nil {
+		defer func() {
 
-		err := util.NewIndexManager(iht).Reindex(edge.Key(), edge.IndexMap(),
-			oldedge.IndexMap())
+			// Flush changes - errors only reported on the actual node storage flush
 
-		if err != nil {
+			gm.gs.FlushMain()
 
-			// The edge was written at this point and the model is
-			// consistent only the index is missing entries
+			gm.flushEdgeIndex(part, edge.Kind())
 
+			gm.flushNodeStorage(part, edge.End1Kind())
+
+			gm.flushNodeStorage(part, edge.End2Kind())
+
+			gm.flushEdgeStorage(part, edge.Kind())
+		}()
+
+		// Execute rules
+
+		trans := newInternalGraphTrans(gm)
+		trans.subtrans = true
+
+		var event int
+		if oldedge == nil {
+			event = EventEdgeCreated
+		} else {
+			event = EventEdgeUpdated
+		}
+
+		if err := gm.gr.graphEvent(trans, event, part, edge, oldedge); err != nil && err != ErrEventHandled {
+			return err
+		} else if err := trans.Commit(); err != nil {
 			return err
 		}
 	}
 
-	// Execute rules
-
-	trans := newInternalGraphTrans(gm)
-	trans.subtrans = true
-
-	var event int
-	if oldedge == nil {
-		event = EventEdgeCreated
-	} else {
-		event = EventEdgeUpdated
-	}
-
-	if err := gm.gr.graphEvent(trans, event, part, edge, oldedge); err != nil {
-		return err
-	} else if err := trans.Commit(); err != nil {
-		return err
-	}
-
-	// Flush changes - errors only reported on the actual node storage flush
-
-	gm.gs.FlushMain()
-
-	gm.flushEdgeIndex(part, edge.Kind())
-
-	gm.flushNodeStorage(part, edge.End1Kind())
-
-	gm.flushNodeStorage(part, edge.End2Kind())
-
-	return gm.flushEdgeStorage(part, edge.Kind())
+	return err
 }
 
 /*
@@ -604,91 +623,112 @@ func (gm *Manager) writeEdge(edge data.Edge, edgeTree *hash.HTree,
 RemoveEdge removes a single edge from a partition of the graph.
 */
 func (gm *Manager) RemoveEdge(part string, key string, kind string) (data.Edge, error) {
+	var err error
 
-	// Get the HTrees which stores the edges and the edge index
+	trans := newInternalGraphTrans(gm)
+	trans.subtrans = true
 
-	iht, err := gm.getEdgeIndexHTree(part, kind, true)
-	if err != nil {
+	if err = gm.gr.graphEvent(trans, EventEdgeDelete, part, key, kind); err != nil {
+		if err == ErrEventHandled {
+			err = nil
+		}
 		return nil, err
 	}
 
-	edgeht, err := gm.getEdgeStorageHTree(part, kind, true)
-	if err != nil {
-		return nil, err
-	}
+	err = trans.Commit()
 
-	// Take writer lock
+	if err == nil {
 
-	gm.mutex.Lock()
-	defer gm.mutex.Unlock()
+		// Get the HTrees which stores the edges and the edge index
 
-	// Delete the node from the datastore
+		iht, err := gm.getEdgeIndexHTree(part, kind, true)
+		if err != nil {
+			return nil, err
+		}
 
-	node, err := gm.deleteNode(key, kind, edgeht, edgeht)
-	edge := data.NewGraphEdgeFromNode(node)
-	if err != nil {
-		return edge, err
-	}
+		edgeht, err := gm.getEdgeStorageHTree(part, kind, true)
+		if err != nil {
+			return nil, err
+		}
 
-	if node != nil {
+		// Take writer lock
 
-		// Get the HTrees which stores the edge endpoints
+		gm.mutex.Lock()
+		defer gm.mutex.Unlock()
 
-		_, end1ht, err := gm.getNodeStorageHTree(part, edge.End1Kind(), false)
+		// Delete the node from the datastore
+
+		node, err := gm.deleteNode(key, kind, edgeht, edgeht)
+		edge := data.NewGraphEdgeFromNode(node)
 		if err != nil {
 			return edge, err
 		}
 
-		_, end2ht, err := gm.getNodeStorageHTree(part, edge.End2Kind(), false)
-		if err != nil {
-			return edge, err
-		}
+		if node != nil {
 
-		// Delete edge info from node storage
+			// Get the HTrees which stores the edge endpoints
 
-		if err := gm.deleteEdge(edge, end1ht, end2ht); err != nil {
-			return edge, err
-		}
-
-		if iht != nil {
-			err := util.NewIndexManager(iht).Deindex(key, edge.IndexMap())
+			_, end1ht, err := gm.getNodeStorageHTree(part, edge.End1Kind(), false)
 			if err != nil {
 				return edge, err
 			}
+
+			_, end2ht, err := gm.getNodeStorageHTree(part, edge.End2Kind(), false)
+			if err != nil {
+				return edge, err
+			}
+
+			// Delete edge info from node storage
+
+			if err := gm.deleteEdge(edge, end1ht, end2ht); err != nil {
+				return edge, err
+			}
+
+			if iht != nil {
+				err := util.NewIndexManager(iht).Deindex(key, edge.IndexMap())
+				if err != nil {
+					return edge, err
+				}
+			}
+
+			// Decrease edge count
+
+			currentCount := gm.EdgeCount(edge.Kind())
+			if err := gm.writeEdgeCount(edge.Kind(), currentCount-1, true); err != nil {
+				return edge, err
+			}
+
+			defer func() {
+
+				// Flush changes - errors only reported on the actual node storage flush
+
+				gm.gs.FlushMain()
+
+				gm.flushEdgeIndex(part, edge.Kind())
+
+				gm.flushNodeStorage(part, edge.End1Kind())
+
+				gm.flushNodeStorage(part, edge.End2Kind())
+
+				gm.flushEdgeStorage(part, edge.Kind())
+			}()
+
+			// Execute rules
+
+			trans := newInternalGraphTrans(gm)
+			trans.subtrans = true
+
+			if err := gm.gr.graphEvent(trans, EventEdgeDeleted, part, edge); err != nil && err != ErrEventHandled {
+				return edge, err
+			} else if err := trans.Commit(); err != nil {
+				return edge, err
+			}
+
+			return edge, nil
 		}
-
-		// Decrease edge count
-
-		currentCount := gm.EdgeCount(edge.Kind())
-		if err := gm.writeEdgeCount(edge.Kind(), currentCount-1, true); err != nil {
-			return edge, err
-		}
-
-		// Execute rules
-
-		trans := newInternalGraphTrans(gm)
-		trans.subtrans = true
-
-		if err := gm.gr.graphEvent(trans, EventEdgeDeleted, part, edge); err != nil {
-			return edge, err
-		} else if err := trans.Commit(); err != nil {
-			return edge, err
-		}
-
-		// Flush changes - errors only reported on the actual node storage flush
-
-		gm.gs.FlushMain()
-
-		gm.flushEdgeIndex(part, edge.Kind())
-
-		gm.flushNodeStorage(part, edge.End1Kind())
-
-		gm.flushNodeStorage(part, edge.End2Kind())
-
-		return edge, gm.flushEdgeStorage(part, edge.Kind())
 	}
 
-	return nil, nil
+	return nil, err
 }
 
 /*

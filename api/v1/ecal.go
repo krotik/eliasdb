@@ -1,0 +1,222 @@
+/*
+ * EliasDB
+ *
+ * Copyright 2016 Matthias Ladkau. All rights reserved.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+package v1
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"devt.de/krotik/ecal/engine"
+	"devt.de/krotik/ecal/scope"
+	"devt.de/krotik/ecal/util"
+	"devt.de/krotik/eliasdb/api"
+	"devt.de/krotik/eliasdb/ecal/dbfunc"
+)
+
+/*
+EndpointECALInternal is the ECAL endpoint URL (rooted) for internal operations. Handles everything under ecal/...
+*/
+const EndpointECALInternal = api.APIRoot + "/ecal/"
+
+/*
+EndpointECALPublic is the ECAL endpoint URL (rooted) for public API operations. Handles everything under api/...
+*/
+const EndpointECALPublic = api.APIRoot + "/api/"
+
+/*
+ECALEndpointInst creates a new endpoint handler.
+*/
+func ECALEndpointInst() api.RestEndpointHandler {
+	return &ecalEndpoint{}
+}
+
+/*
+Handler object for ecal operations.
+*/
+type ecalEndpoint struct {
+	*api.DefaultEndpointHandler
+}
+
+/*
+	HandleGET handles a GET request.
+*/
+func (ee *ecalEndpoint) HandleGET(w http.ResponseWriter, r *http.Request, resources []string) {
+	ee.forwardRequest(w, r, resources)
+}
+
+/*
+	HandlePOST handles a POST request.
+*/
+func (ee *ecalEndpoint) HandlePOST(w http.ResponseWriter, r *http.Request, resources []string) {
+	ee.forwardRequest(w, r, resources)
+}
+
+/*
+	HandlePUT handles a PUT request.
+*/
+func (ee *ecalEndpoint) HandlePUT(w http.ResponseWriter, r *http.Request, resources []string) {
+	ee.forwardRequest(w, r, resources)
+}
+
+/*
+	HandleDELETE handles a DELETE request.
+*/
+func (ee *ecalEndpoint) HandleDELETE(w http.ResponseWriter, r *http.Request, resources []string) {
+	ee.forwardRequest(w, r, resources)
+}
+
+func (ee *ecalEndpoint) forwardRequest(w http.ResponseWriter, r *http.Request, resources []string) {
+
+	if api.SI != nil {
+
+		// Make sure the request we are handling comes from a known path for ECAL
+
+		isPublic := strings.HasPrefix(r.URL.Path, EndpointECALPublic)
+		isInternal := strings.HasPrefix(r.URL.Path, EndpointECALInternal)
+
+		if isPublic || isInternal {
+			var eventKind []string
+
+			body, err := ioutil.ReadAll(r.Body)
+
+			if err == nil {
+				if isPublic {
+					eventKind = []string{"db", "web", "api"}
+				} else {
+					eventKind = []string{"db", "web", "ecal"}
+				}
+
+				var data interface{}
+				json.Unmarshal(body, &data)
+
+				query := map[interface{}]interface{}{}
+				for k, v := range r.URL.Query() {
+					values := make([]interface{}, 0)
+					for _, val := range v {
+						values = append(values, val)
+					}
+					query[k] = values
+				}
+
+				header := map[interface{}]interface{}{}
+				for k, v := range r.Header {
+					header[k] = scope.ConvertJSONToECALObject(v)
+				}
+
+				proc := api.SI.Interpreter.RuntimeProvider.Processor
+				event := engine.NewEvent(fmt.Sprintf("WebRequest"), eventKind,
+					map[interface{}]interface{}{
+						"path":       strings.Join(resources, "/"),
+						"pathList":   resources,
+						"bodyString": string(body),
+						"bodyJSON":   scope.ConvertJSONToECALObject(data),
+						"query":      query,
+						"method":     r.Method,
+						"header":     header,
+					})
+
+				var m engine.Monitor
+
+				if m, err = proc.AddEventAndWait(event, nil); err == nil {
+					if m != nil {
+						var headers map[interface{}]interface{}
+						status := 0
+						var body []byte
+
+						for _, e := range m.(*engine.RootMonitor).AllErrors() {
+							if len(e.ErrorMap) > 0 {
+								for _, e := range e.ErrorMap {
+									if re, ok := e.(*util.RuntimeErrorWithDetail); ok && re.Type == dbfunc.ErrWebEventHandled {
+										res := re.Data.(map[interface{}]interface{})
+
+										if status, err = strconv.Atoi(fmt.Sprint(res["status"])); err == nil {
+											headers, _ = res["header"].(map[interface{}]interface{})
+											body, err = json.Marshal(scope.ConvertECALToJSONObject(res["body"]))
+										}
+									} else {
+										err = e
+									}
+									break
+								}
+								break
+							}
+						}
+
+						if status != 0 {
+							for k, v := range headers {
+								w.Header().Set(fmt.Sprint(k), fmt.Sprint(v))
+							}
+							w.WriteHeader(status)
+							fmt.Fprintln(w, string(body))
+							return
+						}
+					}
+				}
+			}
+
+			if err != nil {
+				api.SI.Interpreter.RuntimeProvider.Logger.LogError(err)
+			}
+		}
+	}
+
+	http.Error(w, "Resource was not found", http.StatusNotFound)
+}
+
+/*
+SwaggerDefs is used to describe the endpoint in swagger.
+*/
+func (ee *ecalEndpoint) SwaggerDefs(s map[string]interface{}) {
+
+	desc := map[string]interface{}{
+		"summary":     "Forward web requests to the ECAL backend.",
+		"description": "The ecal endpoint forwards web requests to the ECAL backend.",
+		"produces": []string{
+			"text/plain",
+			"application/json",
+		},
+		"responses": map[string]interface{}{
+			"200": map[string]interface{}{
+				"description": "A result object generated by ECAL scripts.",
+			},
+			"default": map[string]interface{}{
+				"description": "Error response",
+				"schema": map[string]interface{}{
+					"$ref": "#/definitions/Error",
+				},
+			},
+		},
+	}
+
+	s["paths"].(map[string]interface{})["/ecal"] = map[string]interface{}{
+		"get":    desc,
+		"post":   desc,
+		"put":    desc,
+		"delete": desc,
+	}
+	s["paths"].(map[string]interface{})["/api"] = map[string]interface{}{
+		"get":    desc,
+		"post":   desc,
+		"put":    desc,
+		"delete": desc,
+	}
+
+	// Add generic error object to definition
+
+	s["definitions"].(map[string]interface{})["Error"] = map[string]interface{}{
+		"description": "A human readable error mesage.",
+		"type":        "string",
+	}
+}

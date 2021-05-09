@@ -156,7 +156,7 @@ func TestDiskStorageManager1(t *testing.T) {
 	}
 
 	_, err = dsm.Insert(&testutil.GobTestObject{Name: "test", EncErr: false, DecErr: false})
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -170,7 +170,7 @@ func TestDiskStorageManager1(t *testing.T) {
 	}
 
 	_, err = dsm.Insert(&testutil.GobTestObject{Name: "test", EncErr: false, DecErr: false})
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err, loc)
 	}
 
@@ -205,7 +205,7 @@ func TestDiskStorageManager1(t *testing.T) {
 	flsp.StorageFile().ReleaseInUse(rflsp)
 
 	_, err = dsm.FetchCached(0)
-	if err != ErrNotInCache {
+	if err.(*ManagerError).Type != ErrNotInCache {
 		t.Error("Unexpected FetchCached result:", err)
 		return
 	}
@@ -264,13 +264,13 @@ func TestDiskStorageManager2(t *testing.T) {
 	record, _ := dsm.logicalSlotsSf.Get(2)
 
 	_, err = dsm.Insert("This is a test")
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
 
 	err = dsm.Fetch(util.PackLocation(2, 18), &res)
-	if err != ErrSlotNotFound {
+	if err.(*ManagerError).Type != ErrSlotNotFound {
 		t.Error(err)
 		return
 	}
@@ -278,7 +278,7 @@ func TestDiskStorageManager2(t *testing.T) {
 	dsm.logicalSlotsSf.ReleaseInUse(record)
 
 	err = dsm.Fetch(util.PackLocation(3, 18), &res)
-	if err != ErrSlotNotFound {
+	if err.(*ManagerError).Type != ErrSlotNotFound {
 		t.Error(err)
 		return
 	}
@@ -286,13 +286,13 @@ func TestDiskStorageManager2(t *testing.T) {
 	record, _ = dsm.logicalSlotsSf.Get(1)
 
 	err = dsm.Update(loc, "test")
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
 
 	err = dsm.Fetch(loc, &res)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -300,7 +300,7 @@ func TestDiskStorageManager2(t *testing.T) {
 	dsm.logicalSlotsSf.ReleaseInUse(record)
 
 	err = dsm.Update(util.PackLocation(2, 18), "test")
-	if err != ErrSlotNotFound {
+	if err.(*ManagerError).Type != ErrSlotNotFound {
 		t.Error(err)
 		return
 	}
@@ -328,7 +328,7 @@ func TestDiskStorageManager2(t *testing.T) {
 
 	var testres2 testutil.GobTestObject
 	err = dsm.Fetch(loc, &testres2)
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -336,7 +336,7 @@ func TestDiskStorageManager2(t *testing.T) {
 	// Test a normal update
 
 	err = dsm.Update(loc, "tree")
-	if err != file.ErrAlreadyInUse {
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -453,7 +453,7 @@ func TestDiskStorageManager3(t *testing.T) {
 
 	dsm := NewDiskStorageManager(DBDIR+"/test3", false, false, true, true)
 
-	if dsm.Free(util.PackLocation(2, 18)) != ErrSlotNotFound {
+	if dsm.Free(util.PackLocation(2, 18)).(*ManagerError).Type != ErrSlotNotFound {
 		t.Error("Unexpected free result")
 		return
 	}
@@ -471,7 +471,8 @@ func TestDiskStorageManager3(t *testing.T) {
 
 	record, _ := dsm.physicalSlotsSf.Get(1)
 
-	if dsm.Free(loc) != file.ErrAlreadyInUse {
+	err = dsm.Free(loc)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected free result")
 		return
 	}
@@ -480,7 +481,8 @@ func TestDiskStorageManager3(t *testing.T) {
 
 	record, _ = dsm.logicalSlotsSf.Get(1)
 
-	if dsm.Free(loc) != file.ErrAlreadyInUse {
+	err = dsm.Free(loc)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected free result")
 		return
 	}

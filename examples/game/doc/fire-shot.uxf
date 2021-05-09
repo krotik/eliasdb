@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <help_text/>
+  <zoom_level>8</zoom_level>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>0</x>
+      <y>240</y>
+      <w>1432</w>
+      <h>472</h>
+    </coordinates>
+    <panel_attributes>title=Firing a shot
+obj=display/default.ts\nDefaultEngineEventHandler:onkeydown()~a 
+obj=game/objects.ts\nPlayer~b
+obj=main.ecal\nsink WebSocketHandler~c
+obj=engine.ecal\nexecuteAction()~e
+obj=templates.ecal\nPlayerState~d
+gate-&gt;a:The user presses &lt;space&gt;
+a-&gt;b:stateUpdate(action='fire')
+b-&gt;c:send state update to websocket (action='fire')
+c-&gt;d:set property action='fire'
+gate-&gt;e:Game loop
+e-&gt;d:doAction()
+d-&gt;gate:Add shot sprite to model
+d-&gt;gate:Send audio event to all clients
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>

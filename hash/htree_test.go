@@ -81,7 +81,8 @@ func TestHTree(t *testing.T) {
 
 	sm.AccessMap[1] = storage.AccessInsertError
 
-	if _, err := NewHTree(sm); err != file.ErrAlreadyInUse {
+	_, err := NewHTree(sm)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected new tree result:", err)
 		return
 	}
@@ -121,7 +122,7 @@ func TestHTree(t *testing.T) {
 
 	sm.AccessMap[1] = storage.AccessCacheAndFetchError
 
-	if _, err := LoadHTree(sm, page.Location()); err != storage.ErrSlotNotFound {
+	if _, err := LoadHTree(sm, page.Location()); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected tree load result:", err)
 		return
 	}

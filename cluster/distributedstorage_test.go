@@ -250,7 +250,7 @@ func TestSimpleDataDistribution(t *testing.T) {
 		return
 	}
 
-	if _, err := sm.FetchCached(5); err != storage.ErrNotInCache {
+	if _, err := sm.FetchCached(5); err.(*storage.ManagerError).Type != storage.ErrNotInCache {
 		t.Error("Unexpected response:", err)
 		return
 	}

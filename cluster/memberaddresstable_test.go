@@ -127,7 +127,7 @@ func TestAddressTableClusterLoc(t *testing.T) {
 	msm.AccessMap[loc] = storage.AccessCacheAndFetchSeriousError
 
 	loc, err = ms1[0].at.NewClusterLoc("test1")
-	if err.Error() != "Record is already in-use (? - )" {
+	if err.Error() != "Record is already in-use (<memory> - )" {
 		t.Error("Unexpected result:", loc, err)
 		return
 	}

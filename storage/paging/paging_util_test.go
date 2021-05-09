@@ -54,7 +54,8 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if pc, err := CountPages(psf, view.TypeDataPage); pc != -1 || err != file.ErrAlreadyInUse {
+	pc, err := CountPages(psf, view.TypeDataPage)
+	if sfe, ok := err.(*file.StorageFileError); pc != -1 || !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected page count result:", pc, err)
 		return
 	}
@@ -67,7 +68,8 @@ func TestFreePhysicalSlotManagerScale(t *testing.T) {
 		return
 	}
 
-	if pc, err := CountPages(psf, view.TypeDataPage); pc != -1 || err != file.ErrAlreadyInUse {
+	pc, err = CountPages(psf, view.TypeDataPage)
+	if sfe, ok := err.(*file.StorageFileError); pc != -1 || !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected page count result:", pc, err)
 		return
 	}

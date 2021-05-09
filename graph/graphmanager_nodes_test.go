@@ -542,7 +542,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 	msm.AccessMap[5] = storage.AccessInsertError
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
-		"GraphError: Could not write graph information (Record is already in-use (? - ))" {
+		"GraphError: Could not write graph information (Record is already in-use (<memory> - ))" {
 
 		t.Error(err)
 		return
@@ -553,7 +553,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 	msm.AccessMap[5] = storage.AccessInsertError
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
-		"GraphError: Could not write graph information (Record is already in-use (? - ))" {
+		"GraphError: Could not write graph information (Record is already in-use (<memory> - ))" {
 
 		t.Error(err)
 		return
@@ -599,7 +599,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 	node2.SetAttr("key", "789")
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
-		"GraphError: Index error (Record is already in-use (? - ))" {
+		"GraphError: Index error (Record is already in-use (<memory> - ))" {
 
 		t.Error(err)
 		return
@@ -608,7 +608,7 @@ func TestSimpleNodeStorageErrorCases(t *testing.T) {
 	node2.SetAttr("key", "123")
 
 	if err := gm.StoreNode("testpart", node2); err.Error() !=
-		"GraphError: Index error (Record is already in-use (? - ))" {
+		"GraphError: Index error (Record is already in-use (<memory> - ))" {
 
 		t.Error(err)
 		return

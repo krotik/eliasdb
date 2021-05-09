@@ -22,7 +22,7 @@ import (
 Common TransactionManager related errors
 */
 var (
-	ErrBadMagic = newStorageFileError("Bad magic for transaction log")
+	ErrBadMagic = fmt.Errorf("Bad magic for transaction log")
 )
 
 /*
@@ -107,9 +107,10 @@ func NewTransactionManager(owner *StorageFile, doRecover bool) (*TransactionMana
 		DefaultTransInLog, owner}
 
 	if doRecover {
-		err := ret.recover()
-		if err != nil && err != ErrBadMagic {
-			return nil, err
+		if err := ret.recover(); err != nil {
+			if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrBadMagic {
+				return nil, err
+			}
 		}
 
 		// If we have a bad magic just overwrite the transaction file
@@ -141,7 +142,7 @@ func (t *TransactionManager) recover() error {
 
 	if i != 2 || magic[0] != TransactionLogHeader[0] ||
 		magic[1] != TransactionLogHeader[1] {
-		return ErrBadMagic.fireError(t.owner, "")
+		return NewStorageFileError(ErrBadMagic, "", t.owner.name)
 	}
 
 	for true {

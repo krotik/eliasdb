@@ -1,0 +1,16 @@
+All assets are public domain (CC0)
+
+See: https://opengameart.org/art-search-advanced?keys=space&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=9&field_art_type_tid%5B%5D=10&field_art_type_tid%5B%5D=7273&field_art_type_tid%5B%5D=14&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&field_art_type_tid%5B%5D=11&field_art_licenses_tid%5B%5D=4&sort_by=score&sort_order=DESC&items_per_page=24&Collection=
+
+Credits:
+
+Asteroid images: BlackMoon Design
+Background image: Cuzco
+Background sound: Aquinn
+Explosion sounds: Kenney (Kenney.nl)
+Ship explosion sound: Bart
+Shot sounds: Kenney (Kenney.nl)
+Shot images: Bonsaiheldin
+Ship images: Kenny (Kenney.nl)
+Vanish sound: Krial
+

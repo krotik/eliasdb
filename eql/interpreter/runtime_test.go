@@ -235,7 +235,7 @@ func TestErrors(t *testing.T) {
 
 	msm.AccessMap[1] = storage.AccessCacheAndFetchSeriousError
 
-	if _, err := rt.nextStartKey(); err.Error() != "GraphError: Could not read graph information (Record is already in-use (? - ))" {
+	if _, err := rt.nextStartKey(); err.Error() != "GraphError: Could not read graph information (Record is already in-use (<memory> - ))" {
 		t.Error(err)
 		return
 	}

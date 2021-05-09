@@ -100,6 +100,8 @@ the full text search index.
 */
 package graph
 
+import "errors"
+
 /*
 VERSION of the GraphManager
 */
@@ -225,43 +227,85 @@ const PrefixNSEdge = "\x04"
 //=============
 
 /*
-EventNodeCreated is thrown when a node gets created.
+EventNodeCreated is thrown when a node was created.
 
 Parameters: partition of created node, created node
 */
 const EventNodeCreated = 0x01
 
 /*
-EventNodeUpdated is thrown when a node gets updated.
+EventNodeUpdated is thrown when a node was updated.
 
 Parameters: partition of updated node, updated node, old node
 */
 const EventNodeUpdated = 0x02
 
 /*
-EventNodeDeleted is thrown when a node gets deleted.
+EventNodeDeleted is thrown when a node was deleted.
 
 Parameters: partition of deleted node, deleted node
 */
 const EventNodeDeleted = 0x03
 
 /*
-EventEdgeCreated is thrown when an edge gets created.
+EventEdgeCreated is thrown when an edge was created.
 
 Parameters: partition of created edge, created edge
 */
 const EventEdgeCreated = 0x04
 
 /*
-EventEdgeUpdated is thrown when an edge gets updated.
+EventEdgeUpdated is thrown when an edge was updated.
 
 Parameters: partition of updated edge, updated edge, old edge
 */
 const EventEdgeUpdated = 0x05
 
 /*
-EventEdgeDeleted is thrown when an edge gets deleted.
+EventEdgeDeleted is thrown when an edge was deleted.
 
 Parameters: partition of deleted edge, deleted edge
 */
 const EventEdgeDeleted = 0x06
+
+/*
+EventNodeStore is thrown before a node is stored (always overwriting existing values).
+
+Parameters: partition of node to store, node to store
+*/
+const EventNodeStore = 0x07
+
+/*
+EventNodeUpdate is thrown before a node is updated.
+
+Parameters: partition of node to update, node to update
+*/
+const EventNodeUpdate = 0x08
+
+/*
+EventNodeDelete is thrown before a node is deleted.
+
+Parameters: partition of node to delete, key of node to delete, kind of node to delete
+*/
+const EventNodeDelete = 0x09
+
+/*
+EventEdgeStore is thrown before an edge is stored (always overwriting existing values).
+
+Parameters: partition of stored edge, stored edge
+*/
+const EventEdgeStore = 0x0A
+
+/*
+EventEdgeDelete is thrown before an edge is deleted.
+
+Parameters: partition of deleted edge, key of edge to delete, kind of edge to delete
+*/
+const EventEdgeDelete = 0x0B
+
+/*
+ErrEventHandled is a special error which an event handler can return to
+notify the GraphManager that no further action is necessary. No error will
+be returned by the GraphManager operation.
+*/
+var ErrEventHandled = errors.New("Event handled upstream")

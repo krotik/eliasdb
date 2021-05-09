@@ -423,7 +423,8 @@ func TestRecover(t *testing.T) {
 
 	sf.transDisabled = true
 
-	if err = sf.Close(); err != ErrInTrans {
+	err = sf.Close()
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrInTrans {
 		t.Error(err)
 		return
 	}
@@ -575,7 +576,8 @@ func TestRollbackFail(t *testing.T) {
 	}
 	record.WriteSingleByte(5, 0x42)
 
-	if err = sf.Rollback(); err != ErrInUse {
+	err = sf.Rollback()
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrInUse {
 		t.Error("It should not be possible to rollback while records are still in use")
 	}
 
@@ -599,7 +601,8 @@ func TestRollbackFail(t *testing.T) {
 	}
 
 	sf.inTrans[record.ID()] = record
-	if err = sf.Rollback(); err != ErrInTrans {
+	err = sf.Rollback()
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrInTrans {
 		t.Error("It should not be possible to rollback while records are still in transaction")
 		return
 	}

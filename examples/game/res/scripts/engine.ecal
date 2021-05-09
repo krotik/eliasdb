@@ -1,0 +1,285 @@
+import "./const.ecal" as const
+import "./helper.ecal" as hlp
+
+/*
+ Constant rate for moving. The higher the less movement we do in a given time.
+*/
+moveRate := 30
+
+/*
+ Time the move loop was executed last (used for time correction)
+*/
+lastMoveCycleTime := 0
+
+/*
+ Game engine object which moves objects in a game world.
+*/
+GameEngine := {
+
+    /*
+     Partition to manage
+     */
+    "part" : null,
+
+    /*
+     Game world
+     */
+    "world" : null,
+
+    /*
+     Game state
+     */
+    gameState : null,
+
+    /*
+     Active websocket connections
+     */
+    websocket : null,
+
+    /*
+     Constructor
+     */
+    "init" : func (part, world, gameState, websocket) {
+        this.part := part
+        this.world := world
+        this.gameState := gameState
+        this.websocket := websocket
+    },
+
+    /*
+     updateStat updates a statistic value.
+     */
+    "updateStat" : func (key, value) {
+        mutex GameStateMutex {
+            this.gameState[this.part][key] := value
+        }
+
+    },
+
+    /*
+     moveLoop handles object movement in the game world.
+     */
+    "moveLoop" : func () {
+        let moveLoopTime := now()
+        let timeDelta := moveLoopTime - lastMoveCycleTime # Do the move
+        mutex GameStateMutex {
+            if this.gameState == null or this.gameState[this.part] == null {
+                return null
+            }
+        }
+
+
+        /*
+         Do a single move step with compensation for the time delta
+         */
+        time := now()
+
+        this.move(timeDelta)
+
+        this.updateStat("time_total_move", now() - time)
+
+        lastMoveCycleTime := moveLoopTime
+    },
+
+    /*
+     move calculates one move step
+     */
+    "move" : func (timeDelta) {
+
+        /*
+         Calculate a correction multiplier for the time lag
+         */
+        let timeCorrection := timeDelta / moveRate
+
+        if math.isNaN(timeCorrection) or math.isInf(timeCorrection, 0) or timeCorrection > 10000 {
+            timeCorrection := 1
+        }
+
+        mutex GameStateMutex {
+            this.updateStat("time_move_correction", timeCorrection)
+
+            entitiesToRemove := []
+
+            /* First move things a step */
+            for [playername, obj] in this.gameState[this.part].players {
+                if not this.moveObject(timeCorrection, obj) {
+                    entitiesToRemove := add(entitiesToRemove, obj)
+                }
+                this.executeAction(obj)
+            }
+
+            for obj in this.gameState[this.part].sprites {
+                if not this.moveObject(timeCorrection, obj) {
+                    entitiesToRemove := add(entitiesToRemove, obj)
+                }
+                this.executeAction(obj)
+            }
+
+            /* Detect collisions */
+            for [playername, obj] in this.gameState[this.part].players {
+                entitiesToRemove := concat(entitiesToRemove, this.collisionDetection(obj))
+            }
+
+            for obj in this.gameState[this.part].sprites {
+                entitiesToRemove := concat(entitiesToRemove, this.collisionDetection(obj))
+            }
+
+            /* Remove things from the world */
+            if len(entitiesToRemove) > 0 {
+
+                let toRemoveSpriteIds := []
+                let toRemovePlayerIds := []
+
+                for e in entitiesToRemove {
+                    if e.kind == const.ObjectKinds.Player {
+                        log("Removing player: {{e.id}}")
+                        toRemovePlayerIds := add(toRemovePlayerIds, e.id)
+                        this.gameState[this.part].players := del(this.gameState[this.part].players, e.id)
+                    } else {
+                        toRemoveSpriteIds := add(toRemoveSpriteIds, e.id)
+                    }
+                }
+
+                for [commID, data] in this.websocket {
+                    if data.gamename == this.part {
+                        addEventAndWait("StateUpdate", "db.web.sock.msg", {"commID" : commID, "payload" : {"toRemovePlayerIds" : toRemovePlayerIds}})
+                    }
+                }
+
+                this.gameState[this.part].sprites := hlp.filter(this.gameState[this.part].sprites, func (i) {
+                    return not i.id in toRemoveSpriteIds
+                })
+
+                for [commID, data] in this.websocket {
+                    if data.gamename == this.part {
+                        addEventAndWait("StateUpdate", "db.web.sock.msg", {"commID" : commID, "payload" : {"toRemoveSpriteIds" : toRemoveSpriteIds}})
+                    }
+                }
+            }
+        }
+
+    },
+
+    /*
+     Move a specific object in the game world. Return false if the object
+     should be removed from the world.
+     */
+    "moveObject" : func (timeCorrection, obj) {
+        let keepObj := true
+
+        /*
+         Calculate new entity coordinates
+         */
+        let moveStep := timeCorrection * obj.speed * obj.moveSpeed
+        let strafeStep := timeCorrection * obj.strafe * obj.moveSpeed * 0.02
+
+        /*
+         Forward / backward movement
+         */
+        let newX := obj.x + math.cos(obj.rot) * moveStep
+        let newY := obj.y + math.sin(obj.rot) * moveStep
+
+        /*
+         Left / right strafe movement
+         */
+        newX := newX - math.sin(obj.rot) * strafeStep
+        newY := newY + math.cos(obj.rot) * strafeStep
+
+        /*
+         Rotate the entity
+         */
+        obj.rot := obj.rot + timeCorrection * obj.dir * obj.rotSpeed
+
+        obj.x := math.floor(newX)
+        obj.y := math.floor(newY)
+
+        /*
+         Ensure the entity does not move outside the boundaries
+         */
+        if obj.displayLoop {
+            hmin := 0 - obj.dim - 20
+            hmax := this.world.screenWidth + obj.dim + 20
+
+            if obj.x > hmax {
+                obj.x := 0 - obj.dim - 10
+            } elif obj.x < hmin {
+                obj.x := this.world.screenWidth + obj.dim + 10
+            }
+
+            vmin := 0 - obj.dim - 20
+            vmax := this.world.screenHeight + obj.dim + 20
+
+            if obj.y > vmax {
+                obj.y := 0 - obj.dim - 10
+            } elif obj.y < vmin {
+                obj.y := this.world.screenHeight + obj.dim + 10
+            }
+        } elif obj.x > this.world.screenWidth or obj.x < 0 or obj.y > this.world.screenHeight or obj.y < 0 {
+
+            keepObj := false
+        }
+
+        mutex WebsocketMutex {
+            for [commID, data] in this.websocket {
+                if data.gamename == this.part {
+                    res := addEventAndWait("StateUpdate", "db.web.sock.msg", {"commID" : commID, "payload" : {"state" : obj}})
+                    if len(res) > 0 {
+                        log("Removing unknown websocket", commID)
+                        del(this.websocket, commID)
+                    }
+                }
+            }
+        }
+
+
+        return keepObj
+    },
+
+    /*
+     Detect collisions with other objects. Return false if the object
+     should be removed from the world.
+     */
+    "collisionDetection" : func (entity) {
+        let entitiesToRemove := []
+
+        checkCollision := func (e1, e2) {
+            let e1dh := e1.dim / 2
+            let e2dh := e2.dim / 2
+
+            return e1.x + e1dh > e2.x - e2dh and e1.x - e1dh < e2.x + e2dh and e1.y + e1dh > e2.y - e2dh and e1.y - e1dh < e2.y + e2dh
+        }
+
+        for [playername, obj] in this.gameState[this.part].players {
+            if entity.id == obj.id {
+                break
+            }
+
+            if checkCollision(entity, obj) {
+                entitiesToRemove := concat(entitiesToRemove, entity.collision(entity, obj, this), obj.collision(obj, entity, this))
+            }
+        }
+
+        for obj in this.gameState[this.part].sprites {
+            if entity.id == obj.id {
+                break
+            }
+
+            if checkCollision(entity, obj) {
+                entitiesToRemove := concat(entitiesToRemove, entity.collision(entity, obj, this), obj.collision(obj, entity, this))
+            }
+        }
+
+        return entitiesToRemove
+    },
+
+    /*
+     Execute an action for a given object.
+     */
+    "executeAction" : func (entity) {
+
+        if entity.action != null {
+            entity.doAction(entity, entity.action, this)
+            entity.action := null
+        }
+    }
+}

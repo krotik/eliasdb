@@ -28,7 +28,7 @@ func TestMemoryStorageManager(t *testing.T) {
 		return
 	}
 
-	if err := msm.Fetch(5, &ret); err != ErrSlotNotFound {
+	if err := msm.Fetch(5, &ret); err.(*ManagerError).Type != ErrSlotNotFound {
 		t.Error("Unexpected fetch result:", err)
 		return
 	}
@@ -77,47 +77,50 @@ func TestMemoryStorageManager(t *testing.T) {
 
 	msm.AccessMap[loc] = AccessNotInCache
 
-	if _, err := msm.FetchCached(loc); err != ErrNotInCache {
+	if _, err := msm.FetchCached(loc); err.(*ManagerError).Type != ErrNotInCache {
 		t.Error("Unexpected fetchcached result:", err)
 		return
 	}
 
 	msm.AccessMap[loc] = AccessCacheAndFetchSeriousError
 
-	if _, err := msm.FetchCached(loc); err != file.ErrAlreadyInUse {
+	_, err := msm.FetchCached(loc)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected fetchcached result:", err)
 		return
 	}
 
-	if err := msm.Fetch(loc, &ret); err != file.ErrAlreadyInUse {
+	err = msm.Fetch(loc, &ret)
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected fetch result:", err)
 		return
 	}
 
 	msm.AccessMap[loc] = AccessFetchError
 
-	if err := msm.Fetch(loc, &ret); err != ErrSlotNotFound {
+	if err := msm.Fetch(loc, &ret); err.(*ManagerError).Type != ErrSlotNotFound {
 		t.Error("Unexpected fetch result:", err)
 		return
 	}
 
 	msm.AccessMap[loc] = AccessUpdateError
 
-	if err := msm.Update(loc, ""); err != ErrSlotNotFound {
+	if err := msm.Update(loc, ""); err.(*ManagerError).Type != ErrSlotNotFound {
 		t.Error("Unexpected update result:", err)
 		return
 	}
 
 	msm.AccessMap[loc] = AccessFreeError
 
-	if err := msm.Free(loc); err != ErrSlotNotFound {
+	if err := msm.Free(loc); err.(*ManagerError).Type != ErrSlotNotFound {
 		t.Error("Unexpected free result:", err)
 		return
 	}
 
 	msm.AccessMap[msm.LocCount] = AccessInsertError
 
-	if _, err := msm.Insert(""); err != file.ErrAlreadyInUse {
+	_, err = msm.Insert("")
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected insert result:", err)
 		return
 	}

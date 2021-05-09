@@ -246,7 +246,7 @@ func TestLowLevelReadWrite(t *testing.T) {
 
 	err = sf.readRecord(record)
 
-	if err != ErrNilData {
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrNilData {
 		t.Error("Nil pointer in record data should cause an error")
 		return
 	}
@@ -383,7 +383,9 @@ func TestHighLevelGetRelease(t *testing.T) {
 	checkMap(t, &sf.dirty, record3.ID(), false, "Record3", "dirty")
 	checkMap(t, &sf.inUse, record3.ID(), true, "Record3", "in use")
 
-	if err = sf.Flush(); err != ErrInUse {
+	err = sf.Flush()
+
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrInUse {
 		t.Error("StorageFile should complain about records being in use")
 	}
 
@@ -467,7 +469,9 @@ func TestHighLevelGetRelease(t *testing.T) {
 	}
 
 	// Test that requesting a record twice without releasing it causes an error.
-	if _, err = sf.Get(1); err != ErrAlreadyInUse {
+
+	_, err = sf.Get(1)
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrAlreadyInUse {
 		t.Error("Requesting a record which is already in use should cause an error")
 	}
 
@@ -514,7 +518,8 @@ func TestHighLevelGetRelease(t *testing.T) {
 	// An attempt to close the file should return an error
 
 	err = sf.Close()
-	if err != ErrInUse {
+
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrInUse {
 		t.Error("Attempting to close a StorageFile with records in use should " +
 			"return an error")
 		return
@@ -571,13 +576,15 @@ func TestFlushingClosing(t *testing.T) {
 	}
 	record.WriteSingleByte(0, 0)
 
-	if sf.Flush() != ErrInUse {
+	err = sf.Flush()
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrInUse {
 		t.Error("Flushing should not be allowed while records are in use")
 		return
 	}
 
 	sf.ReleaseInUse(nil) // This should not cause a panic
-	if sf.ReleaseInUseID(5000, true) != ErrNotInUse {
+	err = sf.ReleaseInUseID(5000, true)
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrNotInUse {
 		t.Error("It should not be possible to release records which are not in use")
 		return
 	}
@@ -596,7 +603,7 @@ func TestFlushingClosing(t *testing.T) {
 	record.data = nil
 
 	err = sf.Flush()
-	if err != ErrNilData {
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrNilData {
 		t.Error("It should not be possible to flush a record with an invalid id to disk")
 		return
 	}
@@ -638,7 +645,8 @@ func TestFlushingClosing(t *testing.T) {
 	recordData := record.data
 	record.data = nil
 
-	if sf.Close() != ErrNilData {
+	err = sf.Close()
+	if sfe, ok := err.(*StorageFileError); !ok || sfe.Type != ErrNilData {
 		t.Error("Closing with a dirty record with negative id should not be possible", err)
 		return
 	}

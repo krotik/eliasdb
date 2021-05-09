@@ -341,11 +341,11 @@ func TestAddRemoveIndexHashEntry(t *testing.T) {
 
 	sm.AccessMap[2] = storage.AccessCacheAndFetchError
 
-	if err := im.addIndexHashEntry("mykey2", "myattr", "testvalue"); err != storage.ErrSlotNotFound {
+	if err := im.addIndexHashEntry("mykey2", "myattr", "testvalue"); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error(err)
 		return
 	}
-	if err := im.removeIndexHashEntry("mykey2", "myattr", "testvalue"); err != storage.ErrSlotNotFound {
+	if err := im.removeIndexHashEntry("mykey2", "myattr", "testvalue"); err.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error(err)
 		return
 	}
@@ -459,12 +459,12 @@ func TestAddRemoveIndexEntry(t *testing.T) {
 
 	sm.AccessMap[2] = storage.AccessCacheAndFetchError
 
-	if res := im.addIndexEntry("mykey2", "myattr", "myword", []uint64{10, 12, 80}); res != storage.ErrSlotNotFound {
+	if res := im.addIndexEntry("mykey2", "myattr", "myword", []uint64{10, 12, 80}); res.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected result:", res)
 		return
 	}
 
-	if res := im.removeIndexEntry("mykey2", "myattr", "myword", []uint64{10, 12, 80}); res != storage.ErrSlotNotFound {
+	if res := im.removeIndexEntry("mykey2", "myattr", "myword", []uint64{10, 12, 80}); res.(*storage.ManagerError).Type != storage.ErrSlotNotFound {
 		t.Error("Unexpected result:", res)
 		return
 	}

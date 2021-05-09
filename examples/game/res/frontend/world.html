@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <script src="dist/frontend.js"></script>
+        <style>
+            body {
+                background-color: black;
+            }
+            .mainscreen {
+                border: solid 1px;
+                margin-left: auto;
+                margin-right: auto;
+                display: block;
+                background-color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas class="mainscreen" id="screen"></canvas>
+        <div id="game-debug-out"></div>
+        <script>
+            astro.start('screen').catch(function (err) {
+                console.error(err.toString());
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,282 @@
+import "./templates.ecal" as tmpl
+import "./const.ecal" as const
+import "./helper.ecal" as hlp
+import "./engine.ecal" as engine
+
+/*
+ GameState holds the runtime state of all active games.
+*/
+GameState := {}
+
+/*
+ Websocket holds all active websocket connections.
+*/
+Websocket := {}
+
+/*
+ Get details of a game world.
+
+ Endpoint: /db/ecal/game
+*/
+sink GetGameWorld
+    kindmatch ["db.web.ecal"]
+    statematch {"path" : "game", "method" : "GET"}
+    priority 10
+{
+    let gameWorld
+
+    try {
+        let gameName := event.state.query.gameName[0]
+
+        if gameName != "main" {
+            raise(const.Errors.EntityNotFound, "Game world {{gameName}} not found")
+        }
+
+        gameWorld := tmpl.newGameWorld(gameName)
+
+        mutex GameStateMutex {
+
+            if GameState[gameName] == null {
+                db.storeNode(gameName, gameWorld)
+                sprites := []
+
+                for i in range(1, 8) {
+
+                    posX := math.floor(rand() * gameWorld.screenWidth - 100) + 100
+                    posY := math.floor(rand() * gameWorld.screenHeight - 100) + 100
+                    size := math.floor(rand() * 30) + 20
+                    rot := rand() * math.Pi * 2
+
+                    sprites := add(sprites, tmpl.newAsteroid("asteroid-{{i}}", posX, posY, size, rot, 0.005))
+                }
+
+                GameState[gameName] := {
+                    "players" : {},
+                    "sprites" : sprites,
+                    "stats" : {},
+                    "world" : gameWorld
+                }
+            }
+        }
+
+    } except e {
+        error(e)
+        db.raiseWebEventHandled({"status" : const.ErrorCodes[e.type], "body" : {"error" : e.type}})
+    } otherwise {
+        db.raiseWebEventHandled({"cstatusode" : 200, "body" : {"result" : "success", "gameworld" : gameWorld}})
+    }
+}
+
+
+/*
+ Register a new websocket connection
+
+ Endpoint: wss://<host>/db/sock/gamestate
+*/
+sink WebSocketRegister
+    kindmatch ["db.web.sock"]
+    statematch {"path" : "gamestate", "method" : "GET"}
+    priority 0
+{
+    let gameName := event.state.query.gameName[0]
+    let playerName := event.state.query.playerName[0]
+    let commID := event.state.commID
+
+    mutex WebsocketMutex {
+        Websocket[commID] := {"gamename" : gameName}
+    }
+
+
+    log("Register websocket for player: ", playerName, " in game: ", gameName, " commID: ", commID)
+}
+
+
+/*
+ Register a new player.
+
+ Endpoint: /db/ecal/player
+*/
+sink RegisterNewPlayer
+    kindmatch ["db.web.ecal"]
+    statematch {"path" : "player", "method" : "POST"}
+    priority 10
+{
+    let sprite
+    let gameWorld
+
+    try {
+        let playerName := event.state.bodyJSON.player
+        let gameName := event.state.bodyJSON.gameName
+        let gameWorld := GameState[gameName].world
+
+        mutex GameStateMutex {
+            if GameState[gameName].players[playerName] == null {
+
+                posY := math.floor(rand() * gameWorld.screenHeight - 100) + 100
+
+                GameState[gameName].players[playerName] := tmpl.newPlayer(event.state.bodyJSON.player, 20, posY)
+
+                /*
+                 Reset any player score
+                 */
+                addEvent("changescore", "main.gamescore", {
+                    "id" : playerName,
+                    "part" : gameName,
+                    "changeFunc" : func (s) {
+                        s.score := 0
+                    }
+                })
+
+                log("Registered player: ", playerName, " for game:", gameName)
+            }
+        }
+
+    } except e {
+        error(e)
+        db.raiseWebEventHandled({"status" : const.ErrorCodes["InternalError"], "body" : {"error" : const.Errors.InternalError}})
+    } otherwise {
+        db.raiseWebEventHandled({"status" : 200, "body" : {
+                "result" : "success",
+                "sprite" : sprite,
+                "gameworld" : gameWorld
+        }})
+    }
+}
+
+
+/*
+ Handle player input - send over an established websocket connection.
+*/
+sink WebSocketHandler
+    kindmatch ["db.web.sock.data"]
+    statematch {"path" : "gamestate", "method" : "GET"}
+    priority 0
+{
+
+    try {
+        let playerName := event.state.data.player
+        let gameName := event.state.data.gameName
+        let action := event.state.data.action
+        let state := event.state.data.state
+
+        mutex GameStateMutex {
+            if GameState[gameName].players[playerName] != null {
+                for [k, v] in state {
+                    GameState[gameName].players[playerName][k] := v
+                }
+                if not action in ["move", "stop move"] and GameState[gameName].players[playerName].action == null {
+                    GameState[gameName].players[playerName].action := action
+                }
+            } else {
+                log("Someone didn't know they were gone: ", playerName)
+                addEventAndWait("StateUpdate", "db.web.sock.msg", {"commID" : event.state.commID, "payload" : {"toRemovePlayerIds" : [playerName]}})
+            }
+        }
+
+    } except e {
+        error(e)
+    }
+}
+
+
+/*
+ GameScore sink.
+*/
+sink MainGameScore
+    kindmatch ["main.gamescore"]
+    priority 100
+{
+    try {
+        let scoreObj := db.fetchNode(event.state.part, event.state.id, const.ObjectKinds.ScoreObject)
+
+        if scoreObj == null {
+            scoreObj := {
+                "key" : event.state.id,
+                "kind" : const.ObjectKinds.ScoreObject,
+                "score" : 0
+            }
+        }
+
+        event.state.changeFunc(scoreObj)
+        db.storeNode(event.state.part, scoreObj)
+    } except e {
+        error("GameScore:", e)
+    }
+}
+
+
+/*
+ Object for main game engine.
+*/
+MainGameEngine := new(engine.GameEngine, "main", tmpl.DefaultGameWorld, GameState, Websocket)
+
+/*
+ GameLoop sink.
+*/
+sink MainGameLoop
+    kindmatch ["main.gameloop"]
+    priority 100
+{
+    try {
+        MainGameEngine.moveLoop()
+    } except e {
+        error("Game loop:", e)
+    }
+}
+
+
+/*
+ Period game events loop.
+*/
+sink PeriodicGameEvents
+    kindmatch ["main.periodicgameevents"]
+    priority 100
+{
+    try {
+        mutex GameStateMutex {
+
+            for [gameName, state] in GameState {
+                let gameWorld := state.world
+
+                if len(GameState[gameName].sprites) < 10 {
+                    log("Adding more asteroids", gameWorld.screenWidth)
+                    sprites := GameState[gameName].sprites
+
+                    for i in range(1, 4) {
+
+                        posX := math.floor(rand() * gameWorld.screenWidth - 100) + 100
+                        posY := gameWorld.screenHeight - 100
+                        size := math.floor(rand() * 40) + 20
+                        rot := rand() * math.Pi * 2
+
+                        sprites := add(sprites, tmpl.newAsteroid("asteroid-{{now()}}-{{i}}", posX, posY, size, rot, 0.005))
+                    }
+
+                    GameState[gameName].sprites := sprites
+                }
+            }
+        }
+
+    } except e {
+        error("Periodic events loop:", e)
+    }
+}
+
+
+/*
+ Trigger the main game loop in a set interval (microseconds). The interval here
+ must always be greater than the total time of the move loop (see the time_total_move
+ stat recorded in engine.ecal).
+
+ 35000 - 35 milli seconds - smooth animation calculated in the backend, frontend only needs to display
+
+*/
+setPulseTrigger(35000, "Main Game Loop", "main.gameloop")
+
+/*
+ Trigger periodic events in the game
+
+ 1000000 - 1 second
+
+*/
+setPulseTrigger(1000000, "Periodic Game Events", "main.periodicgameevents")

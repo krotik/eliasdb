@@ -1,0 +1,26 @@
+/*
+ Errors types used in the backend
+*/
+Errors := {"EntityNotFound" : "EntityNotFound", "InternalError" : "InternalError"}
+ErrorCodes := {"EntityNotFound" : 401, "InternalError" : 500}
+
+/*
+ Object kinds
+*/
+ObjectKinds := {
+
+    /* Asteroid in the game */
+    "Asteroid" : "asteroid",
+
+    /* A player in the game */
+    "Player" : "player",
+
+    /* A shot in the game */
+    "Shot" : "shot",
+
+    /* Conf is a configuration obj */
+    "ConfigurationObject" : "conf",
+
+    /* Score is a player statistic state */
+    "ScoreObject" : "score"
+}

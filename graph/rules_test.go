@@ -20,8 +20,10 @@ import (
 )
 
 type TestRule struct {
-	handleError bool
-	commitError bool
+	handledError    bool
+	processingError bool
+	commitError     bool
+	handles         []int
 }
 
 func (r *TestRule) Name() string {
@@ -29,12 +31,14 @@ func (r *TestRule) Name() string {
 }
 
 func (r *TestRule) Handles() []int {
-	return []int{EventNodeCreated, EventNodeUpdated, EventNodeDeleted,
-		EventEdgeCreated, EventEdgeUpdated, EventEdgeDeleted}
+	return r.handles
 }
 
 func (r *TestRule) Handle(gm *Manager, trans Trans, event int, ed ...interface{}) error {
-	if r.handleError {
+	if r.handledError {
+		return ErrEventHandled
+	}
+	if r.processingError {
 		return &util.GraphError{Type: util.ErrAccessComponent, Detail: "Test error"}
 	}
 
@@ -436,7 +440,8 @@ func TestRulesErrors(t *testing.T) {
 	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
 	gm := NewGraphManager(mgs)
 
-	tr := &TestRule{false, false}
+	tr := &TestRule{false, false, false, []int{EventNodeCreated, EventNodeUpdated, EventNodeDeleted,
+		EventEdgeCreated, EventEdgeUpdated, EventEdgeDeleted}}
 
 	gm.SetGraphRule(tr)
 
@@ -453,7 +458,7 @@ func TestRulesErrors(t *testing.T) {
 	node1.SetAttr("kind", "mynode")
 	node1.SetAttr("Name", "Node1")
 
-	tr.handleError = true
+	tr.processingError = true
 	tr.commitError = false
 
 	if err := gm.StoreNode("main", node1); err.Error() !=
@@ -462,7 +467,14 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	// Make sure the node was still added
+
+	if res, err := gm.FetchNode("main", "456", "mynode"); res == nil || err != nil {
+		t.Error("Unexpeccted result:", res, err)
+		return
+	}
+
+	tr.processingError = false
 	tr.commitError = true
 
 	if err := gm.StoreNode("main", node1); err.Error() !=
@@ -471,7 +483,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreNode("main", node1); err != nil {
@@ -479,7 +491,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = true
+	tr.processingError = true
 	tr.commitError = false
 
 	if _, err := gm.RemoveNode("main", node1.Key(), node1.Kind()); err.Error() !=
@@ -488,7 +500,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreNode("main", node1); err != nil {
@@ -496,7 +508,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = true
 
 	if _, err := gm.RemoveNode("main", node1.Key(), node1.Kind()); err.Error() !=
@@ -505,7 +517,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreNode("main", node1); err != nil {
@@ -513,7 +525,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = true
+	tr.processingError = true
 	tr.commitError = false
 
 	edge := data.NewGraphEdge()
@@ -536,7 +548,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = true
 
 	if err := gm.StoreEdge("main", edge); err.Error() !=
@@ -545,7 +557,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreEdge("main", edge); err != nil {
@@ -553,7 +565,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = true
 
 	if _, err := gm.RemoveEdge("main", edge.Key(), edge.Kind()); err.Error() !=
@@ -562,7 +574,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreEdge("main", edge); err != nil {
@@ -570,7 +582,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = true
+	tr.processingError = true
 	tr.commitError = false
 
 	if _, err := gm.RemoveEdge("main", edge.Key(), edge.Kind()); err.Error() !=
@@ -579,7 +591,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreEdge("main", edge); err != nil {
@@ -591,7 +603,7 @@ func TestRulesErrors(t *testing.T) {
 
 	trans := NewConcurrentGraphTrans(gm)
 
-	tr.handleError = true
+	tr.processingError = true
 	tr.commitError = false
 
 	trans.StoreNode("main", node1)
@@ -602,7 +614,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = true
 
 	trans.StoreNode("main", node1)
@@ -613,7 +625,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = true
+	tr.processingError = true
 	tr.commitError = false
 
 	trans.RemoveNode("main", node1.Key(), node1.Kind())
@@ -624,7 +636,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreNode("main", node1); err != nil {
@@ -632,7 +644,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = true
 
 	trans.RemoveNode("main", node1.Key(), node1.Kind())
@@ -643,7 +655,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreNode("main", node1); err != nil {
@@ -651,7 +663,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = true
+	tr.processingError = true
 	tr.commitError = false
 
 	trans.StoreEdge("main", edge)
@@ -662,7 +674,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = true
 
 	trans.StoreEdge("main", edge)
@@ -673,7 +685,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreEdge("main", edge); err != nil {
@@ -681,7 +693,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = true
 
 	trans.RemoveEdge("main", edge.Key(), edge.Kind())
@@ -692,7 +704,7 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = false
+	tr.processingError = false
 	tr.commitError = false
 
 	if err := gm.StoreEdge("main", edge); err != nil {
@@ -700,13 +712,86 @@ func TestRulesErrors(t *testing.T) {
 		return
 	}
 
-	tr.handleError = true
+	tr.processingError = true
 	tr.commitError = false
 
 	trans.RemoveEdge("main", edge.Key(), edge.Kind())
 
 	if err := trans.Commit(); err.Error() !=
 		"GraphError: Graph rule error (GraphError: Failed to access graph storage component (Test error))" {
+		t.Error(err)
+		return
+	}
+}
+
+func TestRulesErrorsPreChange(t *testing.T) {
+	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
+	gm := NewGraphManager(mgs)
+
+	tr := &TestRule{false, false, false, []int{EventNodeStore, EventNodeUpdate, EventNodeDelete,
+		EventEdgeStore, EventEdgeDelete}}
+
+	gm.SetGraphRule(tr)
+
+	// Check that the test rule was added
+
+	if rules := fmt.Sprint(gm.GraphRules()); rules !=
+		"[system.deletenodeedges system.updatenodestats testrule]" {
+		t.Error("unexpected graph rule list:", rules)
+		return
+	}
+
+	// Test that we can stop the storage of a node with custom processing
+
+	node1 := data.NewGraphNode()
+	node1.SetAttr("key", "456")
+	node1.SetAttr("kind", "mynode")
+	node1.SetAttr("Name", "Node1")
+
+	tr.handledError = true
+
+	if err := gm.StoreNode("main", node1); err != nil {
+		t.Error(err)
+		return
+	}
+
+	// Make sure the node was not added
+
+	if res, err := gm.FetchNode("main", "456", "mynode"); res != nil || err != nil {
+		t.Error("Unexpeccted result:", res, err)
+		return
+	}
+
+	if err := gm.UpdateNode("main", node1); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if _, err := gm.RemoveNode("main", node1.Key(), node1.Kind()); err != nil {
+		t.Error(err)
+		return
+	}
+
+	edge := data.NewGraphEdge()
+	edge.SetAttr("key", "123")
+	edge.SetAttr("kind", "myedge")
+
+	edge.SetAttr(data.EdgeEnd1Key, node1.Key())
+	edge.SetAttr(data.EdgeEnd1Kind, node1.Kind())
+	edge.SetAttr(data.EdgeEnd1Role, "node1")
+	edge.SetAttr(data.EdgeEnd1Cascading, false)
+
+	edge.SetAttr(data.EdgeEnd2Key, node1.Key())
+	edge.SetAttr(data.EdgeEnd2Kind, node1.Kind())
+	edge.SetAttr(data.EdgeEnd2Role, "node2")
+	edge.SetAttr(data.EdgeEnd2Cascading, false)
+
+	if err := gm.StoreEdge("main", edge); err != nil {
+		t.Error(err)
+		return
+	}
+
+	if _, err := gm.RemoveEdge("main", edge.Key(), edge.Kind()); err != nil {
 		t.Error(err)
 		return
 	}

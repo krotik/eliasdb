@@ -66,7 +66,8 @@ func TestLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	if _, err := lsm.Insert(util.PackLocation(10, 11)); err != file.ErrAlreadyInUse {
+	_, err = lsm.Insert(util.PackLocation(10, 11))
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -81,7 +82,8 @@ func TestLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	if _, err := lsm.Insert(util.PackLocation(10, 11)); err != file.ErrAlreadyInUse {
+	_, err = lsm.Insert(util.PackLocation(10, 11))
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -106,7 +108,8 @@ func TestLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	if err = lsm.ForceInsert(util.PackLocation(2, 2), util.PackLocation(12, 13)); err != file.ErrAlreadyInUse {
+	err = lsm.ForceInsert(util.PackLocation(2, 2), util.PackLocation(12, 13))
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -128,7 +131,8 @@ func TestLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	if err = lsm.ForceInsert(util.PackLocation(2, 2), util.PackLocation(12, 13)); err != file.ErrAlreadyInUse {
+	err = lsm.ForceInsert(util.PackLocation(2, 2), util.PackLocation(12, 13))
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error(err)
 		return
 	}
@@ -150,7 +154,8 @@ func TestLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	if err = lsm.Free(util.PackLocation(2, 2)); err != file.ErrAlreadyInUse {
+	err = lsm.Free(util.PackLocation(2, 2))
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected free result:", err)
 		return
 	}
@@ -171,7 +176,8 @@ func TestLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	if _, err = lsm.Insert(util.PackLocation(12, 13)); err != file.ErrAlreadyInUse {
+	_, err = lsm.Insert(util.PackLocation(12, 13))
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected free result:", err)
 		return
 	}
@@ -186,7 +192,8 @@ func TestLogicalSlotManager(t *testing.T) {
 		return
 	}
 
-	if err = lsm.Update(util.PackLocation(1, 3), util.PackLocation(12, 13)); err != file.ErrAlreadyInUse {
+	err = lsm.Update(util.PackLocation(1, 3), util.PackLocation(12, 13))
+	if sfe, ok := err.(*file.StorageFileError); !ok || sfe.Type != file.ErrAlreadyInUse {
 		t.Error("Unexpected update result:", err)
 		return
 	}

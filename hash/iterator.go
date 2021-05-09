@@ -105,7 +105,7 @@ func (it *HTreeIterator) nextItem() error {
 
 	if err != nil {
 
-		if err == storage.ErrSlotNotFound {
+		if smr, ok := err.(*storage.ManagerError); ok && smr.Type == storage.ErrSlotNotFound {
 
 			// Something is wrong - the tree must have changed since the last
 			// nextItem call. Remove the path element and try again.

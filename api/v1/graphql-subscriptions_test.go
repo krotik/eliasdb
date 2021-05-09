@@ -72,8 +72,6 @@ func TestGraphQLSubscriptionMissingPartition(t *testing.T) {
 func TestGraphQLSubscription(t *testing.T) {
 	queryURL := "ws://localhost" + TESTPORT + EndpointGraphQLSubscriptions + "main"
 
-	// Test missing partition
-
 	c, _, err := websocket.DefaultDialer.Dial(queryURL, nil)
 	if err != nil {
 		t.Error("Could not open websocket:", err)
@@ -247,7 +245,7 @@ func TestGraphQLSubscription(t *testing.T) {
             "line": 1
           }
         ],
-        "message": "GraphError: Could not read graph information (Record is already in-use (? - ))",
+        "message": "GraphError: Could not read graph information (Record is already in-use (\u003cmemory\u003e - ))",
         "path": [
           "Author"
         ]

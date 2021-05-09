@@ -1,6 +1,7 @@
 EliasDB Chat Example
 ==
 This example demonstrates a simple application which uses advanced features of EliasDB:
+- Node modification via ECAL script
 - User Management
 - GraphQL subscriptions
 
