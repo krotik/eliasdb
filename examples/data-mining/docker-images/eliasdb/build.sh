@@ -4,7 +4,7 @@ export ROOT_PATH=`pwd`
 
 # Build the collector component
 
-cp ../../../../eliasdb .
+env GOOS=linux GOARCH=amd64 go build ../../../../cli/eliasdb.go
 docker build --build-arg cluster_id=1 --tag data-mining/eliasdb1 .
 docker build --build-arg cluster_id=2 --tag data-mining/eliasdb2 .
 docker build --build-arg cluster_id=3 --tag data-mining/eliasdb3 .
