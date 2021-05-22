@@ -14,7 +14,7 @@ import (
 	"bytes"
 	"testing"
 
-	"devt.de/krotik/eliasdb/config"
+	"github.com/krotik/eliasdb/config"
 )
 
 func TestGraphCommands(t *testing.T) {

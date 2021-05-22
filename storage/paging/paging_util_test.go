@@ -13,8 +13,8 @@ package paging
 import (
 	"testing"
 
-	"devt.de/krotik/eliasdb/storage/file"
-	"devt.de/krotik/eliasdb/storage/paging/view"
+	"github.com/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/paging/view"
 )
 
 func TestFreePhysicalSlotManagerScale(t *testing.T) {

@@ -36,7 +36,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"devt.de/krotik/eliasdb/config"
+	"github.com/krotik/eliasdb/config"
 )
 
 /*

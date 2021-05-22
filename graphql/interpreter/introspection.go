@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strings"
 
-	"devt.de/krotik/common/lang/graphql/parser"
+	"github.com/krotik/common/lang/graphql/parser"
 )
 
 /*

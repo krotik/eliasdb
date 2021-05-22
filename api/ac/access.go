@@ -20,11 +20,11 @@ import (
 	"net/url"
 	"strings"
 
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/common/httputil/access"
-	"devt.de/krotik/common/httputil/auth"
-	"devt.de/krotik/common/httputil/user"
-	"devt.de/krotik/eliasdb/api"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/common/httputil/access"
+	"github.com/krotik/common/httputil/auth"
+	"github.com/krotik/common/httputil/user"
+	"github.com/krotik/eliasdb/api"
 )
 
 // Code and datastructures relating to access control

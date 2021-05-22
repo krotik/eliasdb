@@ -18,10 +18,10 @@ import (
 	"sync"
 	"testing"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/common/httputil"
-	"devt.de/krotik/ecal/engine"
 	"github.com/gorilla/websocket"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/common/httputil"
+	"github.com/krotik/ecal/engine"
 )
 
 const TESTPORT = ":9090"

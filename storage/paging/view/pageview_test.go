@@ -13,7 +13,7 @@ package view
 import (
 	"testing"
 
-	"devt.de/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/file"
 )
 
 func TestPageView(t *testing.T) {

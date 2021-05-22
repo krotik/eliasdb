@@ -17,11 +17,11 @@ import (
 	"net/url"
 	"time"
 
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/common/httputil"
-	"devt.de/krotik/common/httputil/auth"
-	"devt.de/krotik/eliasdb/api"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/common/httputil"
+	"github.com/krotik/common/httputil/auth"
+	"github.com/krotik/eliasdb/api"
 )
 
 /*

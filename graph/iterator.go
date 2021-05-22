@@ -11,8 +11,8 @@
 package graph
 
 import (
-	"devt.de/krotik/eliasdb/graph/util"
-	"devt.de/krotik/eliasdb/hash"
+	"github.com/krotik/eliasdb/graph/util"
+	"github.com/krotik/eliasdb/hash"
 )
 
 /*

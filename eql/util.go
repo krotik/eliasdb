@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"devt.de/krotik/common/stringutil"
-	"devt.de/krotik/eliasdb/eql/parser"
+	"github.com/krotik/common/stringutil"
+	"github.com/krotik/eliasdb/eql/parser"
 )
 
 /*

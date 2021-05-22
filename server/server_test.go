@@ -23,15 +23,15 @@ import (
 	"testing"
 	"time"
 
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/common/httputil"
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/api/ac"
-	"devt.de/krotik/eliasdb/cluster"
-	"devt.de/krotik/eliasdb/cluster/manager"
-	"devt.de/krotik/eliasdb/config"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/graphstorage"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/common/httputil"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/api/ac"
+	"github.com/krotik/eliasdb/cluster"
+	"github.com/krotik/eliasdb/cluster/manager"
+	"github.com/krotik/eliasdb/config"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 /*

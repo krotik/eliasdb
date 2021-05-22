@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"devt.de/krotik/common/fileutil"
+	"github.com/krotik/common/fileutil"
 )
 
 const DBDIR = "storagemanagertest"

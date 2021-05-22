@@ -13,7 +13,7 @@ package v1
 import (
 	"testing"
 
-	"devt.de/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/api"
 )
 
 func TestECAL(t *testing.T) {

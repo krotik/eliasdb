@@ -18,12 +18,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/eliasdb/config"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/data"
-	"devt.de/krotik/eliasdb/graph/graphstorage"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/eliasdb/config"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 const testScriptDir = "testscripts"

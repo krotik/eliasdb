@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"devt.de/krotik/common/datautil"
+	"github.com/krotik/common/datautil"
 )
 
 /*

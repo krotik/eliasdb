@@ -17,11 +17,11 @@ import (
 	"fmt"
 	"strings"
 
-	"devt.de/krotik/common/stringutil"
-	"devt.de/krotik/eliasdb/graph/data"
-	"devt.de/krotik/eliasdb/graph/util"
-	"devt.de/krotik/eliasdb/hash"
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/common/stringutil"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/util"
+	"github.com/krotik/eliasdb/hash"
+	"github.com/krotik/eliasdb/storage"
 )
 
 // Helper functions for GraphManager

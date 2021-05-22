@@ -13,9 +13,9 @@ package pageview
 import (
 	"testing"
 
-	"devt.de/krotik/eliasdb/storage/file"
-	"devt.de/krotik/eliasdb/storage/paging/view"
-	"devt.de/krotik/eliasdb/storage/util"
+	"github.com/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/paging/view"
+	"github.com/krotik/eliasdb/storage/util"
 )
 
 func TestFreeLogicalSlotPage(t *testing.T) {

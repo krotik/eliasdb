@@ -15,8 +15,8 @@ import (
 	"path"
 	"strconv"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/common/fileutil"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/common/fileutil"
 )
 
 // Global variables

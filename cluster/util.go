@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"devt.de/krotik/common/errorutil"
+	"github.com/krotik/common/errorutil"
 )
 
 /*

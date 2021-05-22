@@ -16,9 +16,9 @@ import (
 	"os"
 	"testing"
 
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/eliasdb/storage/file"
-	"devt.de/krotik/eliasdb/storage/paging/view"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/paging/view"
 )
 
 const DBDIR = "pagingtest"

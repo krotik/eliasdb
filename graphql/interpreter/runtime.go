@@ -13,9 +13,9 @@ package interpreter
 import (
 	"fmt"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/common/lang/graphql/parser"
-	"devt.de/krotik/eliasdb/graph"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/common/lang/graphql/parser"
+	"github.com/krotik/eliasdb/graph"
 )
 
 // Runtime definition

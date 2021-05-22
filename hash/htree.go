@@ -43,7 +43,7 @@ import (
 	"fmt"
 	"sync"
 
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/eliasdb/storage"
 )
 
 /*

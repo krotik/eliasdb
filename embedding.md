@@ -28,7 +28,7 @@ The first step is to create a graph storage which will store the data. The follo
 ```
 import (
 	...
-		"devt.de/krotik/eliasdb/graph/graphstorage"
+		"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 func main() {
@@ -45,15 +45,9 @@ func main() {
 ```
 Running `go build` again should now download eliasdb as additional dependency (the actual versions might be different):
 ```
-go: finding devt.de/krotik/eliasdb/graph/graphstorage latest
-go: finding devt.de/krotik/eliasdb/graph latest
-go: finding devt.de/krotik/eliasdb v1.0.0
-go: downloading devt.de/krotik/eliasdb v1.0.0
-go: extracting devt.de/krotik/eliasdb v1.0.0
-go: finding github.com/gorilla/websocket v1.4.1
-go: finding devt.de/krotik/common v1.0.0
-go: downloading devt.de/krotik/common v1.0.0
-go: extracting devt.de/krotik/common v1.0.0
+go: finding github.com/krotik/eliasdb/graph/graphstorage latest
+go: finding github.com/krotik/eliasdb/graph latest
+...
 ```
 The `go build` command will have modified the `go.mod` file and created a `go.sum` file.
 
@@ -168,7 +162,7 @@ if idxerr == nil {
 	}
 }
 ```
-For even more complex searches you can use EQL (see also the EQL manual  [here](https://devt.de/krotik/eliasdb/src/master/eql.md)):
+For even more complex searches you can use EQL (see also the EQL manual  [here](eql.md)):
 ```
 res, err := eql.RunQuery("myquery", "main", "get mynode where name = 'Node2'", gm)
 
@@ -193,10 +187,10 @@ import (
 	"fmt"
 	"log"
 
-	"devt.de/krotik/eliasdb/eql"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/data"
-	"devt.de/krotik/eliasdb/graph/graphstorage"
+	"github.com/krotik/eliasdb/eql"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 func main() {

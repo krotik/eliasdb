@@ -16,10 +16,10 @@ import (
 	"strings"
 	"sync"
 
-	"devt.de/krotik/common/cryptutil"
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/data"
+	"github.com/krotik/common/cryptutil"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/data"
 )
 
 /*

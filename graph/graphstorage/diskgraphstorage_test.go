@@ -17,9 +17,9 @@ import (
 	"os"
 	"testing"
 
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/eliasdb/storage"
 )
 
 const diskGraphStorageTestDBDir = "diskgraphstoragetest1"

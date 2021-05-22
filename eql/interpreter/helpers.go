@@ -11,9 +11,9 @@
 package interpreter
 
 import (
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/eliasdb/eql/parser"
-	"devt.de/krotik/eliasdb/graph/data"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/eliasdb/eql/parser"
+	"github.com/krotik/eliasdb/graph/data"
 )
 
 // Not Implemented Runtime

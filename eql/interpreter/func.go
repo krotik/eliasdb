@@ -20,10 +20,10 @@ import (
 	"strings"
 	"time"
 
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/eliasdb/eql/parser"
-	"devt.de/krotik/eliasdb/graph/data"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/eliasdb/eql/parser"
+	"github.com/krotik/eliasdb/graph/data"
 )
 
 // Where related functions

@@ -16,8 +16,8 @@ import (
 	"fmt"
 	"io"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/eliasdb/graph/data"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/eliasdb/graph/data"
 )
 
 /*

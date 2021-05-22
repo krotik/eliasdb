@@ -414,8 +414,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/storage"
 )
 
 /*

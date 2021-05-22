@@ -24,9 +24,9 @@ import (
 	"sort"
 	"strings"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/eliasdb/api/ac"
-	"devt.de/krotik/eliasdb/config"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/eliasdb/api/ac"
+	"github.com/krotik/eliasdb/config"
 )
 
 /*

@@ -15,8 +15,8 @@ import (
 	"fmt"
 	"testing"
 
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/graphstorage"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 func TestTutorialTestQueries(t *testing.T) {

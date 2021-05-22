@@ -14,8 +14,8 @@ import (
 	"fmt"
 	"testing"
 
-	"devt.de/krotik/eliasdb/storage"
-	"devt.de/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage"
+	"github.com/krotik/eliasdb/storage/file"
 )
 
 func TestIterator(t *testing.T) {

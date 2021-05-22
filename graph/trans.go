@@ -15,9 +15,9 @@ import (
 	"strings"
 	"sync"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/eliasdb/graph/data"
-	"devt.de/krotik/eliasdb/graph/util"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/util"
 )
 
 /*

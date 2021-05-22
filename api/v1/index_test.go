@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/storage"
 )
 
 func TestIndexQuery(t *testing.T) {

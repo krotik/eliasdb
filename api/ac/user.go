@@ -16,9 +16,9 @@ import (
 	"net/http"
 	"sort"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/common/httputil/access"
-	"devt.de/krotik/eliasdb/api"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/common/httputil/access"
+	"github.com/krotik/eliasdb/api"
 )
 
 /*

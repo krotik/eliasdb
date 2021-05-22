@@ -11,8 +11,8 @@
 package interpreter
 
 import (
-	"devt.de/krotik/eliasdb/eql/parser"
-	"devt.de/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/eql/parser"
+	"github.com/krotik/eliasdb/graph"
 )
 
 // Runtime provider for GET queries

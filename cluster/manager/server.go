@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"net/rpc"
 
-	"devt.de/krotik/common/errorutil"
+	"github.com/krotik/common/errorutil"
 )
 
 func init() {

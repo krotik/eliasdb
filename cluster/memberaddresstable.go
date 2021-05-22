@@ -17,10 +17,10 @@ import (
 	"sync"
 	"time"
 
-	"devt.de/krotik/common/timeutil"
-	"devt.de/krotik/eliasdb/cluster/manager"
-	"devt.de/krotik/eliasdb/hash"
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/common/timeutil"
+	"github.com/krotik/eliasdb/cluster/manager"
+	"github.com/krotik/eliasdb/hash"
+	"github.com/krotik/eliasdb/storage"
 )
 
 func init() {

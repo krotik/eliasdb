@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"devt.de/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/api"
 )
 
 /*

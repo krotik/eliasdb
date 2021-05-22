@@ -21,12 +21,12 @@ import (
 	"strings"
 	"testing"
 
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/cluster"
-	"devt.de/krotik/eliasdb/cluster/manager"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/graphstorage"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/cluster"
+	"github.com/krotik/eliasdb/cluster/manager"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 func TestClusterStorage(t *testing.T) {

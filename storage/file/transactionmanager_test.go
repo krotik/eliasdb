@@ -16,8 +16,8 @@ import (
 	"reflect"
 	"testing"
 
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/common/testutil"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/common/testutil"
 )
 
 /*

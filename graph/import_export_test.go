@@ -15,9 +15,9 @@ import (
 	"strings"
 	"testing"
 
-	"devt.de/krotik/eliasdb/graph/data"
-	"devt.de/krotik/eliasdb/graph/graphstorage"
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/graphstorage"
+	"github.com/krotik/eliasdb/storage"
 )
 
 func TestImportExportError(t *testing.T) {

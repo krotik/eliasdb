@@ -13,8 +13,8 @@ package storage
 import (
 	"testing"
 
-	"devt.de/krotik/eliasdb/storage/file"
-	"devt.de/krotik/eliasdb/storage/slotting/pageview"
+	"github.com/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/slotting/pageview"
 )
 
 type cachetestobj struct {

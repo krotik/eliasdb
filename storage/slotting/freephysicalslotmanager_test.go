@@ -16,12 +16,12 @@ import (
 	"os"
 	"testing"
 
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/eliasdb/storage/file"
-	"devt.de/krotik/eliasdb/storage/paging"
-	"devt.de/krotik/eliasdb/storage/paging/view"
-	"devt.de/krotik/eliasdb/storage/slotting/pageview"
-	"devt.de/krotik/eliasdb/storage/util"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/paging"
+	"github.com/krotik/eliasdb/storage/paging/view"
+	"github.com/krotik/eliasdb/storage/slotting/pageview"
+	"github.com/krotik/eliasdb/storage/util"
 )
 
 const DBDIR = "buckettest"

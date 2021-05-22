@@ -13,9 +13,9 @@ package cluster
 import (
 	"fmt"
 
-	"devt.de/krotik/common/timeutil"
-	"devt.de/krotik/eliasdb/cluster/manager"
-	"devt.de/krotik/eliasdb/hash"
+	"github.com/krotik/common/timeutil"
+	"github.com/krotik/eliasdb/cluster/manager"
+	"github.com/krotik/eliasdb/hash"
 )
 
 /*

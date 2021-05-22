@@ -23,7 +23,7 @@ package view
 import (
 	"fmt"
 
-	"devt.de/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/file"
 )
 
 /*

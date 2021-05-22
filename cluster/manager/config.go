@@ -31,10 +31,10 @@ import (
 	"fmt"
 	"sync"
 
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/eliasdb/storage"
 )
 
 // Cluster config

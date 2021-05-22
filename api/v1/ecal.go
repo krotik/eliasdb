@@ -18,11 +18,11 @@ import (
 	"strconv"
 	"strings"
 
-	"devt.de/krotik/ecal/engine"
-	"devt.de/krotik/ecal/scope"
-	"devt.de/krotik/ecal/util"
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/ecal/dbfunc"
+	"github.com/krotik/ecal/engine"
+	"github.com/krotik/ecal/scope"
+	"github.com/krotik/ecal/util"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/ecal/dbfunc"
 )
 
 /*

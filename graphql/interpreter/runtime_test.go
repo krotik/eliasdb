@@ -15,10 +15,10 @@ import (
 	"fmt"
 	"testing"
 
-	"devt.de/krotik/common/lang/graphql/parser"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/data"
-	"devt.de/krotik/eliasdb/graph/graphstorage"
+	"github.com/krotik/common/lang/graphql/parser"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 func TestNamedQueries(t *testing.T) {

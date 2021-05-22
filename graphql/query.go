@@ -26,9 +26,9 @@ package graphql
 import (
 	"fmt"
 
-	"devt.de/krotik/common/lang/graphql/parser"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graphql/interpreter"
+	"github.com/krotik/common/lang/graphql/parser"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graphql/interpreter"
 )
 
 /*

@@ -20,8 +20,8 @@ import (
 	"sync"
 	"testing"
 
-	"devt.de/krotik/common/httputil"
-	"devt.de/krotik/eliasdb/config"
+	"github.com/krotik/common/httputil"
+	"github.com/krotik/eliasdb/config"
 )
 
 const TESTPORT = ":9090"

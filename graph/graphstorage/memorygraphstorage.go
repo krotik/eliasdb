@@ -10,7 +10,7 @@
 
 package graphstorage
 
-import "devt.de/krotik/eliasdb/storage"
+import "github.com/krotik/eliasdb/storage"
 
 /*
 MgsRetClose is the return value on successful close

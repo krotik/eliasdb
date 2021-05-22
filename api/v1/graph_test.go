@@ -15,12 +15,12 @@ import (
 	"fmt"
 	"testing"
 
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/data"
-	"devt.de/krotik/eliasdb/hash"
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/hash"
+	"github.com/krotik/eliasdb/storage"
 )
 
 func TestNestedStorage(t *testing.T) {

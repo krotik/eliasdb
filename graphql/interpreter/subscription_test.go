@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"devt.de/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/graph/data"
 )
 
 type testCallbackHandler struct {

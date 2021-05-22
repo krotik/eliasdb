@@ -14,7 +14,7 @@ import (
 	"errors"
 	"fmt"
 
-	"devt.de/krotik/common/pools"
+	"github.com/krotik/common/pools"
 )
 
 /*

@@ -14,9 +14,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"devt.de/krotik/common/stringutil"
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/api/ac"
+	"github.com/krotik/common/stringutil"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/api/ac"
 )
 
 // Command: ver

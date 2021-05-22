@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"devt.de/krotik/eliasdb/cluster/manager"
+	"github.com/krotik/eliasdb/cluster/manager"
 )
 
 func TestRebalancing(t *testing.T) {

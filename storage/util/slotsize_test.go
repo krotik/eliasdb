@@ -13,7 +13,7 @@ package util
 import (
 	"testing"
 
-	"devt.de/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/file"
 )
 
 func TestSlotSize(t *testing.T) {

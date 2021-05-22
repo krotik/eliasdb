@@ -13,9 +13,9 @@ package dbfunc
 import (
 	"fmt"
 
-	"devt.de/krotik/ecal/parser"
-	"devt.de/krotik/eliasdb/eql"
-	"devt.de/krotik/eliasdb/graph"
+	"github.com/krotik/ecal/parser"
+	"github.com/krotik/eliasdb/eql"
+	"github.com/krotik/eliasdb/graph"
 )
 
 /*

@@ -217,7 +217,7 @@ To build EliasDB from source you need to have Go installed (go >= 1.12):
 
 - Create a directory, change into it and run:
 ```
-git clone https://devt.de/krotik/eliasdb/ .
+git clone https://github.com/krotik/eliasdb/ .
 ```
 
 - You can build EliasDB's executable with:
@@ -231,7 +231,7 @@ EliasDB can be build as a secure and compact Docker image.
 
 - Create a directory, change into it and run:
 ```
-git clone https://devt.de/krotik/eliasdb/ .
+git clone https://github.com/krotik/eliasdb/ .
 ```
 
 - You can now build the Docker image with:

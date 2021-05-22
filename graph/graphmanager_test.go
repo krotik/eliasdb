@@ -16,8 +16,8 @@ import (
 	"os"
 	"testing"
 
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/eliasdb/graph/graphstorage"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/eliasdb/graph/graphstorage"
 )
 
 /*

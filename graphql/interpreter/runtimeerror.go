@@ -16,8 +16,8 @@ import (
 	"errors"
 	"fmt"
 
-	"devt.de/krotik/common/lang/graphql/parser"
-	"devt.de/krotik/common/stringutil"
+	"github.com/krotik/common/lang/graphql/parser"
+	"github.com/krotik/common/stringutil"
 )
 
 /*

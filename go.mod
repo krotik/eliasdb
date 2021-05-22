@@ -1,9 +1,9 @@
-module devt.de/krotik/eliasdb
+module github.com/krotik/eliasdb
 
 go 1.12
 
 require (
-	devt.de/krotik/common v1.4.1
-	devt.de/krotik/ecal v1.6.1
 	github.com/gorilla/websocket v1.4.1
+	github.com/krotik/common v1.4.4
+	github.com/krotik/ecal v1.6.3
 )

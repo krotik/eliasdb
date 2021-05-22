@@ -16,8 +16,8 @@ import (
 	"sort"
 	"strings"
 
-	"devt.de/krotik/common/stringutil"
-	"devt.de/krotik/eliasdb/api/v1"
+	"github.com/krotik/common/stringutil"
+	"github.com/krotik/eliasdb/api/v1"
 )
 
 // Command: info

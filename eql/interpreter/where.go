@@ -16,8 +16,8 @@ import (
 	"strconv"
 	"strings"
 
-	"devt.de/krotik/eliasdb/eql/parser"
-	"devt.de/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/eql/parser"
+	"github.com/krotik/eliasdb/graph/data"
 )
 
 /*

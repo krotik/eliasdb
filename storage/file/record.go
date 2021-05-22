@@ -45,8 +45,8 @@ import (
 	"fmt"
 	"io"
 
-	"devt.de/krotik/common/bitutil"
-	"devt.de/krotik/common/stringutil"
+	"github.com/krotik/common/bitutil"
+	"github.com/krotik/common/stringutil"
 )
 
 /*

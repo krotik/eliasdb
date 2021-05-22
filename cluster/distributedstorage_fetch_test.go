@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"devt.de/krotik/eliasdb/cluster/manager"
+	"github.com/krotik/eliasdb/cluster/manager"
 )
 
 func TestSimpleDataReplicationFetch(t *testing.T) {

@@ -20,10 +20,10 @@ import (
 	"strings"
 	"unicode"
 
-	"devt.de/krotik/common/bitutil"
-	"devt.de/krotik/common/sortutil"
-	"devt.de/krotik/common/stringutil"
-	"devt.de/krotik/eliasdb/hash"
+	"github.com/krotik/common/bitutil"
+	"github.com/krotik/common/sortutil"
+	"github.com/krotik/common/stringutil"
+	"github.com/krotik/eliasdb/hash"
 )
 
 /*

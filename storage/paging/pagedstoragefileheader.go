@@ -10,7 +10,7 @@
 
 package paging
 
-import "devt.de/krotik/eliasdb/storage/file"
+import "github.com/krotik/eliasdb/storage/file"
 
 /*
 PageHeader is the magic number to identify page headers

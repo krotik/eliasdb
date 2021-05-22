@@ -17,9 +17,9 @@ import (
 	"sort"
 	"strconv"
 
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/graph/data"
 )
 
 /*

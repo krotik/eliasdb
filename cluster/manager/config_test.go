@@ -18,7 +18,7 @@ import (
 	"strings"
 	"testing"
 
-	"devt.de/krotik/common/datautil"
+	"github.com/krotik/common/datautil"
 )
 
 const invalidFileName = "**" + "\x00"

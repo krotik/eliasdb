@@ -17,12 +17,12 @@ import (
 	"testing"
 	"time"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/ecal/cli/tool"
-	"devt.de/krotik/ecal/engine"
-	"devt.de/krotik/ecal/util"
-	"devt.de/krotik/eliasdb/api"
 	"github.com/gorilla/websocket"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/ecal/cli/tool"
+	"github.com/krotik/ecal/engine"
+	"github.com/krotik/ecal/util"
+	"github.com/krotik/eliasdb/api"
 )
 
 func TestECALSockConnectionErrors(t *testing.T) {

@@ -11,9 +11,9 @@
 package pageview
 
 import (
-	"devt.de/krotik/eliasdb/storage/file"
-	"devt.de/krotik/eliasdb/storage/paging/view"
-	"devt.de/krotik/eliasdb/storage/util"
+	"github.com/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/paging/view"
+	"github.com/krotik/eliasdb/storage/util"
 )
 
 /*

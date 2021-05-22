@@ -14,10 +14,10 @@ import (
 	"fmt"
 	"testing"
 
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/graph/data"
-	"devt.de/krotik/eliasdb/storage"
 	"github.com/gorilla/websocket"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/graph/data"
+	"github.com/krotik/eliasdb/storage"
 )
 
 func TestGraphQLSubscriptionConnectionErrors(t *testing.T) {

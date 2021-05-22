@@ -49,14 +49,14 @@ import (
 	"strings"
 	"time"
 
-	"devt.de/krotik/common/errorutil"
-	"devt.de/krotik/common/fileutil"
-	"devt.de/krotik/common/termutil"
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/config"
-	"devt.de/krotik/eliasdb/console"
-	"devt.de/krotik/eliasdb/graph"
-	"devt.de/krotik/eliasdb/server"
+	"github.com/krotik/common/errorutil"
+	"github.com/krotik/common/fileutil"
+	"github.com/krotik/common/termutil"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/config"
+	"github.com/krotik/eliasdb/console"
+	"github.com/krotik/eliasdb/graph"
+	"github.com/krotik/eliasdb/server"
 )
 
 func main() {

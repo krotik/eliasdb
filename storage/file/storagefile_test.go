@@ -16,7 +16,7 @@ import (
 	"os"
 	"testing"
 
-	"devt.de/krotik/common/fileutil"
+	"github.com/krotik/common/fileutil"
 )
 
 const DBDir = "storagefiletest"

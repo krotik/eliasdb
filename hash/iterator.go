@@ -14,7 +14,7 @@ import (
 	"errors"
 	"fmt"
 
-	"devt.de/krotik/eliasdb/storage"
+	"github.com/krotik/eliasdb/storage"
 )
 
 /*

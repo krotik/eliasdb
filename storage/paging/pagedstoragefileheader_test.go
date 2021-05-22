@@ -13,7 +13,7 @@ package paging
 import (
 	"testing"
 
-	"devt.de/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/file"
 )
 
 func TestPagedStorageFileHeader(t *testing.T) {

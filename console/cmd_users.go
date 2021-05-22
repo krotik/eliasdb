@@ -16,8 +16,8 @@ import (
 	"sort"
 	"strings"
 
-	"devt.de/krotik/common/stringutil"
-	"devt.de/krotik/eliasdb/api/ac"
+	"github.com/krotik/common/stringutil"
+	"github.com/krotik/eliasdb/api/ac"
 )
 
 // Command: users

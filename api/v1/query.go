@@ -17,11 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"devt.de/krotik/common/datautil"
-	"devt.de/krotik/common/stringutil"
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/eql"
-	"devt.de/krotik/eliasdb/graph/data"
+	"github.com/krotik/common/datautil"
+	"github.com/krotik/common/stringutil"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/eql"
+	"github.com/krotik/eliasdb/graph/data"
 )
 
 /*

@@ -18,11 +18,11 @@ import (
 	"testing"
 	"time"
 
-	"devt.de/krotik/common/lockutil"
-	"devt.de/krotik/common/testutil"
-	"devt.de/krotik/eliasdb/storage/file"
-	"devt.de/krotik/eliasdb/storage/slotting/pageview"
-	"devt.de/krotik/eliasdb/storage/util"
+	"github.com/krotik/common/lockutil"
+	"github.com/krotik/common/testutil"
+	"github.com/krotik/eliasdb/storage/file"
+	"github.com/krotik/eliasdb/storage/slotting/pageview"
+	"github.com/krotik/eliasdb/storage/util"
 )
 
 func TestDiskStorageManagerLockFilePanic(t *testing.T) {

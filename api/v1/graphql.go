@@ -15,9 +15,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"devt.de/krotik/common/stringutil"
-	"devt.de/krotik/eliasdb/api"
-	"devt.de/krotik/eliasdb/graphql"
+	"github.com/krotik/common/stringutil"
+	"github.com/krotik/eliasdb/api"
+	"github.com/krotik/eliasdb/graphql"
 )
 
 /*

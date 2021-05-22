@@ -47,7 +47,7 @@ Considering a default page size of 4096 bytes we can address:
 */
 package util
 
-import "devt.de/krotik/eliasdb/storage/file"
+import "github.com/krotik/eliasdb/storage/file"
 
 /*
 LocationSize is the size of a location in bytes
