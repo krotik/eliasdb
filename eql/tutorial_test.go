@@ -12,7 +12,6 @@ package eql
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/krotik/eliasdb/graph"
@@ -23,9 +22,13 @@ func TestTutorialTestQueries(t *testing.T) {
 	mgs := graphstorage.NewMemoryGraphStorage("mystorage")
 	gm := graph.NewGraphManager(mgs)
 
-	graph.ImportPartition(bytes.NewBufferString(tutorialdata), "main", gm)
+	err := graph.ImportPartition(bytes.NewBufferString(tutorialdata), "main", gm)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
-	if err := runQuery(gm, "get Line where name beginswith C", `
+	if err := runTestQuery(gm, "get Line where name beginswith C", `
 Labels: Line Key, Line Name
 Format: auto, auto
 Data: 1:n:key, 1:n:name
@@ -36,7 +39,7 @@ Data: 1:n:key, 1:n:name
 		return
 	}
 
-	if err := runQuery(gm, "get Station where @count(:StationOnLine::Line, 'name beginswith C') > 1", `
+	if err := runTestQuery(gm, "get Station where @count(:StationOnLine::Line, 'name beginswith C') > 1", `
 Labels: Station Key, Has Rail, Latitude, Longitude, Station Name, Zone
 Format: auto, auto, auto, auto, auto, auto
 Data: 1:n:key, 1:n:has_rail, 1:n:latitude, 1:n:longitude, 1:n:name, 1:n:zone
@@ -46,26 +49,6 @@ Data: 1:n:key, 1:n:has_rail, 1:n:latitude, 1:n:longitude, 1:n:name, 1:n:zone
 		t.Error(err)
 		return
 	}
-}
-
-/*
-runQuery runs a query against the tutorial data and compares the result with an
-expected result.
-*/
-func runQuery(gm *graph.Manager, query string, expectedResult string) error {
-
-	sr, err := RunQuery("", "main", query, gm)
-
-	if err != nil {
-		return err
-	}
-	sr.(*queryResult).SearchResult.StableSort()
-
-	if sr.String() != expectedResult {
-		return fmt.Errorf("Unexpected result: %s", sr)
-	}
-
-	return nil
 }
 
 var tutorialdata = `
