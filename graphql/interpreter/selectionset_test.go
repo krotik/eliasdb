@@ -154,6 +154,86 @@ func TestSortingAndLimiting(t *testing.T) {
 		"operationName": nil,
 		"query": `
 {
+  Song(ascending:"ranking", last: 3) {
+    key
+	name
+	ranking
+  }
+}
+`,
+		"variables": nil,
+	}
+
+	if rerr := checkResult(`
+{
+  "data": {
+    "Song": [
+      {
+        "key": "Aria1",
+        "name": "Aria1",
+        "ranking": 8
+      },
+      {
+        "key": "Aria4",
+        "name": "Aria4",
+        "ranking": 18
+      },
+      {
+        "key": "MyOnlySong3",
+        "name": "MyOnlySong3",
+        "ranking": 19
+      }
+    ]
+  }
+}`[1:], query, gm); rerr != nil {
+		t.Error(rerr)
+		return
+	}
+
+	query = map[string]interface{}{
+		"operationName": nil,
+		"query": `
+{
+  Song(descending:"ranking", last: 3) {
+    key
+	name
+	ranking
+  }
+}
+`,
+		"variables": nil,
+	}
+
+	if rerr := checkResult(`
+{
+  "data": {
+    "Song": [
+      {
+        "key": "FightSong4",
+        "name": "FightSong4",
+        "ranking": 3
+      },
+      {
+        "key": "Aria2",
+        "name": "Aria2",
+        "ranking": 2
+      },
+      {
+        "key": "LoveSong3",
+        "name": "LoveSong3",
+        "ranking": 1
+      }
+    ]
+  }
+}`[1:], query, gm); rerr != nil {
+		t.Error(rerr)
+		return
+	}
+
+	query = map[string]interface{}{
+		"operationName": nil,
+		"query": `
+{
   Song(ascending:"name", items: 2, last: 3) {
     key
 	name
@@ -852,55 +932,6 @@ func TestTraversals(t *testing.T) {
 		t.Error(rerr)
 		return
 	}
-
-	query = map[string]interface{}{
-		"operationName": nil,
-		"query": `
-{
-  Song(key : "StrangeSong1") {
-    song_key : key
-    foo : bar(traverse : ":::Author") {
-       kind() {}
-    }
-  }
-}
-`,
-		"variables": nil,
-	}
-
-	if rerr := checkResult(`
-{
-  "data": {
-    "Song": [
-      {
-        "foo": [
-          {
-            "kind": "Author"
-          }
-        ],
-        "song_key": "StrangeSong1"
-      }
-    ]
-  },
-  "errors": [
-    {
-      "locations": [
-        {
-          "column": 9,
-          "line": 6
-        }
-      ],
-      "message": "Traversal argument is missing",
-      "path": [
-        "Song",
-        ":::Author"
-      ]
-    }
-  ]
-}`[1:], query, gm); rerr != nil {
-		t.Error(rerr)
-		return
-	}
 }
 
 func TestListQueries(t *testing.T) {
@@ -1287,6 +1318,64 @@ fragment SongKind on Song {
       ]
     }
   ]
+}`[1:], query, gm); rerr != nil {
+		t.Error(rerr)
+		return
+	}
+}
+
+func TestShortcutListQueries(t *testing.T) {
+	gm, _ := songGraphGroups()
+
+	query := map[string]interface{}{
+		"operationName": nil,
+		"query": `
+{
+  Song(matches : {name : ["Aria1", Aria2, "Aria3" ]}) {
+	foo : key
+	name
+	bar: Author {
+	  name
+	}
+  }
+}
+`,
+		"variables": nil,
+	}
+
+	if rerr := checkResult(`
+{
+  "data": {
+    "Song": [
+      {
+        "bar": [
+          {
+            "name": "John"
+          }
+        ],
+        "foo": "Aria1",
+        "name": "Aria1"
+      },
+      {
+        "bar": [
+          {
+            "name": "John"
+          }
+        ],
+        "foo": "Aria2",
+        "name": "Aria2"
+      },
+      {
+        "bar": [
+          {
+            "name": "John"
+          }
+        ],
+        "foo": "Aria3",
+        "name": "Aria3"
+      }
+    ]
+  }
 }`[1:], query, gm); rerr != nil {
 		t.Error(rerr)
 		return

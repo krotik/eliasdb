@@ -16,7 +16,29 @@ It reads: "Get all graph nodes of a certain node kind and fetch attr1, attr2 and
 Filtering results
 -----------------
 
-It is possible to reduce the number of resulting nodes by defining a condition using the `matches` argument. For example to get all `Person` nodes which start with the letters `Jo` you could write:
+It is possible to reduce the number of resulting nodes by defining a condition using the `matches` argument.
+
+The simplest case is to retrieve a node with a specific value:
+```
+query {
+  Person(matches: {
+    name : "John"
+  }) {
+    name
+  }
+}
+```
+Multiple values can be matched by specifying a list:
+```
+query {
+  Person(matches: {
+    name : ["John", "Frank"]
+  }) {
+    name
+  }
+}
+```
+For more complex cases it is also possible to use a Regex. For example to get all `Person` nodes where the `name` starts with the letters `Jo` you could write:
 ```
 query {
   Person(matches: {
@@ -26,7 +48,7 @@ query {
   }
 }
 ```
-The condition can be inverted by prefixing with `not_` so to get all `Person` nodes which do *NOT* start with `Jo` you could write:
+The condition can be inverted by prefixing with `not_`. To get all `Person` nodes where the `name` does *NOT* start with `Jo`:
 ```
 query {
   Person(matches: {
@@ -36,6 +58,7 @@ query {
   }
 }
 ```
+
 To retrieve a specific node with a known key it is possible to do a direct lookup by key:
 ```
 query {
@@ -49,7 +72,7 @@ Sorting and limiting
 --------------------
 To manage potentially large results and avoid overwhelming a client with data it is possible to sort and limit the result.
 
-To sort a result in ascending or descending order use the arguments `ascending` or `descending` with the ordering attribute. To order all Person nodes by ascending name write:
+To sort a result in ascending or descending order use the arguments `ascending` or `descending` with the ordering attribute. Ordering is only possible for attributes which are part of the query. To order all Person nodes in ascending name write:
 ```
 query {
   Person(ascending: "name") {
@@ -68,7 +91,7 @@ query {
 
 Traversal
 ---------
-To traverse the graph you need to add the `traverse` argument on a field of the selection set. For example to get the friends of a Person write:
+To traverse the graph you can add the `traverse` argument on a field of the selection set. For example to get the friends of a Person write:
 ```
 query {
   Person(ascending: "name") {
@@ -79,6 +102,59 @@ query {
   }
 }
 ```
+If the traversal route does not matter (e.g. a traversal wildcard would be used above :::Person) then a shortcut is available:
+```
+query {
+  Person(ascending: "name") {
+    name
+    friends: Person {
+      name
+    }
+  }
+}
+```
+
+Fragments
+---------
+Fragments allow repeated selections to be defined once and be reused via a label:
+```
+{
+  Station(ascending:key) {
+    ...stationFields
+    Station(ascending:key) {
+      ...stationFields
+    }
+  }
+}
+fragment stationFields on Station {
+  key
+  name
+  zone
+}
+```
+
+Fragments can also be used as type conditions to query different attributes dependent on the encountered node kind:
+```
+{
+  Station(ascending:key) {
+    ...stationFields
+    StationAndLines(traverse: ":::", ascending:key) {
+      ...stationFields
+      ... on Line {
+        key
+        name
+      }
+    }
+  }
+}
+fragment stationFields on Station {
+  key
+  name
+  zone
+}
+```
+The example above shows a combination of a separate fragment definition and an inline fragment.
+
 
 Data modification
 -----------------
@@ -101,7 +177,7 @@ Possible arguments are `storeNode, storeEdge, removeNode and removeEdge`. The op
 
 Variables
 ---------
-To avoid parsing issues and possible security risks it is advisable to always use variables to pass data to EliasDB especially if it is a user-provided value. EliasDB supports all default GraphQL default types: string, integer, float
+To avoid parsing issues and possible security risks it is advisable to always use variables to pass data to EliasDB especially if it is a user-provided value. EliasDB supports all GraphQL default types: string, integer, float
 ```
 mutation($name: string) {
     Person(storeNode: {
@@ -117,6 +193,24 @@ The type name (in the example `string`) is not evaluated in EliasDB's GraphQL in
 ```
 {
   name: "Hans"
+}
+```
+Variables can be used in combination with fragments and the directives `@skip` and `@include` to modify queries:
+```
+query Stations($expandedInfo: boolean=true){
+  Station(ascending:key) {
+    ...stationFields
+    Station(ascending:key) {
+      ...stationFields
+      ... on Station @include(if: $expandedInfo) {
+        zone
+      }
+    }
+  }
+}
+fragment stationFields on Station {
+  key
+  name
 }
 ```
 

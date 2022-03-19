@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://devt.de///compare/v1.2.0...v1.3.0) (2022-03-19)
+
+
+### Features
+
+* GraphQL related improvements ([d7771c2](https://devt.de///commit/d7771c24e2f376617ccb5113dc31571d3776eab2))
+
 ## [1.2.0](https://devt.de///compare/v1.1.2...v1.2.0) (2021-05-04)
 
 

@@ -221,7 +221,20 @@ func (rt *selectionSetRuntime) ProcessNodes(path []string, kind string,
 				if matchesOk {
 					if matchesMapOk {
 						for k, v := range matchesMap {
+
 							matchAttrs = append(matchAttrs, k)
+
+							if valueList, ok := v.([]interface{}); ok {
+								stringList := make([]string, 0, len(valueList))
+
+								// Shortcut for matching against multiple string values
+
+								for _, val := range valueList {
+									stringList = append(stringList, regexp.QuoteMeta(fmt.Sprint(val)))
+								}
+
+								v = fmt.Sprintf("^(%v)$", strings.Join(stringList, "|"))
+							}
 
 							if re, rerr := regexp.Compile(fmt.Sprint(v)); rerr == nil {
 								matchesRegexMap[k] = re
@@ -575,8 +588,14 @@ func (rt *selectionSetRuntime) GetPlainFieldsAndAliases(path []string, kind stri
 					}
 
 				} else {
-					rt.rtp.handleRuntimeError(fmt.Errorf(
-						"Traversal argument is missing"), path, c)
+
+					// Shortcut to take the name as the traversal kind
+
+					traversalMap[field.Alias()] = &traversal{
+						spec:                fmt.Sprintf(":::%v", field.Name()),
+						args:                args,
+						selectionSetRuntime: field.SelectionSetRuntime(),
+					}
 				}
 
 			} else if stringutil.IndexOf(field.Name(), resList) == -1 {

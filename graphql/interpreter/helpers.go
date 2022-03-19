@@ -160,11 +160,25 @@ func (d DataSlice) Less(i, j int) bool {
 	ja, ok2 := d.data[j][d.attr]
 
 	if ok1 && ok2 {
-		if d.ascending {
-			return fmt.Sprint(ia) < fmt.Sprint(ja)
+
+		is := fmt.Sprint(ia)
+		js := fmt.Sprint(ja)
+
+		in, err1 := strconv.Atoi(is)
+		jn, err2 := strconv.Atoi(js)
+
+		if err1 == nil && err2 == nil {
+			if d.ascending {
+				return in < jn
+			}
+			return in > jn
 		}
 
-		return fmt.Sprint(ia) > fmt.Sprint(ja)
+		if d.ascending {
+			return is < js
+		}
+
+		return is > js
 	}
 
 	return false
