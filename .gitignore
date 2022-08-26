@@ -9,6 +9,7 @@
 /build
 /eliasdb
 /examples/tutorial/run/
+/examples/game/run/
 /examples/chat/run/
 /examples/chat/res/chat/*.lock
 /examples/chat/res/chat/*-lock.json
